@@ -413,6 +413,7 @@
 			this.store = getMapStore(this.groupId);
 			this.dataNode = root.querySelector(".tccm-map__data");
 			this.mapElement = root.querySelector("[data-map]");
+			this.loadingElement = root.querySelector("[data-map-loading]");
 			this.emptyElement = root.querySelector("[data-map-empty]");
 			this.controlsRoot = root.querySelector("[data-map-controls]");
 			this.editorPreview = root.querySelector("[data-editor-style-preview]");
@@ -431,6 +432,11 @@
 			this.state = cloneState(this.store.state);
 			this.lastStateSignature = "";
 			this.hasAppliedManualView = false;
+			this.gestureStartZoom = null;
+			this.onPinchWheel = this.handlePinchWheel.bind(this);
+			this.onGestureStart = this.handleGestureStart.bind(this);
+			this.onGestureChange = this.handleGestureChange.bind(this);
+			this.onGestureEnd = this.handleGestureEnd.bind(this);
 		}
 
 		readPayload() {
@@ -456,6 +462,7 @@
 		}
 
 		init() {
+			this.setLoading(true);
 			this.store.setContext(this.buildContext());
 
 			if (this.controlsRoot) {
@@ -493,7 +500,16 @@
 			this.render();
 		}
 
+		setLoading(isLoading) {
+			if (!this.loadingElement) {
+				return;
+			}
+
+			this.loadingElement.hidden = !isLoading;
+		}
+
 		reportInitFailure(data) {
+			this.setLoading(false);
 			if (this.editorPreview) {
 				this.editorPreview.hidden = false;
 			}
@@ -531,6 +547,13 @@
 				this.map.remove();
 				this.map = null;
 				this.layers = null;
+			}
+
+			if (this.mapElement) {
+				this.mapElement.removeEventListener("wheel", this.onPinchWheel, { passive: false });
+				this.mapElement.removeEventListener("gesturestart", this.onGestureStart, { passive: false });
+				this.mapElement.removeEventListener("gesturechange", this.onGestureChange, { passive: false });
+				this.mapElement.removeEventListener("gestureend", this.onGestureEnd, { passive: false });
 			}
 
 			if (this.root && this.root.__tccmMapInstance === this) {
@@ -581,7 +604,7 @@
 
 		initMap() {
 			this.map = window.L.map(this.mapElement, {
-				scrollWheelZoom: true,
+				scrollWheelZoom: false,
 				attributionControl: true,
 				zoomSnap: 0.25,
 				zoomDelta: 0.5
@@ -599,6 +622,70 @@
 			if (this.map.touchZoom) {
 				this.map.touchZoom.enable();
 			}
+			this.bindTrackpadPinchZoom();
+		}
+
+		bindTrackpadPinchZoom() {
+			if (!this.mapElement) {
+				return;
+			}
+
+			this.mapElement.addEventListener("wheel", this.onPinchWheel, { passive: false });
+			this.mapElement.addEventListener("gesturestart", this.onGestureStart, { passive: false });
+			this.mapElement.addEventListener("gesturechange", this.onGestureChange, { passive: false });
+			this.mapElement.addEventListener("gestureend", this.onGestureEnd, { passive: false });
+		}
+
+		handlePinchWheel(event) {
+			if (!this.map || !event || (!event.ctrlKey && !event.metaKey)) {
+				return;
+			}
+
+			event.preventDefault();
+
+			const currentZoom = this.map.getZoom();
+			const delta = Math.max(-1.5, Math.min(1.5, -event.deltaY / 240));
+			if (!Number.isFinite(delta) || delta === 0) {
+				return;
+			}
+
+			const containerPoint = this.map.mouseEventToContainerPoint(event);
+			const targetZoom = Math.max(this.map.getMinZoom(), Math.min(this.map.getMaxZoom(), currentZoom + delta));
+			this.map.setZoomAround(containerPoint, targetZoom);
+		}
+
+		handleGestureStart(event) {
+			if (!this.map || !event) {
+				return;
+			}
+
+			event.preventDefault();
+			this.gestureStartZoom = this.map.getZoom();
+		}
+
+		handleGestureChange(event) {
+			if (!this.map || !event || !Number.isFinite(this.gestureStartZoom) || !Number.isFinite(event.scale) || event.scale <= 0) {
+				return;
+			}
+
+			event.preventDefault();
+
+			const rect = this.mapElement ? this.mapElement.getBoundingClientRect() : null;
+			const centerPoint = rect
+				? window.L.point(rect.width / 2, rect.height / 2)
+				: window.L.point(0, 0);
+			const zoomOffset = Math.log(event.scale) / Math.log(2);
+			const targetZoom = Math.max(this.map.getMinZoom(), Math.min(this.map.getMaxZoom(), this.gestureStartZoom + zoomOffset));
+
+			this.map.setZoomAround(centerPoint, targetZoom);
+		}
+
+		handleGestureEnd(event) {
+			if (event) {
+				event.preventDefault();
+			}
+
+			this.gestureStartZoom = null;
 		}
 
 		applyInitialMapView() {
@@ -680,6 +767,7 @@
 					layerCount: 0
 				});
 				this.renderEditorDebug(0, 0);
+				this.setLoading(false);
 				return;
 			}
 
@@ -706,6 +794,7 @@
 			if (this.emptyElement) {
 				this.emptyElement.hidden = hasLayers;
 			}
+			this.setLoading(false);
 
 			if (hasLayers) {
 				const bounds = this.layers.getBounds();

@@ -4,6 +4,7 @@
  */
 
 use Elementor\Controls_Manager;
+use Elementor\Group_Control_Typography;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -70,6 +71,141 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'label_off'    => esc_html__( 'Non', 'thecore-collectivity-management' ),
 				'return_value' => 'yes',
 				'default'      => '',
+			)
+		);
+
+		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'section_style',
+			array(
+				'label' => esc_html__( 'Style', 'thecore-collectivity-management' ),
+				'tab'   => Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'button_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__toggle, {{WRAPPER}} .tccm-map__reset',
+			)
+		);
+
+		$this->add_control(
+			'button_background_color',
+			array(
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-bg: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_border_color',
+			array(
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-border: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_text_color',
+			array(
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-text: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_hover_heading',
+			array(
+				'label'     => esc_html__( 'Survol / focus', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'button_hover_background_color',
+			array(
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-hover-bg: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_hover_border_color',
+			array(
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-hover-border: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_hover_text_color',
+			array(
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-hover-text: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_active_heading',
+			array(
+				'label'     => esc_html__( 'Actif', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'button_active_background_color',
+			array(
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-active-bg: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_active_border_color',
+			array(
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-active-border: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_control(
+			'button_active_text_color',
+			array(
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-toggle-active-text: {{VALUE}};',
+				),
 			)
 		);
 

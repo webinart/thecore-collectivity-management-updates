@@ -886,6 +886,10 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			<?php endif; ?>
 
 			<div class="tccm-map__canvas-wrap">
+				<div class="tccm-map__loading" data-map-loading>
+					<span class="tccm-map__loading-spinner" aria-hidden="true"></span>
+					<span class="tccm-map__loading-label"><?php esc_html_e( 'Chargement de la carte…', 'thecore-collectivity-management' ); ?></span>
+				</div>
 				<div class="tccm-map__canvas" data-map></div>
 				<div class="tccm-map__empty" data-map-empty hidden><?php esc_html_e( 'Aucun élément ne correspond aux filtres actuels.', 'thecore-collectivity-management' ); ?></div>
 			</div>
