@@ -29,6 +29,16 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 	const ACTION_SAVE_GTFS_CONFIG = 'bellevue_transport_save_gtfs_config';
 
 	/**
+	 * Export GTFS source config action.
+	 */
+	const ACTION_EXPORT_GTFS_CONFIG = 'bellevue_transport_export_gtfs_config';
+
+	/**
+	 * Import GTFS source config action.
+	 */
+	const ACTION_IMPORT_GTFS_CONFIG = 'bellevue_transport_import_gtfs_config';
+
+	/**
 	 * Discover locality action.
 	 */
 	const ACTION_DISCOVER_GTFS_LOCALITY = 'bellevue_transport_discover_gtfs_locality';
@@ -93,6 +103,8 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 		add_action( 'admin_post_' . self::ACTION_IMPORT_GTFS, array( $this, 'handle_import_gtfs' ) );
 		add_action( 'admin_post_' . self::ACTION_IMPORT_REALTIME, array( $this, 'handle_import_realtime' ) );
 		add_action( 'admin_post_' . self::ACTION_SAVE_GTFS_CONFIG, array( $this, 'handle_save_gtfs_config' ) );
+		add_action( 'admin_post_' . self::ACTION_EXPORT_GTFS_CONFIG, array( $this, 'handle_export_gtfs_config' ) );
+		add_action( 'admin_post_' . self::ACTION_IMPORT_GTFS_CONFIG, array( $this, 'handle_import_gtfs_config' ) );
 		add_action( 'admin_post_' . self::ACTION_DISCOVER_GTFS_LOCALITY, array( $this, 'handle_discover_gtfs_locality' ) );
 	}
 
@@ -184,29 +196,7 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 			? wp_unslash( $_POST['bellevue_transport_gtfs_sources'] )
 			: array();
 
-		$sources = array();
-		foreach ( $raw_sources as $source ) {
-			if ( ! is_array( $source ) ) {
-				continue;
-			}
-
-			$sources[] = array(
-				'provider_label'   => sanitize_text_field( $source['provider_label'] ?? '' ),
-				'provider_key'     => sanitize_key( $source['provider_key'] ?? '' ),
-				'gtfs_url'         => esc_url_raw( $source['gtfs_url'] ?? '' ),
-				'realtime_format'  => sanitize_key( $source['realtime_format'] ?? '' ),
-				'trip_updates_url' => esc_url_raw( $source['trip_updates_url'] ?? '' ),
-				'service_alerts_url' => esc_url_raw( $source['service_alerts_url'] ?? '' ),
-				'vehicle_positions_url' => esc_url_raw( $source['vehicle_positions_url'] ?? '' ),
-				'locality_name'    => sanitize_text_field( $source['locality_name'] ?? '' ),
-				'locality_insee'   => sanitize_text_field( $source['locality_insee'] ?? '' ),
-				'extra_localities' => sanitize_textarea_field( $source['extra_localities'] ?? '' ),
-				'extra_route_ids'  => sanitize_textarea_field( $source['extra_route_ids'] ?? '' ),
-				'extra_stop_ids'   => sanitize_textarea_field( $source['extra_stop_ids'] ?? '' ),
-				'is_enabled'       => ! empty( $source['is_enabled'] ),
-				'realtime_is_enabled' => ! empty( $source['realtime_is_enabled'] ),
-			);
-		}
+		$sources = $this->sanitize_sources_input( $raw_sources );
 
 		$this->schedule_repository->update_gtfs_sources( $sources );
 
@@ -222,6 +212,91 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Export GTFS source config as JSON.
+	 *
+	 * @return void
+	 */
+	public function handle_export_gtfs_config() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'Acces refuse.', 'bellevue' ) );
+		}
+
+		check_admin_referer( self::ACTION_EXPORT_GTFS_CONFIG );
+
+		$payload = array(
+			'format'          => 'tccm_gtfs_sources',
+			'version'         => 1,
+			'exported_at_gmt' => gmdate( 'c' ),
+			'site_url'        => home_url( '/' ),
+			'sources'         => $this->schedule_repository->get_gtfs_sources(),
+		);
+
+		$filename = sprintf(
+			'tccm-gtfs-sources-%s.json',
+			gmdate( 'Y-m-d-His' )
+		);
+
+		nocache_headers();
+		header( 'Content-Type: application/json; charset=utf-8' );
+		header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+		echo wp_json_encode( $payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+		exit;
+	}
+
+	/**
+	 * Import GTFS source config from JSON.
+	 *
+	 * @return void
+	 */
+	public function handle_import_gtfs_config() {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			wp_die( esc_html__( 'Acces refuse.', 'bellevue' ) );
+		}
+
+		check_admin_referer( self::ACTION_IMPORT_GTFS_CONFIG );
+
+		if ( empty( $_FILES['bellevue_transport_gtfs_import_file']['tmp_name'] ) || ! is_uploaded_file( $_FILES['bellevue_transport_gtfs_import_file']['tmp_name'] ) ) {
+			$this->redirect_with_notice( 'error', __( 'Aucun fichier JSON valide n a été téléversé.', 'bellevue' ) );
+		}
+
+		$file_contents = file_get_contents( $_FILES['bellevue_transport_gtfs_import_file']['tmp_name'] );
+		if ( ! is_string( $file_contents ) || '' === trim( $file_contents ) ) {
+			$this->redirect_with_notice( 'error', __( 'Le fichier importé est vide.', 'bellevue' ) );
+		}
+
+		$decoded = json_decode( $file_contents, true );
+		if ( ! is_array( $decoded ) ) {
+			$this->redirect_with_notice( 'error', __( 'Le fichier JSON est invalide.', 'bellevue' ) );
+		}
+
+		$raw_sources = $decoded;
+		if ( isset( $decoded['sources'] ) ) {
+			$raw_sources = $decoded['sources'];
+		}
+
+		if ( ! is_array( $raw_sources ) ) {
+			$this->redirect_with_notice( 'error', __( 'Le fichier ne contient pas de liste de sources GTFS.', 'bellevue' ) );
+		}
+
+		$sources = $this->sanitize_sources_input( $raw_sources );
+
+		if ( empty( $sources ) ) {
+			$this->redirect_with_notice( 'error', __( 'Aucune source GTFS exploitable n a été trouvée dans le fichier.', 'bellevue' ) );
+		}
+
+		$this->schedule_repository->update_gtfs_sources( $sources );
+
+		$this->redirect_with_notice(
+			'success',
+			sprintf(
+				/* translators: %d: number of sources imported */
+				__( 'Configuration GTFS importée. %d source(s) enregistrée(s).', 'bellevue' ),
+				count( $sources )
+			)
+		);
 	}
 
 	/**
@@ -298,6 +373,30 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 			</table>
 
 			<h2 style="margin-top:24px;"><?php esc_html_e( 'Configurer les sources GTFS', 'bellevue' ); ?></h2>
+			<div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start; margin:16px 0 24px; max-width:1200px;">
+				<div style="background:#fff; border:1px solid #dcdcde; padding:16px; min-width:320px; flex:1;">
+					<h3 style="margin-top:0;"><?php esc_html_e( 'Exporter la configuration', 'bellevue' ); ?></h3>
+					<p><?php esc_html_e( 'Télécharge un fichier JSON contenant les sources GTFS/temps réel actuellement configurées sur ce site.', 'bellevue' ); ?></p>
+					<p>
+						<a class="button button-secondary" href="<?php echo esc_url( wp_nonce_url( add_query_arg( array( 'action' => self::ACTION_EXPORT_GTFS_CONFIG ), admin_url( 'admin-post.php' ) ), self::ACTION_EXPORT_GTFS_CONFIG ) ); ?>">
+							<?php esc_html_e( 'Exporter la configuration GTFS', 'bellevue' ); ?>
+						</a>
+					</p>
+				</div>
+				<div style="background:#fff; border:1px solid #dcdcde; padding:16px; min-width:320px; flex:1;">
+					<h3 style="margin-top:0;"><?php esc_html_e( 'Importer une configuration', 'bellevue' ); ?></h3>
+					<p><?php esc_html_e( 'Réimporte un fichier JSON précédemment exporté depuis un autre site ou environnement.', 'bellevue' ); ?></p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" enctype="multipart/form-data">
+						<?php wp_nonce_field( self::ACTION_IMPORT_GTFS_CONFIG ); ?>
+						<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_IMPORT_GTFS_CONFIG ); ?>" />
+						<p>
+							<input type="file" name="bellevue_transport_gtfs_import_file" accept="application/json,.json" required />
+						</p>
+						<?php submit_button( __( 'Importer la configuration GTFS', 'bellevue' ), 'secondary', 'submit', false ); ?>
+					</form>
+				</div>
+			</div>
+
 			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="max-width:1200px;">
 				<?php wp_nonce_field( self::ACTION_SAVE_GTFS_CONFIG ); ?>
 				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_SAVE_GTFS_CONFIG ); ?>" />
@@ -570,6 +669,77 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 
 		$class = 'success' === $status ? 'notice-success' : 'notice-error';
 		printf( '<div class="notice %1$s is-dismissible"><p>%2$s</p></div>', esc_attr( $class ), esc_html( $message ) );
+	}
+
+	/**
+	 * Redirect back to admin page with a notice.
+	 *
+	 * @param string $status  success|error.
+	 * @param string $message Notice message.
+	 * @return void
+	 */
+	private function redirect_with_notice( $status, $message ) {
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'post_type'               => TheCore_Collectivity_Transports_Post_Types::POST_TYPE_LINE,
+					'page'                    => self::PAGE_SLUG,
+					'bellevue_import_status'  => sanitize_key( $status ),
+					'bellevue_import_message' => sanitize_text_field( $message ),
+				),
+				admin_url( 'edit.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Sanitize a list of raw source rows.
+	 *
+	 * @param array $raw_sources Raw source payload.
+	 * @return array
+	 */
+	private function sanitize_sources_input( array $raw_sources ) {
+		$sources = array();
+
+		foreach ( $raw_sources as $source ) {
+			if ( ! is_array( $source ) ) {
+				continue;
+			}
+
+			$sources[] = array(
+				'provider_label'         => sanitize_text_field( $source['provider_label'] ?? '' ),
+				'provider_key'           => sanitize_key( $source['provider_key'] ?? '' ),
+				'gtfs_url'               => esc_url_raw( $source['gtfs_url'] ?? '' ),
+				'realtime_format'        => sanitize_key( $source['realtime_format'] ?? '' ),
+				'trip_updates_url'       => esc_url_raw( $source['trip_updates_url'] ?? '' ),
+				'service_alerts_url'     => esc_url_raw( $source['service_alerts_url'] ?? '' ),
+				'vehicle_positions_url'  => esc_url_raw( $source['vehicle_positions_url'] ?? '' ),
+				'locality_name'          => sanitize_text_field( $source['locality_name'] ?? '' ),
+				'locality_insee'         => sanitize_text_field( $source['locality_insee'] ?? '' ),
+				'extra_localities'       => $this->sanitize_multivalue_import_field( $source['extra_localities'] ?? array() ),
+				'extra_route_ids'        => $this->sanitize_multivalue_import_field( $source['extra_route_ids'] ?? array() ),
+				'extra_stop_ids'         => $this->sanitize_multivalue_import_field( $source['extra_stop_ids'] ?? array() ),
+				'is_enabled'             => ! empty( $source['is_enabled'] ),
+				'realtime_is_enabled'    => ! empty( $source['realtime_is_enabled'] ),
+			);
+		}
+
+		return $sources;
+	}
+
+	/**
+	 * Sanitize one multi-value import field as newline text.
+	 *
+	 * @param mixed $value Raw field value.
+	 * @return string
+	 */
+	private function sanitize_multivalue_import_field( $value ) {
+		if ( is_array( $value ) ) {
+			$value = implode( "\n", array_map( 'sanitize_text_field', $value ) );
+		}
+
+		return sanitize_textarea_field( (string) $value );
 	}
 
 	/**

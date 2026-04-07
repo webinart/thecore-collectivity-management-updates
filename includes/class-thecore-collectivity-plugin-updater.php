@@ -9,6 +9,21 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class TheCore_Collectivity_Plugin_Updater {
 	/**
+	 * Settings page slug.
+	 */
+	const SETTINGS_PAGE_SLUG = 'thecore-collectivity-update-settings';
+
+	/**
+	 * Settings save action.
+	 */
+	const ACTION_SAVE_SETTINGS = 'thecore_collectivity_save_update_settings';
+
+	/**
+	 * Stored update channel option name.
+	 */
+	const OPTION_UPDATE_CHANNEL = 'thecore_collectivity_management_update_channel';
+
+	/**
 	 * Default source branch.
 	 */
 	const DEFAULT_BRANCH = 'main';
@@ -57,6 +72,153 @@ final class TheCore_Collectivity_Plugin_Updater {
 
 		add_filter( 'update_plugins_' . $context['hostname'], array( __CLASS__, 'filter_update_response' ), 10, 4 );
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'normalize_package_source' ), 10, 4 );
+		add_action( 'admin_menu', array( __CLASS__, 'register_admin_page' ) );
+		add_action( 'admin_post_' . self::ACTION_SAVE_SETTINGS, array( __CLASS__, 'handle_save_settings' ) );
+		add_filter( 'plugin_action_links_' . THECORE_COLLECTIVITY_MANAGEMENT_BASENAME, array( __CLASS__, 'add_plugin_action_links' ) );
+	}
+
+	/**
+	 * Register the update settings page.
+	 *
+	 * @return void
+	 */
+	public static function register_admin_page() {
+		add_options_page(
+			__( 'The Core Collectivity', 'thecore-collectivity-management' ),
+			__( 'The Core Collectivity', 'thecore-collectivity-management' ),
+			'manage_options',
+			self::SETTINGS_PAGE_SLUG,
+			array( __CLASS__, 'render_settings_page' )
+		);
+	}
+
+	/**
+	 * Add a shortcut to the update settings from the plugins list.
+	 *
+	 * @param array<int,string> $links Existing action links.
+	 * @return array<int,string>
+	 */
+	public static function add_plugin_action_links( $links ) {
+		$url = admin_url( 'options-general.php?page=' . self::SETTINGS_PAGE_SLUG );
+
+		array_unshift(
+			$links,
+			sprintf(
+				'<a href="%1$s">%2$s</a>',
+				esc_url( $url ),
+				esc_html__( 'Canal de mise a jour', 'thecore-collectivity-management' )
+			)
+		);
+
+		return $links;
+	}
+
+	/**
+	 * Handle settings save.
+	 *
+	 * @return void
+	 */
+	public static function handle_save_settings() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Acces refuse.', 'thecore-collectivity-management' ) );
+		}
+
+		check_admin_referer( self::ACTION_SAVE_SETTINGS );
+
+		$channel = isset( $_POST['thecore_collectivity_update_channel'] ) ? sanitize_key( wp_unslash( $_POST['thecore_collectivity_update_channel'] ) ) : '';
+
+		if ( ! in_array( $channel, array( 'prod', 'beta' ), true ) ) {
+			$channel = 'prod';
+		}
+
+		update_option( self::OPTION_UPDATE_CHANNEL, $channel );
+
+		wp_safe_redirect(
+			add_query_arg(
+				array(
+					'page'             => self::SETTINGS_PAGE_SLUG,
+					'settings-updated' => 'true',
+				),
+				admin_url( 'options-general.php' )
+			)
+		);
+		exit;
+	}
+
+	/**
+	 * Render the update settings page.
+	 *
+	 * @return void
+	 */
+	public static function render_settings_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Acces refuse.', 'thecore-collectivity-management' ) );
+		}
+
+		$stored_channel    = self::get_saved_channel();
+		$effective_channel = self::get_effective_channel();
+		$selected_channel  = in_array( $stored_channel, array( 'prod', 'beta' ), true ) ? $stored_channel : $effective_channel;
+		$version           = defined( 'THECORE_COLLECTIVITY_MANAGEMENT_VERSION' ) ? THECORE_COLLECTIVITY_MANAGEMENT_VERSION : '';
+		$is_forced         = defined( 'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_CHANNEL' ) && '' !== trim( (string) constant( 'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_CHANNEL' ) );
+		?>
+		<div class="wrap">
+			<h1><?php echo esc_html__( 'The Core Collectivity', 'thecore-collectivity-management' ); ?></h1>
+			<?php if ( isset( $_GET['settings-updated'] ) ) : ?>
+				<div class="notice notice-success is-dismissible">
+					<p><?php echo esc_html__( 'Canal de mise a jour enregistre.', 'thecore-collectivity-management' ); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<p><?php echo esc_html__( 'Choisissez si ce site doit recevoir les mises a jour stables ou beta du plugin.', 'thecore-collectivity-management' ); ?></p>
+
+			<table class="widefat striped" style="max-width: 760px; margin: 16px 0 24px;">
+				<tbody>
+					<tr>
+						<td style="width: 240px;"><strong><?php echo esc_html__( 'Version locale du plugin', 'thecore-collectivity-management' ); ?></strong></td>
+						<td><?php echo esc_html( $version ); ?></td>
+					</tr>
+					<tr>
+						<td><strong><?php echo esc_html__( 'Canal enregistre', 'thecore-collectivity-management' ); ?></strong></td>
+						<td><?php echo esc_html( '' !== $stored_channel ? $stored_channel : __( 'Non defini', 'thecore-collectivity-management' ) ); ?></td>
+					</tr>
+					<tr>
+						<td><strong><?php echo esc_html__( 'Canal effectif', 'thecore-collectivity-management' ); ?></strong></td>
+						<td><?php echo esc_html( $effective_channel ); ?></td>
+					</tr>
+				</tbody>
+			</table>
+
+			<?php if ( $is_forced ) : ?>
+				<div class="notice notice-warning inline">
+					<p><?php echo esc_html__( 'Le canal est actuellement force par constante dans la configuration WordPress. Le selecteur ci-dessous reste enregistre, mais cette constante garde la priorite.', 'thecore-collectivity-management' ); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" style="max-width: 760px;">
+				<?php wp_nonce_field( self::ACTION_SAVE_SETTINGS ); ?>
+				<input type="hidden" name="action" value="<?php echo esc_attr( self::ACTION_SAVE_SETTINGS ); ?>" />
+
+				<table class="form-table" role="presentation">
+					<tbody>
+						<tr>
+							<th scope="row">
+								<label for="thecore-collectivity-update-channel"><?php echo esc_html__( 'Canal de mise a jour', 'thecore-collectivity-management' ); ?></label>
+							</th>
+							<td>
+								<select id="thecore-collectivity-update-channel" name="thecore_collectivity_update_channel">
+									<option value="prod" <?php selected( $selected_channel, 'prod' ); ?>><?php echo esc_html__( 'Production (stable)', 'thecore-collectivity-management' ); ?></option>
+									<option value="beta" <?php selected( $selected_channel, 'beta' ); ?>><?php echo esc_html__( 'Beta', 'thecore-collectivity-management' ); ?></option>
+								</select>
+								<p class="description"><?php echo esc_html__( 'Utilisez beta sur les environnements de test. Utilisez production sur les sites stabilises.', 'thecore-collectivity-management' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<?php submit_button( __( 'Enregistrer', 'thecore-collectivity-management' ) ); ?>
+			</form>
+		</div>
+		<?php
 	}
 
 	/**
@@ -440,10 +602,7 @@ final class TheCore_Collectivity_Plugin_Updater {
 		$branch = self::filter_value( 'thecore_collectivity_management_update_branch', $branch, $repository );
 		$branch = self::normalize_branch( $branch );
 
-		$channel = self::constant_value(
-			'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_CHANNEL',
-			self::default_channel_for_version( trim( (string) ( $headers['Version'] ?? '' ) ) )
-		);
+		$channel = self::get_effective_channel( $headers );
 		$channel = self::filter_value( 'thecore_collectivity_management_update_channel', $channel, $branch, $repository );
 		$channel = self::normalize_channel( $channel );
 
@@ -512,6 +671,48 @@ final class TheCore_Collectivity_Plugin_Updater {
 		);
 
 		return is_array( $headers ) ? array_map( 'trim', $headers ) : array();
+	}
+
+	/**
+	 * Get the stored update channel.
+	 *
+	 * @return string
+	 */
+	private static function get_saved_channel() {
+		if ( ! function_exists( 'get_option' ) ) {
+			return '';
+		}
+
+		$channel = get_option( self::OPTION_UPDATE_CHANNEL, '' );
+		$channel = self::normalize_channel( $channel );
+
+		return in_array( $channel, array( 'prod', 'beta' ), true ) ? $channel : '';
+	}
+
+	/**
+	 * Get the effective channel before filters.
+	 *
+	 * @param array<string,string>|null $headers Optional plugin headers.
+	 * @return string
+	 */
+	private static function get_effective_channel( $headers = null ) {
+		if ( null === $headers ) {
+			$headers = self::read_plugin_headers();
+		}
+
+		$default_channel = self::default_channel_for_version( trim( (string) ( $headers['Version'] ?? '' ) ) );
+		$saved_channel   = self::get_saved_channel();
+
+		if ( in_array( $saved_channel, array( 'prod', 'beta' ), true ) ) {
+			$channel = $saved_channel;
+		} else {
+			$channel = $default_channel;
+		}
+
+		$channel = self::constant_value( 'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_CHANNEL', $channel );
+		$channel = self::normalize_channel( $channel );
+
+		return in_array( $channel, array( 'prod', 'beta' ), true ) ? $channel : $default_channel;
 	}
 
 	/**
