@@ -333,7 +333,7 @@
 }
 
 .tccm-map__popup .leaflet-popup-content-wrapper {
-	border-radius: 16px;
+	border-radius: var(--tccm-map-popup-radius, 16px);
 	padding: 0;
 	background: var(--tccm-map-popup-bg, #fff);
 	border: 1px solid var(--tccm-map-popup-border, var(--tccm-map-border));
@@ -358,8 +358,8 @@
 	width: 100%;
 	height: 136px;
 	object-fit: cover;
-	border-top-left-radius: 16px;
-	border-top-right-radius: 16px;
+	border-top-left-radius: var(--tccm-map-popup-radius, 16px);
+	border-top-right-radius: var(--tccm-map-popup-radius, 16px);
 }
 
 .tccm-map__popup-body {
@@ -371,7 +371,7 @@
 	margin: 0 0 0.3rem;
 	font-size: 1rem;
 	line-height: 1.2;
-	color: var(--tccm-map-popup-text, var(--tccm-map-text));
+	color: var(--tccm-map-popup-title, var(--tccm-map-popup-text, var(--tccm-map-text)));
 }
 
 .tccm-map__popup-subtitle,
@@ -400,7 +400,7 @@
 	font-weight: 700;
 	letter-spacing: 0.04em;
 	text-transform: uppercase;
-	color: var(--tccm-map-popup-muted, var(--tccm-map-muted));
+	color: var(--tccm-map-popup-section-title, var(--tccm-map-popup-muted, var(--tccm-map-muted)));
 }
 
 .tccm-map__popup-tags span {
@@ -416,6 +416,11 @@
 	margin: 0 0 0.75rem 1rem;
 	padding: 0;
 	font-size: 0.9rem;
+	color: var(--tccm-map-popup-text, var(--tccm-map-text));
+}
+
+.tccm-map__popup-list li,
+.tccm-map__popup-link-list li {
 	color: var(--tccm-map-popup-text, var(--tccm-map-text));
 }
 
@@ -477,7 +482,7 @@
 	min-height: 38px;
 	padding: 0.55rem 0.8rem;
 	border-radius: 999px;
-	border: 1px solid var(--tccm-map-popup-primary-bg, var(--tccm-map-accent));
+	border: 1px solid var(--tccm-map-popup-primary-border, var(--tccm-map-popup-primary-bg, var(--tccm-map-accent)));
 	background: var(--tccm-map-popup-primary-bg, var(--tccm-map-accent));
 	background-image: none !important;
 	color: var(--tccm-map-popup-primary-text, #fff);
@@ -493,7 +498,7 @@
 .tccm-map__popup .tccm-map__popup-cta--related,
 .tccm-map__popup .tccm-map__popup-cta--related:visited {
 	width: 100%;
-	border-color: var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff));
+	border-color: var(--tccm-map-popup-secondary-border, var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff)));
 	background: var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff));
 	color: var(--tccm-map-popup-secondary-text, var(--tccm-map-accent));
 }

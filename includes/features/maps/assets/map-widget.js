@@ -767,12 +767,14 @@
 					layerCount: 0
 				});
 				this.renderEditorDebug(0, 0);
-				this.setLoading(false);
 				return;
 			}
 
 			const items = this.filterItems();
 			this.layers.clearLayers();
+			if (this.emptyElement) {
+				this.emptyElement.hidden = true;
+			}
 
 			items.forEach((item) => {
 				if (item.geometryType === "point") {
@@ -791,10 +793,17 @@
 				layerCount: this.layers.getLayers().length
 			});
 			this.renderEditorDebug(items.length, this.layers.getLayers().length);
-			if (this.emptyElement) {
-				this.emptyElement.hidden = hasLayers;
+			const finalizeVisibility = () => {
+				if (this.emptyElement) {
+					this.emptyElement.hidden = hasLayers;
+				}
+				this.setLoading(false);
+			};
+			if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
+				window.requestAnimationFrame(() => window.requestAnimationFrame(finalizeVisibility));
+			} else {
+				finalizeVisibility();
 			}
-			this.setLoading(false);
 
 			if (hasLayers) {
 				const bounds = this.layers.getBounds();

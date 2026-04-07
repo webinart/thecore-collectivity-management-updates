@@ -6,6 +6,7 @@
 require_once dirname( __DIR__ ) . '/class-thecore-collectivity-maps-transport-adapter.php';
 
 use Elementor\Controls_Manager;
+use Elementor\Group_Control_Box_Shadow;
 use Elementor\Group_Control_Typography;
 use Elementor\Icons_Manager;
 use Elementor\Repeater;
@@ -559,10 +560,99 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
+			'popup_card_heading',
+			array(
+				'label' => esc_html__( 'Vignette', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::HEADING,
+			)
+		);
+
+		$this->add_control(
 			'popup_background_color',
 			array(
-				'label' => esc_html__( 'Fond de la vignette', 'thecore-collectivity-management' ),
+				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
 				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_border_color',
+			array(
+				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_radius_heading',
+			array(
+				'label' => esc_html__( 'Rayon', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'popup_border_radius',
+			array(
+				'label'      => esc_html__( 'Border radius', 'thecore-collectivity-management' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array(
+					'px' => array(
+						'min' => 0,
+						'max' => 40,
+					),
+				),
+				'default'    => array(
+					'size' => 16,
+					'unit' => 'px',
+				),
+				'selectors'  => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-radius: {{SIZE}}{{UNIT}};',
+				),
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Box_Shadow::get_type(),
+			array(
+				'name'     => 'popup_card_box_shadow',
+				'selector' => '{{WRAPPER}} .tccm-map__popup .leaflet-popup-content-wrapper',
+			)
+		);
+
+		$this->add_control(
+			'popup_title_heading',
+			array(
+				'label'     => esc_html__( 'Titre', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'popup_title_color',
+			array(
+				'label' => esc_html__( 'Couleur', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'popup_title_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-title',
+			)
+		);
+
+		$this->add_control(
+			'popup_text_heading',
+			array(
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
 			)
 		);
 
@@ -583,18 +673,125 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
-			'popup_border_color',
+			'popup_link_color',
+			array(
+				'label' => esc_html__( 'Liens texte', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_section_title_color',
+			array(
+				'label' => esc_html__( 'Titres de sections', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'popup_body_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-subtitle, {{WRAPPER}} .tccm-map__popup-summary, {{WRAPPER}} .tccm-map__popup-meta, {{WRAPPER}} .tccm-map__popup-accessibility, {{WRAPPER}} .tccm-map__popup-link-list, {{WRAPPER}} .tccm-map__popup-link-list a, {{WRAPPER}} .tccm-map__popup-list',
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'popup_section_title_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-section-title',
+			)
+		);
+
+		$this->add_control(
+			'popup_primary_button_heading',
+			array(
+				'label'     => esc_html__( 'Bouton principal', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'popup_primary_button_background_color',
+			array(
+				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_primary_button_text_color',
+			array(
+				'label' => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_primary_button_border_color',
 			array(
 				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
 				'type'  => Controls_Manager::COLOR,
 			)
 		);
 
-		$this->add_control(
-			'popup_link_color',
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
 			array(
-				'label' => esc_html__( 'Liens texte', 'thecore-collectivity-management' ),
+				'name'     => 'popup_primary_button_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-cta--primary',
+			)
+		);
+
+		$this->add_control(
+			'popup_secondary_button_heading',
+			array(
+				'label'     => esc_html__( 'Bouton secondaire', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
+			)
+		);
+
+		$this->add_control(
+			'popup_secondary_button_background_color',
+			array(
+				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
 				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_secondary_button_text_color',
+			array(
+				'label' => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'popup_secondary_button_border_color',
+			array(
+				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'popup_secondary_button_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-cta--related',
+			)
+		);
+
+		$this->add_control(
+			'popup_tags_heading',
+			array(
+				'label'     => esc_html__( 'Tags et pastilles', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::HEADING,
+				'separator' => 'before',
 			)
 		);
 
@@ -614,6 +811,14 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			)
 		);
 
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'popup_tag_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__popup-tags span',
+			)
+		);
+
 		$this->add_control(
 			'popup_chip_background_color',
 			array(
@@ -630,98 +835,11 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			)
 		);
 
-		$this->add_control(
-			'popup_primary_button_background_color',
-			array(
-				'label' => esc_html__( 'Fond du bouton principal', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
-			)
-		);
-
-		$this->add_control(
-			'popup_primary_button_text_color',
-			array(
-				'label' => esc_html__( 'Texte du bouton principal', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
-			)
-		);
-
-		$this->add_control(
-			'popup_secondary_button_background_color',
-			array(
-				'label' => esc_html__( 'Fond des boutons secondaires', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
-			)
-		);
-
-		$this->add_control(
-			'popup_secondary_button_text_color',
-			array(
-				'label' => esc_html__( 'Texte des boutons secondaires', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
-			)
-		);
-
-		$this->add_control(
-			'popup_typography_heading',
-			array(
-				'label'     => esc_html__( 'Typographies', 'thecore-collectivity-management' ),
-				'type'      => Controls_Manager::HEADING,
-				'separator' => 'before',
-			)
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			array(
-				'name'     => 'popup_title_typography',
-				'label'    => esc_html__( 'Titre', 'thecore-collectivity-management' ),
-				'selector' => '{{WRAPPER}} .tccm-map__popup-title',
-			)
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			array(
-				'name'     => 'popup_body_typography',
-				'label'    => esc_html__( 'Texte courant', 'thecore-collectivity-management' ),
-				'selector' => '{{WRAPPER}} .tccm-map__popup-subtitle, {{WRAPPER}} .tccm-map__popup-summary, {{WRAPPER}} .tccm-map__popup-meta, {{WRAPPER}} .tccm-map__popup-accessibility, {{WRAPPER}} .tccm-map__popup-link-list, {{WRAPPER}} .tccm-map__popup-link-list a, {{WRAPPER}} .tccm-map__popup-list',
-			)
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			array(
-				'name'     => 'popup_section_title_typography',
-				'label'    => esc_html__( 'Titres de sections', 'thecore-collectivity-management' ),
-				'selector' => '{{WRAPPER}} .tccm-map__popup-section-title',
-			)
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			array(
-				'name'     => 'popup_tag_typography',
-				'label'    => esc_html__( 'Tags', 'thecore-collectivity-management' ),
-				'selector' => '{{WRAPPER}} .tccm-map__popup-tags span',
-			)
-		);
-
 		$this->add_group_control(
 			Group_Control_Typography::get_type(),
 			array(
 				'name'     => 'popup_chip_typography',
-				'label'    => esc_html__( 'Pastilles de liens', 'thecore-collectivity-management' ),
 				'selector' => '{{WRAPPER}} .tccm-map__popup-chip',
-			)
-		);
-
-		$this->add_group_control(
-			Group_Control_Typography::get_type(),
-			array(
-				'name'     => 'popup_button_typography',
-				'label'    => esc_html__( 'Boutons', 'thecore-collectivity-management' ),
-				'selector' => '{{WRAPPER}} .tccm-map__popup-cta',
 			)
 		);
 
@@ -2067,6 +2185,8 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			'--tccm-map-popup-bg'             => $settings['popup_background_color'] ?? '',
 			'--tccm-map-popup-text'           => $settings['popup_text_color'] ?? '',
 			'--tccm-map-popup-muted'          => $settings['popup_muted_color'] ?? '',
+			'--tccm-map-popup-title'          => $settings['popup_title_color'] ?? '',
+			'--tccm-map-popup-section-title'  => $settings['popup_section_title_color'] ?? '',
 			'--tccm-map-popup-border'         => $settings['popup_border_color'] ?? '',
 			'--tccm-map-popup-link'           => $settings['popup_link_color'] ?? '',
 			'--tccm-map-popup-tag-bg'         => $settings['popup_tag_background_color'] ?? '',
@@ -2075,8 +2195,10 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			'--tccm-map-popup-chip-text'      => $settings['popup_chip_text_color'] ?? '',
 			'--tccm-map-popup-primary-bg'     => $settings['popup_primary_button_background_color'] ?? '',
 			'--tccm-map-popup-primary-text'   => $settings['popup_primary_button_text_color'] ?? '',
+			'--tccm-map-popup-primary-border' => $settings['popup_primary_button_border_color'] ?? '',
 			'--tccm-map-popup-secondary-bg'   => $settings['popup_secondary_button_background_color'] ?? '',
 			'--tccm-map-popup-secondary-text' => $settings['popup_secondary_button_text_color'] ?? '',
+			'--tccm-map-popup-secondary-border' => $settings['popup_secondary_button_border_color'] ?? '',
 		);
 
 		$declarations = array();

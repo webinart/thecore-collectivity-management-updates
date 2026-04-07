@@ -221,6 +221,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 		$settings      = $this->get_settings_for_display();
 		$group_context = $this->get_group_context( $settings );
 		$widget_id     = 'tccm-map-types-' . $this->get_id();
+		$style_vars    = $this->get_style_variables( $settings );
 
 		$this->add_render_attribute(
 			'wrapper',
@@ -228,6 +229,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'class'          => 'tccm-map-filters tccm-map-filters--types',
 				'id'             => $widget_id,
 				'data-map-group' => $group_context['normalized'],
+				'style'          => ! empty( $style_vars ) ? implode( ';', $style_vars ) . ';' : '',
 			)
 		);
 		?>
@@ -249,5 +251,65 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 			?>
 		</div>
 		<?php
+	}
+
+	/**
+	 * Build inline CSS variables for the types widget controls.
+	 *
+	 * @param array $settings Widget settings.
+	 * @return array
+	 */
+	private function get_style_variables( array $settings ) {
+		$variables = array(
+			'--tccm-map-toggle-bg'            => $settings['button_background_color'] ?? '',
+			'--tccm-map-toggle-border'        => $settings['button_border_color'] ?? '',
+			'--tccm-map-toggle-text'          => $settings['button_text_color'] ?? '',
+			'--tccm-map-toggle-hover-bg'      => $settings['button_hover_background_color'] ?? '',
+			'--tccm-map-toggle-hover-border'  => $settings['button_hover_border_color'] ?? '',
+			'--tccm-map-toggle-hover-text'    => $settings['button_hover_text_color'] ?? '',
+			'--tccm-map-toggle-active-bg'     => $settings['button_active_background_color'] ?? '',
+			'--tccm-map-toggle-active-border' => $settings['button_active_border_color'] ?? '',
+			'--tccm-map-toggle-active-text'   => $settings['button_active_text_color'] ?? '',
+		);
+
+		$declarations = array();
+		foreach ( $variables as $name => $value ) {
+			$sanitized = $this->sanitize_css_color_value( $value );
+			if ( '' === $sanitized ) {
+				continue;
+			}
+
+			$declarations[] = $name . ':' . $sanitized;
+		}
+
+		return $declarations;
+	}
+
+	/**
+	 * Sanitize CSS color values for inline custom properties.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	private function sanitize_css_color_value( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		$value = trim( (string) $value );
+		if ( '' === $value ) {
+			return '';
+		}
+
+		$hex = sanitize_hex_color( $value );
+		if ( $hex ) {
+			return $hex;
+		}
+
+		if ( preg_match( '/^(rgba?|hsla?)\\([\d\s.,%+-]+\)$/i', $value ) ) {
+			return $value;
+		}
+
+		return '';
 	}
 }
