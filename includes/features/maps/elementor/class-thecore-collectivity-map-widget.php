@@ -944,7 +944,10 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 				data-map-controls
 				data-map-group="<?php echo esc_attr( $group_id ); ?>"
 				data-show-search="<?php echo $show_search ? '1' : '0'; ?>"
-				data-show-filters="<?php echo ( $show_types || ! empty( $facet_keys ) || $show_accessible ) ? '1' : '0'; ?>"
+				data-show-types="<?php echo $show_types ? '1' : '0'; ?>"
+				data-show-facets="<?php echo ! empty( $facet_keys ) ? '1' : '0'; ?>"
+				data-show-accessible="<?php echo $show_accessible ? '1' : '0'; ?>"
+				data-show-reset="<?php echo $show_reset ? '1' : '0'; ?>"
 				data-show-summary="<?php echo $show_summary ? '1' : '0'; ?>"
 			>
 				<?php if ( $show_toolbar ) : ?>

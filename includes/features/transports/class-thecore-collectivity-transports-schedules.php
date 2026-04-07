@@ -12,6 +12,7 @@ require_once __DIR__ . '/class-thecore-collectivity-transports-schedule-reposito
 require_once __DIR__ . '/class-thecore-collectivity-transports-realtime-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-realtime-adapter-interface.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-realtime-adapter-factory.php';
+require_once __DIR__ . '/class-thecore-collectivity-transports-gtfs-source-resolver.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-gtfs-importer.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-gtfs-discovery.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-gtfs-realtime-adapter.php';
@@ -53,6 +54,13 @@ final class TheCore_Collectivity_Transports_Schedules {
 	private $importer;
 
 	/**
+	 * GTFS source resolver.
+	 *
+	 * @var TheCore_Collectivity_Transports_GTFS_Source_Resolver
+	 */
+	private $source_resolver;
+
+	/**
 	 * Realtime repository.
 	 *
 	 * @var TheCore_Collectivity_Transports_Realtime_Repository
@@ -86,9 +94,10 @@ final class TheCore_Collectivity_Transports_Schedules {
 	public function __construct() {
 		$this->schema     = new TheCore_Collectivity_Transports_Schedule_Schema();
 		$this->repository = new TheCore_Collectivity_Transports_Schedule_Repository();
+		$this->source_resolver = new TheCore_Collectivity_Transports_GTFS_Source_Resolver();
 		$this->realtime_repository = new TheCore_Collectivity_Transports_Realtime_Repository( $this->repository );
-		$this->importer   = new TheCore_Collectivity_Transports_GTFS_Importer( $this->repository );
-		$this->discovery  = new TheCore_Collectivity_Transports_GTFS_Discovery( $this->repository );
+		$this->importer   = new TheCore_Collectivity_Transports_GTFS_Importer( $this->repository, $this->source_resolver );
+		$this->discovery  = new TheCore_Collectivity_Transports_GTFS_Discovery( $this->repository, $this->source_resolver );
 		$this->realtime_importer = new TheCore_Collectivity_Transports_Realtime_Importer(
 			$this->repository,
 			$this->realtime_repository,

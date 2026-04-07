@@ -183,7 +183,10 @@
 			this.groupId = "";
 			this.store = null;
 			this.showSearch = true;
-			this.showFilters = true;
+			this.showTypes = true;
+			this.showFacets = true;
+			this.showAccessible = true;
+			this.showReset = true;
 			this.showSummary = true;
 			this.countElement = root.querySelector("[data-map-count]");
 			this.filterSearch = root.querySelector("[data-filter-search]");
@@ -234,7 +237,10 @@
 			this.groupId = this.root.getAttribute("data-map-group") || "tccm-map-default";
 			this.store = getMapStore(this.groupId);
 			this.showSearch = this.root.getAttribute("data-show-search") === "1";
-			this.showFilters = this.root.getAttribute("data-show-filters") === "1";
+			this.showTypes = this.root.getAttribute("data-show-types") === "1";
+			this.showFacets = this.root.getAttribute("data-show-facets") === "1";
+			this.showAccessible = this.root.getAttribute("data-show-accessible") === "1";
+			this.showReset = this.root.getAttribute("data-show-reset") === "1";
 			this.showSummary = this.root.getAttribute("data-show-summary") === "1";
 		}
 
@@ -344,15 +350,15 @@
 
 			const availableTypes = Array.isArray(context.availableTypes) ? context.availableTypes : [];
 			if (wraps.types) {
-				wraps.types.hidden = !this.showFilters || availableTypes.length <= 1;
+				wraps.types.hidden = !this.showTypes || availableTypes.length <= 1;
 			}
 
 			if (wraps.facets) {
-				wraps.facets.hidden = !this.showFilters;
+				wraps.facets.hidden = !this.showFacets;
 			}
 
 			if (wraps.accessible) {
-				wraps.accessible.hidden = !this.showFilters || !context.hasAccessible;
+				wraps.accessible.hidden = !this.showAccessible || !context.hasAccessible;
 			}
 
 			if (wraps.summary) {
@@ -360,7 +366,7 @@
 			}
 
 			if (this.resetButton) {
-				this.resetButton.hidden = !this.showSearch && !this.showFilters;
+				this.resetButton.hidden = !this.showReset;
 			}
 
 			Object.keys(this.selectNodes).forEach((key) => {
@@ -370,7 +376,7 @@
 				}
 
 				const values = Array.isArray((context.facets || {})[key]) ? context.facets[key] : [];
-				select.hidden = !this.showFilters || values.length <= 1;
+				select.hidden = !this.showFacets || values.length <= 1;
 			});
 		}
 

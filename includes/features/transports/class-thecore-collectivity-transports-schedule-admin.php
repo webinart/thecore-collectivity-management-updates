@@ -510,8 +510,11 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 						</td>
 					</tr>
 					<tr>
-						<th scope="row"><?php esc_html_e( 'URL du ZIP GTFS', 'bellevue' ); ?></th>
-						<td><input type="url" name="bellevue_transport_gtfs_sources[<?php echo esc_attr( $index ); ?>][gtfs_url]" class="widefat" value="<?php echo esc_attr( $source['gtfs_url'] ); ?>" /></td>
+						<th scope="row"><?php esc_html_e( 'URL GTFS ou page ressource PAN', 'bellevue' ); ?></th>
+						<td>
+							<input type="url" name="bellevue_transport_gtfs_sources[<?php echo esc_attr( $index ); ?>][gtfs_url]" class="widefat" value="<?php echo esc_attr( $source['gtfs_url'] ); ?>" />
+							<p class="description"><?php esc_html_e( 'Accepte soit une URL directe de ZIP GTFS, soit une page ressource transport.data.gouv.fr du type /resources/12345. La page ressource est recommandee si l URL producteur timeoute.', 'bellevue' ); ?></p>
+						</td>
 					</tr>
 					<tr>
 						<th scope="row"><?php esc_html_e( 'Activer le temps réel', 'bellevue' ); ?></th>

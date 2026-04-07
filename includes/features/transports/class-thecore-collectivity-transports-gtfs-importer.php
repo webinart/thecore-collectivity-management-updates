@@ -16,12 +16,21 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 	private $schedule_repository;
 
 	/**
+	 * GTFS source resolver.
+	 *
+	 * @var TheCore_Collectivity_Transports_GTFS_Source_Resolver
+	 */
+	private $source_resolver;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param TheCore_Collectivity_Transports_Schedule_Repository $schedule_repository Schedule repository.
+	 * @param TheCore_Collectivity_Transports_Schedule_Repository   $schedule_repository Schedule repository.
+	 * @param TheCore_Collectivity_Transports_GTFS_Source_Resolver $source_resolver     Source resolver.
 	 */
-	public function __construct( TheCore_Collectivity_Transports_Schedule_Repository $schedule_repository ) {
+	public function __construct( TheCore_Collectivity_Transports_Schedule_Repository $schedule_repository, TheCore_Collectivity_Transports_GTFS_Source_Resolver $source_resolver ) {
 		$this->schedule_repository = $schedule_repository;
+		$this->source_resolver     = $source_resolver;
 	}
 
 	/**
@@ -72,24 +81,24 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 			$provider_key
 		);
 
-		require_once ABSPATH . 'wp-admin/includes/file.php';
-		$temp_file = download_url( $gtfs_url, 180 );
-		if ( is_wp_error( $temp_file ) ) {
+		$download = $this->source_resolver->download_to_temp_file( $gtfs_url, 180 );
+		if ( is_wp_error( $download ) ) {
 			$this->schedule_repository->update_import_status(
 				array(
 					'status'     => 'error',
 					'completed_at'=> current_time( 'mysql' ),
-					'message'    => $temp_file->get_error_message(),
+					'message'    => $download->get_error_message(),
 					'source_url' => $gtfs_url,
 					'provider'   => ! empty( $source_config['provider_label'] ) ? $source_config['provider_label'] : '',
 					'providerKey'=> $provider_key,
 				),
 				$provider_key
 			);
-			return $temp_file;
+			return $download;
 		}
 
-		$result = $this->import_archive( $temp_file, $config, $provider_key );
+		$temp_file = $download['temp_file'];
+		$result    = $this->import_archive( $temp_file, $config, $provider_key );
 		@unlink( $temp_file );
 
 		if ( is_wp_error( $result ) ) {
@@ -111,6 +120,7 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 			'status'       => 'success',
 			'completed_at' => current_time( 'mysql' ),
 			'source_url'   => $gtfs_url,
+			'download_url' => $download['download_url'] ?? $gtfs_url,
 			'provider'     => ! empty( $source_config['provider_label'] ) ? $source_config['provider_label'] : '',
 			'providerKey'  => $provider_key,
 			'counts'       => $result,
