@@ -1,0 +1,725 @@
+<?php
+/**
+ * Plugin updater for The Core - Collectivity Management.
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+final class TheCore_Collectivity_Plugin_Updater {
+	/**
+	 * Default source branch.
+	 */
+	const DEFAULT_BRANCH = 'main';
+
+	/**
+	 * Default manifest branch.
+	 */
+	const DEFAULT_MANIFEST_BRANCH = 'plugin-updates';
+
+	/**
+	 * Default source repository.
+	 */
+	const DEFAULT_REPOSITORY = 'webinart/thecore-collectivity-management';
+
+	/**
+	 * Default distribution repository.
+	 *
+	 * Public distribution repository hosting manifests and packaged archives.
+	 */
+	const DEFAULT_DISTRIBUTION_REPOSITORY = 'webinart/thecore-collectivity-management-updates';
+
+	/**
+	 * Whether hooks have already been registered.
+	 *
+	 * @var bool
+	 */
+	private static $bootstrapped = false;
+
+	/**
+	 * Register updater hooks.
+	 *
+	 * @return void
+	 */
+	public static function register_hooks() {
+		if ( self::$bootstrapped ) {
+			return;
+		}
+
+		self::$bootstrapped = true;
+
+		$context = self::get_context();
+
+		if ( null === $context || '' === $context['hostname'] ) {
+			return;
+		}
+
+		add_filter( 'update_plugins_' . $context['hostname'], array( __CLASS__, 'filter_update_response' ), 10, 4 );
+		add_filter( 'upgrader_source_selection', array( __CLASS__, 'normalize_package_source' ), 10, 4 );
+	}
+
+	/**
+	 * Filter the update payload returned by WordPress.
+	 *
+	 * @param false|array<string,mixed> $update      Existing update payload.
+	 * @param array<string,mixed>       $plugin_data Current plugin headers.
+	 * @param string                    $plugin_file Plugin basename.
+	 * @param array<int,string>         $locales     Installed locales.
+	 * @return false|array<string,mixed>
+	 */
+	public static function filter_update_response( $update, array $plugin_data, $plugin_file, array $locales = array() ) {
+		unset( $locales );
+
+		$context = self::get_context();
+
+		if ( null === $context ) {
+			return $update;
+		}
+
+		if ( $plugin_file !== $context['plugin'] ) {
+			return $update;
+		}
+
+		$update_uri = isset( $plugin_data['UpdateURI'] ) ? trim( (string) $plugin_data['UpdateURI'] ) : '';
+
+		if ( '' === $update_uri || self::normalize_url( $update_uri ) !== self::normalize_url( $context['update_uri'] ) ) {
+			return $update;
+		}
+
+		$manifest = self::fetch_remote_manifest( $context['manifest_url'] );
+
+		if ( null !== $manifest ) {
+			$payload = self::build_update_payload_from_manifest( $context, $manifest );
+
+			if ( false !== $payload ) {
+				return $payload;
+			}
+		}
+
+		$remote_headers = self::fetch_remote_plugin_headers(
+			$context['repository'],
+			$context['branch'],
+			$context['entry_file']
+		);
+
+		if ( null === $remote_headers ) {
+			return $update;
+		}
+
+		$payload = self::build_update_payload_from_headers( $context, $remote_headers );
+
+		return false !== $payload ? $payload : $update;
+	}
+
+	/**
+	 * Normalize the downloaded package directory to the expected plugin slug.
+	 *
+	 * @param string|false             $source        Extracted source directory.
+	 * @param string                   $remote_source WordPress upgrader remote source.
+	 * @param mixed                    $upgrader      Upgrader instance.
+	 * @param array<string,mixed>      $hook_extra    Upgrade context.
+	 * @return string|false
+	 */
+	public static function normalize_package_source( $source, $remote_source, $upgrader, array $hook_extra = array() ) {
+		unset( $upgrader );
+
+		if ( ! is_string( $source ) || '' === $source || '' === $remote_source ) {
+			return $source;
+		}
+
+		$context = self::get_context();
+
+		if ( null === $context ) {
+			return $source;
+		}
+
+		if ( ( $hook_extra['type'] ?? '' ) !== 'plugin' ) {
+			return $source;
+		}
+
+		$matches_plugin      = ( $hook_extra['plugin'] ?? '' ) === $context['plugin'];
+		$matches_bulk_update = isset( $hook_extra['plugins'] ) && is_array( $hook_extra['plugins'] ) && in_array( $context['plugin'], $hook_extra['plugins'], true );
+
+		if ( ! $matches_plugin && ! $matches_bulk_update ) {
+			return $source;
+		}
+
+		$expected_dir = $context['slug'];
+		$current_dir  = basename( rtrim( $source, "/\\" ) );
+
+		if ( $current_dir === $expected_dir ) {
+			return $source;
+		}
+
+		global $wp_filesystem;
+
+		if ( ( ! is_object( $wp_filesystem ) || ! method_exists( $wp_filesystem, 'move' ) ) && function_exists( 'WP_Filesystem' ) ) {
+			WP_Filesystem();
+		}
+
+		if ( ! is_object( $wp_filesystem ) || ! method_exists( $wp_filesystem, 'move' ) ) {
+			return $source;
+		}
+
+		$normalized_remote_source = rtrim( $remote_source, "/\\" );
+		$target                   = $normalized_remote_source . DIRECTORY_SEPARATOR . $expected_dir;
+
+		if ( method_exists( $wp_filesystem, 'exists' ) && $wp_filesystem->exists( $target ) && method_exists( $wp_filesystem, 'delete' ) ) {
+			$wp_filesystem->delete( $target, true );
+		}
+
+		$moved = $wp_filesystem->move( $source, $target, true );
+
+		if ( ! $moved ) {
+			return $source;
+		}
+
+		return $target;
+	}
+
+	/**
+	 * Parse a GitHub repository from an Update URI.
+	 *
+	 * @param string $update_uri Update URI.
+	 * @return string
+	 */
+	public static function parse_repository_from_update_uri( $update_uri ) {
+		$update_uri = trim( (string) $update_uri );
+
+		if ( '' === $update_uri ) {
+			return '';
+		}
+
+		$parts = parse_url( $update_uri );
+
+		if ( ! is_array( $parts ) || empty( $parts['host'] ) || empty( $parts['path'] ) ) {
+			return '';
+		}
+
+		if ( 'github.com' !== strtolower( (string) $parts['host'] ) ) {
+			return '';
+		}
+
+		$segments = array_values( array_filter( explode( '/', trim( (string) $parts['path'], '/' ) ) ) );
+
+		if ( count( $segments ) < 2 ) {
+			return '';
+		}
+
+		return $segments[0] . '/' . $segments[1];
+	}
+
+	/**
+	 * Normalize a branch name.
+	 *
+	 * @param string $branch Branch name.
+	 * @return string
+	 */
+	public static function normalize_branch( $branch ) {
+		$branch = trim( (string) $branch );
+
+		if ( '' === $branch ) {
+			return self::DEFAULT_BRANCH;
+		}
+
+		if ( 0 === strpos( $branch, 'refs/heads/' ) ) {
+			$branch = substr( $branch, strlen( 'refs/heads/' ) );
+		}
+
+		$branch = trim( $branch, '/' );
+
+		return '' !== $branch ? $branch : self::DEFAULT_BRANCH;
+	}
+
+	/**
+	 * Normalize an update channel.
+	 *
+	 * @param string $channel Channel name.
+	 * @return string
+	 */
+	public static function normalize_channel( $channel ) {
+		$channel = trim( strtolower( (string) $channel ) );
+		$channel = preg_replace( '/[^a-z0-9._-]+/', '-', $channel );
+
+		if ( ! is_string( $channel ) ) {
+			return 'prod';
+		}
+
+		$channel = trim( $channel, '-' );
+		$channel = preg_replace( '/-+/', '-', $channel );
+
+		return is_string( $channel ) && '' !== $channel ? $channel : 'prod';
+	}
+
+	/**
+	 * Derive the default release channel from a version string.
+	 *
+	 * @param string $version Plugin version.
+	 * @return string
+	 */
+	public static function default_channel_for_version( $version ) {
+		return false !== stripos( (string) $version, 'beta' ) ? 'beta' : 'prod';
+	}
+
+	/**
+	 * Build a package zip URL for a GitHub branch.
+	 *
+	 * @param string $repository Repository slug.
+	 * @param string $branch     Branch name.
+	 * @return string
+	 */
+	public static function build_package_url( $repository, $branch ) {
+		$repository = trim( (string) $repository, '/' );
+		$branch     = self::normalize_branch( $branch );
+
+		if ( '' === $repository ) {
+			return '';
+		}
+
+		return 'https://github.com/' . $repository . '/archive/refs/heads/' . self::encode_path_segments( $branch ) . '.zip';
+	}
+
+	/**
+	 * Build the manifest URL.
+	 *
+	 * @param string $repository      Distribution repository.
+	 * @param string $manifest_branch Manifest branch.
+	 * @param string $channel         Release channel.
+	 * @return string
+	 */
+	public static function build_manifest_url( $repository, $manifest_branch, $channel ) {
+		$repository      = trim( (string) $repository, '/' );
+		$manifest_branch = self::normalize_branch( $manifest_branch );
+		$channel         = self::normalize_channel( $channel );
+
+		if ( '' === $repository || '' === $manifest_branch || '' === $channel ) {
+			return '';
+		}
+
+		return 'https://raw.githubusercontent.com/' . $repository . '/' . self::encode_path_segments( $manifest_branch ) . '/' . rawurlencode( $channel ) . '.json';
+	}
+
+	/**
+	 * Build a details URL.
+	 *
+	 * @param string $repository Repository slug.
+	 * @return string
+	 */
+	public static function build_release_index_url( $repository ) {
+		$repository = trim( (string) $repository, '/' );
+
+		if ( '' === $repository ) {
+			return '';
+		}
+
+		return 'https://github.com/' . $repository;
+	}
+
+	/**
+	 * Build an update payload from a manifest.
+	 *
+	 * @param array<string,string> $context  Local context.
+	 * @param array<string,mixed>  $manifest Remote manifest.
+	 * @return false|array<string,string>
+	 */
+	public static function build_update_payload_from_manifest( array $context, array $manifest ) {
+		$local_version  = isset( $context['version'] ) ? (string) $context['version'] : '';
+		$remote_version = isset( $manifest['version'] ) ? trim( (string) $manifest['version'] ) : '';
+		$package        = isset( $manifest['package'] ) ? trim( (string) $manifest['package'] ) : '';
+
+		if ( '' === $local_version || '' === $remote_version || '' === $package ) {
+			return false;
+		}
+
+		if ( version_compare( $remote_version, $local_version, '<=' ) ) {
+			return false;
+		}
+
+		$payload = array(
+			'slug'        => isset( $context['slug'] ) ? (string) $context['slug'] : '',
+			'version'     => $remote_version,
+			'new_version' => $remote_version,
+			'url'         => self::pick_manifest_string( $manifest, array( 'details_url', 'url' ), isset( $context['details_url'] ) ? (string) $context['details_url'] : '' ),
+			'package'     => $package,
+		);
+
+		$requires_php = self::pick_manifest_string( $manifest, array( 'requires_php' ), '' );
+		if ( '' !== $requires_php ) {
+			$payload['requires_php'] = $requires_php;
+		}
+
+		$requires_wp = self::pick_manifest_string( $manifest, array( 'requires_wp', 'requires' ), '' );
+		if ( '' !== $requires_wp ) {
+			$payload['requires'] = $requires_wp;
+		}
+
+		$tested = self::pick_manifest_string( $manifest, array( 'tested' ), '' );
+		if ( '' !== $tested ) {
+			$payload['tested'] = $tested;
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * Build an update payload from remote plugin headers.
+	 *
+	 * @param array<string,string> $context        Local context.
+	 * @param array<string,string> $remote_headers Remote plugin headers.
+	 * @return false|array<string,string>
+	 */
+	public static function build_update_payload_from_headers( array $context, array $remote_headers ) {
+		$local_version  = isset( $context['version'] ) ? (string) $context['version'] : '';
+		$remote_version = isset( $remote_headers['Version'] ) ? (string) $remote_headers['Version'] : '';
+
+		if ( '' === $local_version || '' === $remote_version || version_compare( $remote_version, $local_version, '<=' ) ) {
+			return false;
+		}
+
+		$payload = array(
+			'slug'        => isset( $context['slug'] ) ? (string) $context['slug'] : '',
+			'version'     => $remote_version,
+			'new_version' => $remote_version,
+			'url'         => isset( $context['source_details_url'] ) ? (string) $context['source_details_url'] : ( isset( $context['details_url'] ) ? (string) $context['details_url'] : '' ),
+			'package'     => self::build_package_url(
+				isset( $context['distribution_repository'] ) ? (string) $context['distribution_repository'] : ( isset( $context['repository'] ) ? (string) $context['repository'] : '' ),
+				isset( $context['branch'] ) ? (string) $context['branch'] : self::DEFAULT_BRANCH
+			),
+		);
+
+		if ( ! empty( $remote_headers['RequiresPHP'] ) ) {
+			$payload['requires_php'] = (string) $remote_headers['RequiresPHP'];
+		}
+
+		if ( ! empty( $remote_headers['RequiresWP'] ) ) {
+			$payload['requires'] = (string) $remote_headers['RequiresWP'];
+		}
+
+		if ( ! empty( $remote_headers['TestedUpTo'] ) ) {
+			$payload['tested'] = (string) $remote_headers['TestedUpTo'];
+		}
+
+		return $payload;
+	}
+
+	/**
+	 * Build the local updater context.
+	 *
+	 * @return array<string,string>|null
+	 */
+	private static function get_context() {
+		$headers           = self::read_plugin_headers();
+		$update_uri        = trim( $headers['UpdateURI'] ?? '' );
+		$parsed_repository = self::parse_repository_from_update_uri( $update_uri );
+		$repository        = self::constant_value( 'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_REPOSITORY', '' !== $parsed_repository ? $parsed_repository : self::DEFAULT_REPOSITORY );
+		$repository        = self::filter_value( 'thecore_collectivity_management_update_repository', $repository, $update_uri );
+		$repository        = trim( $repository, '/' );
+
+		if ( '' === $update_uri || '' === $repository ) {
+			return null;
+		}
+
+		$distribution_repository = self::constant_value(
+			'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_DISTRIBUTION_REPOSITORY',
+			self::DEFAULT_DISTRIBUTION_REPOSITORY
+		);
+		$distribution_repository = self::filter_value(
+			'thecore_collectivity_management_update_distribution_repository',
+			$distribution_repository,
+			$repository,
+			$update_uri
+		);
+		$distribution_repository = trim( $distribution_repository, '/' );
+
+		if ( '' === $distribution_repository ) {
+			$distribution_repository = $repository;
+		}
+
+		$branch = self::constant_value( 'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_BRANCH', self::DEFAULT_BRANCH );
+		$branch = self::filter_value( 'thecore_collectivity_management_update_branch', $branch, $repository );
+		$branch = self::normalize_branch( $branch );
+
+		$channel = self::constant_value(
+			'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_CHANNEL',
+			self::default_channel_for_version( trim( (string) ( $headers['Version'] ?? '' ) ) )
+		);
+		$channel = self::filter_value( 'thecore_collectivity_management_update_channel', $channel, $branch, $repository );
+		$channel = self::normalize_channel( $channel );
+
+		$manifest_branch = self::constant_value(
+			'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_MANIFEST_BRANCH',
+			self::DEFAULT_MANIFEST_BRANCH
+		);
+		$manifest_branch = self::filter_value(
+			'thecore_collectivity_management_update_manifest_branch',
+			$manifest_branch,
+			$distribution_repository,
+			$repository,
+			$channel
+		);
+		$manifest_branch = self::normalize_branch( $manifest_branch );
+
+		$manifest_url = self::constant_value(
+			'THECORE_COLLECTIVITY_MANAGEMENT_UPDATE_MANIFEST_URL',
+			self::build_manifest_url( $distribution_repository, $manifest_branch, $channel )
+		);
+		$manifest_url = self::filter_value(
+			'thecore_collectivity_management_update_manifest_url',
+			$manifest_url,
+			$distribution_repository,
+			$channel,
+			$manifest_branch,
+			$repository
+		);
+
+		$slug = dirname( THECORE_COLLECTIVITY_MANAGEMENT_BASENAME );
+
+		return array(
+			'plugin'                  => THECORE_COLLECTIVITY_MANAGEMENT_BASENAME,
+			'entry_file'              => basename( THECORE_COLLECTIVITY_MANAGEMENT_BASENAME ),
+			'slug'                    => $slug,
+			'version'                 => trim( (string) ( $headers['Version'] ?? '' ) ),
+			'update_uri'              => $update_uri,
+			'repository'              => $repository,
+			'distribution_repository' => $distribution_repository,
+			'branch'                  => $branch,
+			'channel'                 => $channel,
+			'manifest_branch'         => $manifest_branch,
+			'manifest_url'            => trim( (string) $manifest_url ),
+			'hostname'                => (string) parse_url( $update_uri, PHP_URL_HOST ),
+			'details_url'             => self::build_release_index_url( $distribution_repository ),
+			'source_details_url'      => 'https://github.com/' . $repository . '/tree/' . self::encode_path_segments( $branch ),
+		);
+	}
+
+	/**
+	 * Read plugin headers from the local entry file.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function read_plugin_headers() {
+		$headers = get_file_data(
+			THECORE_COLLECTIVITY_MANAGEMENT_FILE,
+			array(
+				'Version'     => 'Version',
+				'UpdateURI'   => 'Update URI',
+				'RequiresPHP' => 'Requires PHP',
+				'RequiresWP'  => 'Requires at least',
+				'TestedUpTo'  => 'Tested up to',
+			),
+			'plugin'
+		);
+
+		return is_array( $headers ) ? array_map( 'trim', $headers ) : array();
+	}
+
+	/**
+	 * Fetch a remote JSON manifest.
+	 *
+	 * @param string $manifest_url Manifest URL.
+	 * @return array<string,mixed>|null
+	 */
+	private static function fetch_remote_manifest( $manifest_url ) {
+		if ( '' === $manifest_url || ! function_exists( 'wp_remote_get' ) || ! function_exists( 'wp_remote_retrieve_response_code' ) || ! function_exists( 'wp_remote_retrieve_body' ) ) {
+			return null;
+		}
+
+		$response = wp_remote_get(
+			$manifest_url,
+			array(
+				'timeout' => 15,
+				'headers' => array(
+					'Accept'     => 'application/json',
+					'User-Agent' => self::build_user_agent(),
+				),
+			)
+		);
+
+		if ( ! is_array( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return null;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+
+		if ( ! is_string( $body ) || '' === $body ) {
+			return null;
+		}
+
+		$manifest = json_decode( $body, true );
+
+		return is_array( $manifest ) ? $manifest : null;
+	}
+
+	/**
+	 * Fetch remote plugin headers from GitHub.
+	 *
+	 * @param string $repository Repository slug.
+	 * @param string $branch     Branch name.
+	 * @param string $entry_file Plugin entry file.
+	 * @return array<string,string>|null
+	 */
+	private static function fetch_remote_plugin_headers( $repository, $branch, $entry_file ) {
+		if ( ! function_exists( 'wp_remote_get' ) || ! function_exists( 'wp_remote_retrieve_response_code' ) || ! function_exists( 'wp_remote_retrieve_body' ) ) {
+			return null;
+		}
+
+		$url = 'https://api.github.com/repos/' . trim( (string) $repository, '/' ) . '/contents/' . rawurlencode( (string) $entry_file ) . '?ref=' . rawurlencode( self::normalize_branch( $branch ) );
+
+		$response = wp_remote_get(
+			$url,
+			array(
+				'timeout' => 15,
+				'headers' => array(
+					'Accept'     => 'application/vnd.github+json',
+					'User-Agent' => self::build_user_agent(),
+				),
+			)
+		);
+
+		if ( ! is_array( $response ) || 200 !== wp_remote_retrieve_response_code( $response ) ) {
+			return null;
+		}
+
+		$body = wp_remote_retrieve_body( $response );
+
+		if ( ! is_string( $body ) || '' === $body ) {
+			return null;
+		}
+
+		$data = json_decode( $body, true );
+
+		if ( ! is_array( $data ) || empty( $data['content'] ) || ! is_string( $data['content'] ) ) {
+			return null;
+		}
+
+		$encoded     = str_replace( array( "\r", "\n" ), '', $data['content'] );
+		$plugin_file = base64_decode( $encoded, true );
+
+		if ( ! is_string( $plugin_file ) || '' === $plugin_file ) {
+			return null;
+		}
+
+		return self::parse_plugin_headers( $plugin_file );
+	}
+
+	/**
+	 * Parse plugin headers from a raw plugin file.
+	 *
+	 * @param string $plugin_file Plugin file contents.
+	 * @return array<string,string>
+	 */
+	public static function parse_plugin_headers( $plugin_file ) {
+		$headers  = array();
+		$patterns = array(
+			'Version'     => '/^[ \t\/*#@]*Version:\s*(.+)$/mi',
+			'RequiresPHP' => '/^[ \t\/*#@]*Requires PHP:\s*(.+)$/mi',
+			'RequiresWP'  => '/^[ \t\/*#@]*Requires at least:\s*(.+)$/mi',
+			'TestedUpTo'  => '/^[ \t\/*#@]*Tested up to:\s*(.+)$/mi',
+		);
+
+		foreach ( $patterns as $key => $pattern ) {
+			if ( 1 === preg_match( $pattern, $plugin_file, $matches ) && isset( $matches[1] ) ) {
+				$headers[ $key ] = trim( (string) $matches[1] );
+			}
+		}
+
+		return $headers;
+	}
+
+	/**
+	 * Pick the first non-empty string from a manifest.
+	 *
+	 * @param array<string,mixed> $manifest Manifest data.
+	 * @param array<int,string>   $keys     Candidate keys.
+	 * @param string              $default  Default value.
+	 * @return string
+	 */
+	private static function pick_manifest_string( array $manifest, array $keys, $default = '' ) {
+		foreach ( $keys as $key ) {
+			if ( ! isset( $manifest[ $key ] ) ) {
+				continue;
+			}
+
+			$value = trim( (string) $manifest[ $key ] );
+
+			if ( '' !== $value ) {
+				return $value;
+			}
+		}
+
+		return $default;
+	}
+
+	/**
+	 * Build a user-agent string for remote requests.
+	 *
+	 * @return string
+	 */
+	private static function build_user_agent() {
+		$blog_version = function_exists( 'get_bloginfo' ) ? (string) get_bloginfo( 'version' ) : 'unknown';
+		$home         = function_exists( 'home_url' ) ? (string) home_url( '/' ) : 'http://localhost';
+
+		return 'WordPress/' . $blog_version . '; ' . $home . '; The Core Collectivity Management Updater';
+	}
+
+	/**
+	 * Encode a slash-separated path.
+	 *
+	 * @param string $value Path value.
+	 * @return string
+	 */
+	private static function encode_path_segments( $value ) {
+		$segments = explode( '/', trim( (string) $value, '/' ) );
+		$segments = array_map( 'rawurlencode', $segments );
+
+		return implode( '/', $segments );
+	}
+
+	/**
+	 * Normalize a URL for comparison.
+	 *
+	 * @param string $url URL.
+	 * @return string
+	 */
+	private static function normalize_url( $url ) {
+		return rtrim( trim( (string) $url ), '/' );
+	}
+
+	/**
+	 * Read a non-empty string constant value.
+	 *
+	 * @param string $constant_name Constant name.
+	 * @param string $default       Default value.
+	 * @return string
+	 */
+	private static function constant_value( $constant_name, $default ) {
+		if ( defined( $constant_name ) ) {
+			$value = constant( $constant_name );
+
+			if ( is_string( $value ) && '' !== trim( $value ) ) {
+				return trim( $value );
+			}
+		}
+
+		return $default;
+	}
+
+	/**
+	 * Apply a string filter safely.
+	 *
+	 * @param string $hook_name Filter name.
+	 * @param string $value     Base value.
+	 * @param mixed  ...$args   Extra args.
+	 * @return string
+	 */
+	private static function filter_value( $hook_name, $value, ...$args ) {
+		if ( ! function_exists( 'apply_filters' ) ) {
+			return $value;
+		}
+
+		$filtered = apply_filters( $hook_name, $value, ...$args );
+
+		return is_string( $filtered ) ? trim( $filtered ) : $value;
+	}
+}

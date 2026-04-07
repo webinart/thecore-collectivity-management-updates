@@ -1,0 +1,109 @@
+.bellevue-alerts {
+	--bellevue-alert-bg: #f8fafc;
+	--bellevue-alert-border: rgba(148, 163, 184, 0.28);
+	--bellevue-alert-text: #0f172a;
+	--bellevue-alert-muted: #475569;
+}
+
+.bellevue-alerts__list {
+	display: grid;
+	gap: 0.85rem;
+}
+
+.bellevue-alerts__item {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: start;
+	gap: 0.9rem;
+	padding: 1rem 1.1rem;
+	border: 1px solid var(--bellevue-alert-border);
+	border-radius: 1rem;
+	background: var(--bellevue-alert-bg);
+	color: var(--bellevue-alert-text);
+}
+
+.bellevue-alerts__item--info {
+	--bellevue-alert-accent: #2563eb;
+	background: #eff6ff;
+	border-color: rgba(37, 99, 235, 0.22);
+}
+
+.bellevue-alerts__item--warning {
+	--bellevue-alert-accent: #d97706;
+	background: #fff7ed;
+	border-color: rgba(217, 119, 6, 0.22);
+}
+
+.bellevue-alerts__item--critical {
+	--bellevue-alert-accent: #dc2626;
+	background: #fef2f2;
+	border-color: rgba(220, 38, 38, 0.22);
+}
+
+.bellevue-alerts__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2.25rem;
+	height: 2.25rem;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, 0.7);
+	color: var(--bellevue-alert-accent);
+}
+
+.bellevue-alerts__icon svg {
+	width: 1.15rem;
+	height: 1.15rem;
+}
+
+.bellevue-alerts__content {
+	min-width: 0;
+}
+
+.bellevue-alerts__title,
+.bellevue-alerts__message,
+.bellevue-alerts__topics {
+	margin: 0;
+}
+
+.bellevue-alerts__title {
+	font-weight: 700;
+	line-height: 1.35;
+}
+
+.bellevue-alerts__message {
+	margin-top: 0.18rem;
+	color: var(--bellevue-alert-muted);
+	line-height: 1.5;
+}
+
+.bellevue-alerts__topics {
+	margin-top: 0.32rem;
+	color: var(--bellevue-alert-muted);
+	font-size: 0.9rem;
+}
+
+.bellevue-alerts__link {
+	align-self: center;
+	color: var(--bellevue-alert-text);
+	font-size: 0.92rem;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.bellevue-alerts__link:hover,
+.bellevue-alerts__link:focus-visible {
+	text-decoration: underline;
+	outline: none;
+}
+
+@media (max-width: 767px) {
+	.bellevue-alerts__item {
+		grid-template-columns: auto 1fr;
+	}
+
+	.bellevue-alerts__link {
+		grid-column: 2;
+	}
+}

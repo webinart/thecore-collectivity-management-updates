@@ -1,0 +1,7 @@
+{
+  "name": "webinart/thecore-collectivity-management",
+  "type": "wordpress-plugin",
+  "require": {
+    "jkapron/gtfs-realtime-bindings": "^0.0.3"
+  }
+}

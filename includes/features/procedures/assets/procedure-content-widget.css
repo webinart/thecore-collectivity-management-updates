@@ -1,0 +1,98 @@
+.tccm-proc-block {
+	display: block;
+}
+
+.tccm-procedure-list,
+.tccm-proc-block .tccm-procedure-list {
+	margin: 0;
+	padding-left: 1.25rem;
+	display: grid;
+	gap: 0.75rem;
+}
+
+.tccm-procedure-list--steps,
+.tccm-proc-block .tccm-procedure-list--steps {
+	padding-left: 1.4rem;
+}
+
+.tccm-procedure-list__item,
+.tccm-proc-block .tccm-procedure-list__item {
+	margin: 0;
+	color: #344054;
+}
+
+.tccm-procedure-faq,
+.tccm-proc-block .tccm-procedure-faq {
+	display: grid;
+	gap: 1rem;
+}
+
+.tccm-procedure-faq__item,
+.tccm-proc-block .tccm-procedure-faq__item {
+	padding: 1rem 1.125rem;
+	border: 1px solid #e4e7ec;
+	border-radius: 1rem;
+	background: #fff;
+}
+
+.tccm-procedure-faq__question,
+.tccm-proc-block .tccm-procedure-faq__question {
+	font-weight: 600;
+	color: #0f172a;
+}
+
+.tccm-procedure-faq__answer,
+.tccm-proc-block .tccm-procedure-faq__answer {
+	margin-top: 0.5rem;
+	color: #475467;
+}
+
+.tccm-procedure-faq__answer p,
+.tccm-proc-block .tccm-procedure-faq__answer p {
+	margin: 0;
+}
+
+.tccm-related-documents,
+.tccm-proc-block .tccm-related-documents {
+	display: grid;
+	gap: 1rem;
+}
+
+.tccm-related-documents__item,
+.tccm-proc-block .tccm-related-documents__item {
+	padding: 1rem 1.125rem;
+	border: 1px solid #e4e7ec;
+	border-radius: 1rem;
+	background: #fff;
+}
+
+.tccm-related-documents__link,
+.tccm-related-documents__title,
+.tccm-proc-block .tccm-related-documents__link,
+.tccm-proc-block .tccm-related-documents__title {
+	display: inline-block;
+	font-weight: 600;
+	color: #124734;
+	text-decoration: none;
+}
+
+.tccm-related-documents__link:hover,
+.tccm-related-documents__link:focus,
+.tccm-proc-block .tccm-related-documents__link:hover,
+.tccm-proc-block .tccm-related-documents__link:focus {
+	text-decoration: underline;
+}
+
+.tccm-related-documents__reference,
+.tccm-proc-block .tccm-related-documents__reference {
+	margin-top: 0.35rem;
+	font-size: 0.875rem;
+	font-weight: 600;
+	color: #475467;
+}
+
+.tccm-related-documents__summary,
+.tccm-proc-block .tccm-related-documents__summary {
+	margin-top: 0.35rem;
+	color: #475467;
+}
