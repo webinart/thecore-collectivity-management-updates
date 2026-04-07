@@ -4,7 +4,7 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `0.1.1-beta.1`
+Current version: `1.0.1-beta.1`
 Release channel: beta
 
 Current scope:
