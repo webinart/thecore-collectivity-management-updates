@@ -4,6 +4,9 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
+Current version: `0.1.1-beta.1`
+Release channel: beta
+
 Current scope:
 - menu item subtext
 - event agenda on regular posts
@@ -64,6 +67,15 @@ Read these files in order:
 - The transport explorer widget expects mapped transport content in the admin before GTFS import can succeed.
 - The map module stores both points and routes in the single CPT `tccm_map_item`.
 - Map route geometry is stored as GeoJSON in post meta.
+
+## Remote updates
+
+- Source repository: `webinart/thecore-collectivity-management`
+- Public distribution repository: `webinart/thecore-collectivity-management-updates`
+- Distribution branch: `plugin-updates`
+- Channels: `beta`, `prod`
+- GitHub Actions secret expected in the source repository: `UPDATES_REPO_SSH_KEY`
+- Publication helper script: `scripts/publish-plugin-updates.sh`
 
 ## Status
 
