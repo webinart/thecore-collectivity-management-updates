@@ -520,6 +520,9 @@
 				marker.bindPopup(this.getPopupMarkup(place));
 				marker.addTo(this.markersLayer);
 				this.markerIndex[String(place.id)] = marker;
+				(Array.isArray(place.childPlaceIds) ? place.childPlaceIds : []).forEach((childPlaceId) => {
+					this.markerIndex[String(childPlaceId)] = marker;
+				});
 				bounds.push([place.latitude, place.longitude]);
 			});
 
@@ -789,7 +792,7 @@
 			parkings = this.sortParkings(parkings);
 			bikes = bikes.slice().sort((a, b) => this.compareByTitle(a, b));
 			trains = trains.slice().sort((a, b) => this.compareByTitle(a, b));
-			busStops = busStops.slice().sort((a, b) => this.compareByTitle(a, b));
+			busStops = this.groupBusStops(busStops).sort((a, b) => this.compareByTitle(a, b));
 			const vehicles = (this.data.realtime && Array.isArray(this.data.realtime.vehicles) ? this.data.realtime.vehicles : [])
 				.filter((vehicle) => visibleTypes.indexOf("bus") !== -1 && visibleLineIds.has(vehicle.lineId))
 				.filter((vehicle) => matchesQuery(vehicle.searchText || "", query))
@@ -841,6 +844,115 @@
 
 		compareByTitle(a, b) {
 			return String(a.title || "").localeCompare(String(b.title || ""), "fr", { sensitivity: "base" });
+		}
+
+		getTransportBaseTitle(title) {
+			return String(title || "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+		}
+
+		canGroupBusPlaces(left, right) {
+			const leftTitle = this.getTransportBaseTitle(left && left.title);
+			const rightTitle = this.getTransportBaseTitle(right && right.title);
+			if (!leftTitle || !rightTitle || leftTitle.localeCompare(rightTitle, "fr", { sensitivity: "base" }) !== 0) {
+				return false;
+			}
+
+			const leftProvider = String((left && left.providerKey) || "");
+			const rightProvider = String((right && right.providerKey) || "");
+			if (leftProvider !== rightProvider) {
+				return false;
+			}
+
+			if (String((left && left.mode) || "") !== "bus" || String((right && right.mode) || "") !== "bus") {
+				return false;
+			}
+
+			const leftLat = typeof left.latitude === "number" ? left.latitude : null;
+			const leftLng = typeof left.longitude === "number" ? left.longitude : null;
+			const rightLat = typeof right.latitude === "number" ? right.latitude : null;
+			const rightLng = typeof right.longitude === "number" ? right.longitude : null;
+			if (leftLat === null || leftLng === null || rightLat === null || rightLng === null) {
+				return false;
+			}
+
+			const distance = Math.sqrt(Math.pow(leftLat - rightLat, 2) + Math.pow(leftLng - rightLng, 2));
+			return distance <= 0.0002;
+		}
+
+		groupBusStops(places) {
+			if (!Array.isArray(places) || places.length < 2) {
+				return Array.isArray(places) ? places.slice() : [];
+			}
+
+			const groups = [];
+
+			places.forEach((place) => {
+				let assigned = false;
+
+				for (let index = 0; index < groups.length; index += 1) {
+					if (this.canGroupBusPlaces(groups[index][0], place)) {
+						groups[index].push(place);
+						assigned = true;
+						break;
+					}
+				}
+
+				if (!assigned) {
+					groups.push([place]);
+				}
+			});
+
+			return groups.map((group) => this.normalizeGroupedBusStop(group)).filter(Boolean);
+		}
+
+		mergeUniquePlaceList(places, key) {
+			return Array.from(new Set((Array.isArray(places) ? places : []).reduce((values, place) => {
+				const items = Array.isArray(place && place[key]) ? place[key] : [];
+				return values.concat(items);
+			}, [])));
+		}
+
+		normalizeGroupedBusStop(group) {
+			if (!Array.isArray(group) || !group.length) {
+				return null;
+			}
+
+			if (group.length === 1) {
+				const place = group[0];
+				return Object.assign({}, place, {
+					childPlaceIds: [String(place.id || "")]
+				});
+			}
+
+			const referencePlaces = group.filter((place) => {
+				return (Array.isArray(place.relatedLineIds) && place.relatedLineIds.length) || (Array.isArray(place.relatedLineCodes) && place.relatedLineCodes.length);
+			});
+			const effectivePlaces = referencePlaces.length ? referencePlaces : group;
+			const primaryPlace = effectivePlaces[0];
+			const baseTitle = this.getTransportBaseTitle(primaryPlace.title) || String(primaryPlace.title || "");
+			const childPlaceIds = group.map((place) => String(place.id || "")).filter(Boolean);
+			const coordinates = effectivePlaces.reduce((accumulator, place) => {
+				if (typeof place.latitude === "number" && typeof place.longitude === "number") {
+					accumulator.lat += place.latitude;
+					accumulator.lng += place.longitude;
+					accumulator.count += 1;
+				}
+				return accumulator;
+			}, { lat: 0, lng: 0, count: 0 });
+
+			return Object.assign({}, primaryPlace, {
+				id: "transport-hub-" + childPlaceIds.join("-"),
+				title: baseTitle,
+				subtitle: primaryPlace.subtitle || (group.length > 1 ? group.length + " quais" : ""),
+				latitude: coordinates.count ? coordinates.lat / coordinates.count : primaryPlace.latitude,
+				longitude: coordinates.count ? coordinates.lng / coordinates.count : primaryPlace.longitude,
+				isAccessible: group.some((place) => !!place.isAccessible),
+				relatedLineIds: this.mergeUniquePlaceList(effectivePlaces, "relatedLineIds"),
+				relatedLineCodes: this.mergeUniquePlaceList(effectivePlaces, "relatedLineCodes"),
+				relatedLineTitles: this.mergeUniquePlaceList(effectivePlaces, "relatedLineTitles"),
+				searchText: group.map((place) => String(place.searchText || "")).filter(Boolean).join(" "),
+				childPlaceIds: childPlaceIds
+			});
 		}
 
 		parseFrequencyValue(label) {
