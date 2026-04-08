@@ -670,11 +670,14 @@
 			const lines = Array.isArray(place.relatedLineCodes) && place.relatedLineCodes.length ? '<p class="bte__popup-lines">Lignes: ' + escapeHtml(place.relatedLineCodes.join(", ")) + '</p>' : "";
 			const subtitle = place.subtitle ? '<p class="bte__popup-subtitle">' + escapeHtml(place.subtitle) + '</p>' : "";
 			const address = place.address ? '<p class="bte__popup-address">' + escapeHtml(place.address) + '</p>' : "";
+			const directions = this.getPlaceDirectionLabels(place);
+			const directionMarkup = directions.length ? '<p class="bte__popup-lines">Directions: ' + escapeHtml(directions.join(" · ")) + '</p>' : "";
 			return '<div class="bte__popup">' +
 				'<p class="bte__popup-title">' + escapeHtml(place.title) + '</p>' +
 				subtitle +
 				address +
 				lines +
+				directionMarkup +
 			'</div>';
 		}
 
@@ -947,6 +950,7 @@
 				latitude: coordinates.count ? coordinates.lat / coordinates.count : primaryPlace.latitude,
 				longitude: coordinates.count ? coordinates.lng / coordinates.count : primaryPlace.longitude,
 				isAccessible: group.some((place) => !!place.isAccessible),
+				gtfsStopIds: this.mergeUniquePlaceList(effectivePlaces, "gtfsStopIds"),
 				relatedLineIds: this.mergeUniquePlaceList(effectivePlaces, "relatedLineIds"),
 				relatedLineCodes: this.mergeUniquePlaceList(effectivePlaces, "relatedLineCodes"),
 				relatedLineTitles: this.mergeUniquePlaceList(effectivePlaces, "relatedLineTitles"),
@@ -1071,6 +1075,41 @@
 					return "Direction " + String(direction.directionId);
 				}
 				return "Direction";
+			}
+
+			getPlaceDirectionLabels(place) {
+				if (!place || !Array.isArray(this.data.lines) || !this.data.lines.length) {
+					return [];
+				}
+
+				const stopIds = Array.isArray(place.gtfsStopIds) ? place.gtfsStopIds.map((stopId) => String(stopId || "")).filter(Boolean) : [];
+				const relatedLineIds = Array.isArray(place.relatedLineIds) ? place.relatedLineIds.map((lineId) => String(lineId || "")).filter(Boolean) : [];
+				if (!stopIds.length || !relatedLineIds.length) {
+					return [];
+				}
+
+				const directionLabels = new Set();
+
+				this.data.lines.forEach((line) => {
+					if (!line || !line.schedule || !Array.isArray(line.schedule.stops) || !relatedLineIds.includes(String(line.id || ""))) {
+						return;
+					}
+
+					line.schedule.stops.forEach((stop) => {
+						if (!stopIds.includes(String(stop && stop.stopId ? stop.stopId : ""))) {
+							return;
+						}
+
+						(Array.isArray(stop.directions) ? stop.directions : []).forEach((direction) => {
+							const label = this.getDirectionLabel(direction);
+							if (label) {
+								directionLabels.add(label);
+							}
+						});
+					});
+				});
+
+				return Array.from(directionLabels).sort((left, right) => left.localeCompare(right, "fr", { sensitivity: "base" }));
 			}
 
 			getDirectionForStop(stop, directionKey) {
