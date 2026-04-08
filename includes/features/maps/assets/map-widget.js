@@ -588,7 +588,7 @@
 		}
 
 		buildContext() {
-			const hasPoints = this.items.some((item) => item.geometryType === "point");
+			const hasPoints = this.items.some((item) => this.getFilterType(item) === FILTER_TYPE_POINT);
 			const hasMapRoutes = this.items.some((item) => this.getFilterType(item) === FILTER_TYPE_ROUTE);
 			const hasTransportRoutes = this.items.some((item) => this.getFilterType(item) === FILTER_TYPE_TRANSPORT_ROUTE);
 			const availableTypes = [];
@@ -775,7 +775,7 @@
 				return FILTER_TYPE_POINT;
 			}
 
-			if (item.geometryType === "route" && item.source === "transport") {
+			if (item.source === "transport") {
 				return FILTER_TYPE_TRANSPORT_ROUTE;
 			}
 
