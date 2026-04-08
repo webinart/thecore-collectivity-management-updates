@@ -83,8 +83,10 @@
 	padding: 0.65rem 0.85rem;
 	border: 1px solid var(--tccm-map-toggle-border) !important;
 	border-width: 1px !important;
+	border-style: solid !important;
 	border-radius: 999px !important;
 	background: var(--tccm-map-toggle-bg) !important;
+	background-color: var(--tccm-map-toggle-bg) !important;
 	background-image: none;
 	color: var(--tccm-map-toggle-text) !important;
 	cursor: pointer;
@@ -99,8 +101,10 @@
 .tccm-map__reset:focus-visible,
 .tccm-map__reset:active {
 	background: var(--tccm-map-toggle-hover-bg) !important;
+	background-color: var(--tccm-map-toggle-hover-bg) !important;
 	border-color: var(--tccm-map-toggle-hover-border) !important;
 	border-width: 1px !important;
+	border-style: solid !important;
 	color: var(--tccm-map-toggle-hover-text) !important;
 	outline: none;
 	box-shadow: 0 0 0 3px color-mix(in srgb, var(--tccm-map-toggle-hover-border) 16%, transparent);
@@ -109,7 +113,9 @@
 .tccm-map__toggle.is-active {
 	border-color: var(--tccm-map-toggle-active-border) !important;
 	border-width: 1px !important;
+	border-style: solid !important;
 	background: var(--tccm-map-toggle-active-bg) !important;
+	background-color: var(--tccm-map-toggle-active-bg) !important;
 	color: var(--tccm-map-toggle-active-text) !important;
 }
 
@@ -118,7 +124,9 @@
 .tccm-map__toggle.is-active:active {
 	border-color: var(--tccm-map-toggle-active-border) !important;
 	border-width: 1px !important;
+	border-style: solid !important;
 	background: var(--tccm-map-toggle-active-bg) !important;
+	background-color: var(--tccm-map-toggle-active-bg) !important;
 	color: var(--tccm-map-toggle-active-text) !important;
 }
 
@@ -129,6 +137,37 @@
 	background-image: none !important;
 	text-shadow: none !important;
 	transform: none !important;
+}
+
+body[class*="elementor-kit-"] .tccm-map__toggle,
+body[class*="elementor-kit-"] .tccm-map__reset {
+	border-width: 1px !important;
+	border-style: solid !important;
+	background-image: none !important;
+	background-color: var(--tccm-map-toggle-bg) !important;
+	color: var(--tccm-map-toggle-text) !important;
+}
+
+body[class*="elementor-kit-"] .tccm-map__toggle:hover,
+body[class*="elementor-kit-"] .tccm-map__toggle:focus-visible,
+body[class*="elementor-kit-"] .tccm-map__toggle:active,
+body[class*="elementor-kit-"] .tccm-map__reset:hover,
+body[class*="elementor-kit-"] .tccm-map__reset:focus-visible,
+body[class*="elementor-kit-"] .tccm-map__reset:active {
+	border-width: 1px !important;
+	border-style: solid !important;
+	background-color: var(--tccm-map-toggle-hover-bg) !important;
+	color: var(--tccm-map-toggle-hover-text) !important;
+}
+
+body[class*="elementor-kit-"] .tccm-map__toggle.is-active,
+body[class*="elementor-kit-"] .tccm-map__toggle.is-active:hover,
+body[class*="elementor-kit-"] .tccm-map__toggle.is-active:focus-visible,
+body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
+	border-width: 1px !important;
+	border-style: solid !important;
+	background-color: var(--tccm-map-toggle-active-bg) !important;
+	color: var(--tccm-map-toggle-active-text) !important;
 }
 
 .tccm-map__accessible {
@@ -520,7 +559,9 @@
 	padding: 0.55rem 0.8rem;
 	border-radius: 999px !important;
 	border: 1px solid var(--tccm-map-popup-primary-border, var(--tccm-map-popup-primary-bg, var(--tccm-map-accent))) !important;
+	border-style: solid !important;
 	background: var(--tccm-map-popup-primary-bg, var(--tccm-map-accent)) !important;
+	background-color: var(--tccm-map-popup-primary-bg, var(--tccm-map-accent)) !important;
 	background-image: none !important;
 	color: var(--tccm-map-popup-primary-text, #fff) !important;
 	text-decoration: none !important;
@@ -540,7 +581,9 @@
 .tccm-map__popup .tccm-map__popup-cta--related:active {
 	width: 100%;
 	border-color: var(--tccm-map-popup-secondary-border, var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff))) !important;
+	border-style: solid !important;
 	background: var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff)) !important;
+	background-color: var(--tccm-map-popup-secondary-bg, color-mix(in srgb, var(--tccm-map-accent) 12%, #fff)) !important;
 	color: var(--tccm-map-popup-secondary-text, var(--tccm-map-accent)) !important;
 }
 

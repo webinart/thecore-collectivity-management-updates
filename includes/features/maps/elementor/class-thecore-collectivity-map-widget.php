@@ -2239,7 +2239,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			return $value;
 		}
 
-		if ( preg_match( '/^var\\(--[a-z0-9_-]+\\)$/i', $value ) ) {
+		if ( preg_match( '/^var\\(\\s*--[a-z0-9_-]+(?:\\s*,\\s*[^)]+)?\\s*\\)$/i', $value ) ) {
 			return $value;
 		}
 
