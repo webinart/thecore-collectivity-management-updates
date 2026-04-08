@@ -405,6 +405,12 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 	color: var(--tccm-map-popup-muted, var(--tccm-map-muted));
 }
 
+.tccm-map__popup a.leaflet-popup-close-button {
+	top: 15px;
+	left: 15px;
+	right: auto;
+}
+
 .tccm-map__popup-card {
 	width: min(280px, 100%);
 	color: var(--tccm-map-popup-text, var(--tccm-map-text));

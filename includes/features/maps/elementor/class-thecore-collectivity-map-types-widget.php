@@ -99,6 +99,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-bg: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle, {{WRAPPER}} .tccm-map__reset' => 'background: {{VALUE}} !important; background-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -110,6 +111,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-border: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle, {{WRAPPER}} .tccm-map__reset' => 'border-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -121,6 +123,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-text: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle, {{WRAPPER}} .tccm-map__reset' => 'color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -141,6 +144,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-hover-bg: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle:hover, {{WRAPPER}} .tccm-map__toggle:focus-visible, {{WRAPPER}} .tccm-map__toggle:active, {{WRAPPER}} .tccm-map__reset:hover, {{WRAPPER}} .tccm-map__reset:focus-visible, {{WRAPPER}} .tccm-map__reset:active' => 'background: {{VALUE}} !important; background-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -152,6 +156,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-hover-border: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle:hover, {{WRAPPER}} .tccm-map__toggle:focus-visible, {{WRAPPER}} .tccm-map__toggle:active, {{WRAPPER}} .tccm-map__reset:hover, {{WRAPPER}} .tccm-map__reset:focus-visible, {{WRAPPER}} .tccm-map__reset:active' => 'border-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -163,6 +168,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-hover-text: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle:hover, {{WRAPPER}} .tccm-map__toggle:focus-visible, {{WRAPPER}} .tccm-map__toggle:active, {{WRAPPER}} .tccm-map__reset:hover, {{WRAPPER}} .tccm-map__reset:focus-visible, {{WRAPPER}} .tccm-map__reset:active' => 'color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -183,6 +189,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-active-bg: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle.is-active, {{WRAPPER}} .tccm-map__toggle.is-active:hover, {{WRAPPER}} .tccm-map__toggle.is-active:focus-visible, {{WRAPPER}} .tccm-map__toggle.is-active:active' => 'background: {{VALUE}} !important; background-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -194,6 +201,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-active-border: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle.is-active, {{WRAPPER}} .tccm-map__toggle.is-active:hover, {{WRAPPER}} .tccm-map__toggle.is-active:focus-visible, {{WRAPPER}} .tccm-map__toggle.is-active:active' => 'border-color: {{VALUE}} !important;',
 				),
 			)
 		);
@@ -205,6 +213,7 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 				'type'      => Controls_Manager::COLOR,
 				'selectors' => array(
 					'{{WRAPPER}}' => '--tccm-map-toggle-active-text: {{VALUE}};',
+					'{{WRAPPER}} .tccm-map__toggle.is-active, {{WRAPPER}} .tccm-map__toggle.is-active:hover, {{WRAPPER}} .tccm-map__toggle.is-active:focus-visible, {{WRAPPER}} .tccm-map__toggle.is-active:active' => 'color: {{VALUE}} !important;',
 				),
 			)
 		);
