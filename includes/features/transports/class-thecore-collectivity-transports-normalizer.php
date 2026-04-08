@@ -242,6 +242,7 @@ final class TheCore_Collectivity_Transports_Normalizer {
 			'providerLabel'    => $provider_label,
 			'latitude'         => $this->normalize_coordinate( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_LATITUDE, true ) ),
 			'longitude'        => $this->normalize_coordinate( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_LONGITUDE, true ) ),
+			'gtfsStopIds'      => $this->schedule_repository->parse_meta_list( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, true ) ),
 			'isAccessible'     => '1' === (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_IS_ACCESSIBLE, true ),
 			'externalUrl'      => (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_EXTERNAL_URL, true ),
 			'sortOrder'        => (int) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_SORT_ORDER, true ),

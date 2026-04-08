@@ -382,7 +382,7 @@ final class TheCore_Collectivity_Transports_Meta {
 		update_post_meta( $post_id, self::META_GTFS_ROUTE_IDS, sanitize_textarea_field( wp_unslash( $_POST['bellevue_transport_gtfs_route_ids'] ?? '' ) ) );
 		update_post_meta( $post_id, self::META_GTFS_SHORT_NAMES, sanitize_textarea_field( wp_unslash( $_POST['bellevue_transport_gtfs_short_names'] ?? '' ) ) );
 		update_post_meta( $post_id, self::META_PRIMARY_STOP_IDS, sanitize_textarea_field( wp_unslash( $_POST['bellevue_transport_primary_stop_ids'] ?? '' ) ) );
-		update_post_meta( $post_id, self::META_REFERENCE_STOPS, wp_json_encode( $this->sanitize_reference_stop_map( $_POST['bellevue_transport_reference_stops'] ?? array() ) ) );
+		update_post_meta( $post_id, self::META_REFERENCE_STOPS, wp_slash( wp_json_encode( $this->sanitize_reference_stop_map( $_POST['bellevue_transport_reference_stops'] ?? array() ) ) ) );
 		update_post_meta( $post_id, self::META_IS_ACCESSIBLE, isset( $_POST['bellevue_transport_is_accessible'] ) ? '1' : '0' );
 		update_post_meta( $post_id, self::META_EXTERNAL_URL, esc_url_raw( wp_unslash( $_POST['bellevue_transport_external_url'] ?? '' ) ) );
 		update_post_meta( $post_id, self::META_SEARCH_KEYWORDS, sanitize_text_field( wp_unslash( $_POST['bellevue_transport_search_keywords'] ?? '' ) ) );
@@ -483,7 +483,7 @@ final class TheCore_Collectivity_Transports_Meta {
 
 		$reference_stops = array();
 		foreach ( $value as $direction_key => $stop_id ) {
-			$direction_key = rawurldecode( sanitize_text_field( (string) $direction_key ) );
+			$direction_key = trim( rawurldecode( wp_unslash( (string) $direction_key ) ) );
 			$stop_id       = sanitize_text_field( wp_unslash( (string) $stop_id ) );
 			if ( '' === $direction_key || '' === $stop_id ) {
 				continue;

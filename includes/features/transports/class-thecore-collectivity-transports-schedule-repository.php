@@ -368,7 +368,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 
 		$reference_stops = array();
 		foreach ( $decoded as $direction_key => $stop_id ) {
-			$direction_key = sanitize_text_field( (string) $direction_key );
+			$direction_key = trim( (string) $direction_key );
 			$stop_id       = sanitize_text_field( (string) $stop_id );
 			if ( '' === $direction_key || '' === $stop_id ) {
 				continue;

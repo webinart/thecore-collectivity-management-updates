@@ -22,7 +22,18 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 
 		$payload = $module->get_normalizer()->get_widget_payload();
 		$places  = ! empty( $payload['places'] ) && is_array( $payload['places'] ) ? $payload['places'] : array();
+		$lines   = ! empty( $payload['lines'] ) && is_array( $payload['lines'] ) ? $payload['lines'] : array();
 		$modes   = $this->normalize_mode_filters( $filters['modes'] ?? array() );
+		$line_index = array();
+
+		foreach ( $lines as $line ) {
+			$line_id = isset( $line['id'] ) ? (int) $line['id'] : 0;
+			if ( $line_id <= 0 ) {
+				continue;
+			}
+
+			$line_index[ $line_id ] = $line;
+		}
 
 		$filtered_places = array();
 		foreach ( $places as $place ) {
@@ -40,11 +51,11 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		$items = array();
 		foreach ( $this->group_transport_places( $filtered_places ) as $group ) {
 			if ( 1 === count( $group ) ) {
-				$items[] = $this->normalize_transport_place( $group[0] );
+				$items[] = $this->normalize_transport_place( $group[0], $line_index );
 				continue;
 			}
 
-			$items[] = $this->normalize_transport_group( $group );
+			$items[] = $this->normalize_transport_group( $group, $line_index );
 		}
 
 		usort(
@@ -152,12 +163,18 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 	 * @param array $place Transport place payload.
 	 * @return array
 	 */
-	private function normalize_transport_place( array $place ) {
+	private function normalize_transport_place( array $place, array $line_index = array() ) {
 		$title             = isset( $place['title'] ) ? sanitize_text_field( (string) $place['title'] ) : '';
 		$subtitle          = isset( $place['subtitle'] ) ? sanitize_text_field( (string) $place['subtitle'] ) : '';
 		$address           = isset( $place['address'] ) ? sanitize_text_field( (string) $place['address'] ) : '';
 		$transport_modes   = $this->normalize_transport_modes( $place );
 		$primary_mode_slug = ! empty( $transport_modes[0]['slug'] ) ? $transport_modes[0]['slug'] : '';
+		$cta               = $this->resolve_transport_cta(
+			array( $place['externalUrl'] ?? '' ),
+			(array) ( $place['relatedLineIds'] ?? array() ),
+			$line_index
+		);
+		$direction_labels  = $this->build_transport_direction_labels( array( $place ), $line_index );
 
 		return array(
 			'id'                 => 'transport-place-' . (int) ( $place['id'] ?? 0 ),
@@ -170,8 +187,8 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'geometryType'       => TheCore_Collectivity_Maps_Meta::GEOMETRY_POINT,
 			'subtitle'           => $subtitle,
 			'summary'            => $this->build_summary( $place ),
-			'ctaLabel'           => ! empty( $place['externalUrl'] ) ? __( 'Voir la fiche transport', 'thecore-collectivity-management' ) : '',
-			'ctaUrl'             => ! empty( $place['externalUrl'] ) ? esc_url_raw( (string) $place['externalUrl'] ) : '',
+			'ctaLabel'           => $cta['label'],
+			'ctaUrl'             => $cta['url'],
 			'displayOrder'       => isset( $place['sortOrder'] ) ? (int) $place['sortOrder'] : 0,
 			'accentColor'        => $this->get_mode_color( $primary_mode_slug ),
 			'iconKey'            => $primary_mode_slug,
@@ -203,6 +220,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'relatedLineIds'     => array_values( array_filter( array_map( 'intval', (array) ( $place['relatedLineIds'] ?? array() ) ) ) ),
 			'relatedLineCodes'   => array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $place['relatedLineCodes'] ?? array() ) ) ) ),
 			'relatedLineTitles'  => array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $place['relatedLineTitles'] ?? array() ) ) ) ),
+			'directionLabels'    => $direction_labels,
 			'parkingType'        => isset( $place['parkingType'] ) ? sanitize_text_field( (string) $place['parkingType'] ) : '',
 			'totalPlaces'        => $this->normalize_integer( $place['totalPlaces'] ?? null ),
 			'availablePlaces'    => $this->normalize_integer( $place['availablePlaces'] ?? null ),
@@ -410,7 +428,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 	 * @param array $places Grouped transport places.
 	 * @return array
 	 */
-	private function normalize_transport_group( array $places ) {
+	private function normalize_transport_group( array $places, array $line_index = array() ) {
 		$reference_places   = $this->get_transport_reference_places( $places );
 		$primary_place      = reset( $reference_places );
 		$transport_modes    = $this->merge_transport_modes( $places );
@@ -418,6 +436,12 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		$related_line_ids   = $this->merge_unique_int_lists( $reference_places, 'relatedLineIds' );
 		$related_line_codes = $this->merge_unique_text_lists( $reference_places, 'relatedLineCodes' );
 		$related_line_titles = $this->merge_unique_text_lists( $reference_places, 'relatedLineTitles' );
+		$direction_labels   = $this->build_transport_direction_labels( $reference_places, $line_index );
+		$cta                = $this->resolve_transport_cta(
+			$this->merge_unique_text_lists( $reference_places, 'externalUrl' ),
+			$related_line_ids,
+			$line_index
+		);
 		$coordinates        = $this->get_group_coordinates( $reference_places );
 		$base_title         = $this->get_transport_base_title( $primary_place['title'] ?? '' );
 		$child_count        = count( $reference_places );
@@ -462,8 +486,8 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'geometryType'        => TheCore_Collectivity_Maps_Meta::GEOMETRY_POINT,
 			'subtitle'            => sanitize_text_field( (string) ( $primary_place['subtitle'] ?? '' ) ),
 			'summary'             => implode( ' · ', array_filter( $summary_parts ) ),
-			'ctaLabel'            => '',
-			'ctaUrl'              => '',
+			'ctaLabel'            => $cta['label'],
+			'ctaUrl'              => $cta['url'],
 			'displayOrder'        => isset( $primary_place['sortOrder'] ) ? (int) $primary_place['sortOrder'] : 0,
 			'accentColor'         => $this->get_mode_color( $primary_mode_slug ),
 			'iconKey'             => $primary_mode_slug,
@@ -495,6 +519,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'relatedLineIds'      => $related_line_ids,
 			'relatedLineCodes'    => $related_line_codes,
 			'relatedLineTitles'   => $related_line_titles,
+			'directionLabels'     => $direction_labels,
 			'parkingType'         => '',
 			'totalPlaces'         => null,
 			'availablePlaces'     => null,
@@ -526,6 +551,130 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		);
 
 		return ! empty( $with_lines ) ? $with_lines : $places;
+	}
+
+	/**
+	 * Resolve the best CTA for one transport stop or grouped hub.
+	 *
+	 * @param array $external_urls    Candidate external urls.
+	 * @param array $related_line_ids Related line ids.
+	 * @param array $line_index       Indexed transport line payloads.
+	 * @return array
+	 */
+	private function resolve_transport_cta( array $external_urls, array $related_line_ids, array $line_index ) {
+		foreach ( $external_urls as $external_url ) {
+			$external_url = esc_url_raw( (string) $external_url );
+			if ( '' === $external_url ) {
+				continue;
+			}
+
+			return array(
+				'label' => __( 'Voir la fiche transport', 'thecore-collectivity-management' ),
+				'url'   => $external_url,
+			);
+		}
+
+		$related_line_ids = array_values( array_unique( array_filter( array_map( 'intval', $related_line_ids ) ) ) );
+		if ( 1 !== count( $related_line_ids ) ) {
+			return array(
+				'label' => '',
+				'url'   => '',
+			);
+		}
+
+		$line_id = (int) $related_line_ids[0];
+		if ( empty( $line_index[ $line_id ]['externalUrl'] ) ) {
+			return array(
+				'label' => '',
+				'url'   => '',
+			);
+		}
+
+		$line_url = esc_url_raw( (string) $line_index[ $line_id ]['externalUrl'] );
+		if ( '' === $line_url ) {
+			return array(
+				'label' => '',
+				'url'   => '',
+			);
+		}
+
+		return array(
+			'label' => __( 'Voir la fiche transport', 'thecore-collectivity-management' ),
+			'url'   => $line_url,
+		);
+	}
+
+	/**
+	 * Build direction/terminus labels for one stop or grouped hub.
+	 *
+	 * @param array $places      Grouped transport places.
+	 * @param array $line_index  Indexed transport line payloads.
+	 * @return array
+	 */
+	private function build_transport_direction_labels( array $places, array $line_index ) {
+		$stop_ids          = array();
+		$related_line_ids  = array();
+		$direction_labels  = array();
+
+		foreach ( $places as $place ) {
+			$stop_ids         = array_merge( $stop_ids, array_map( 'sanitize_text_field', (array) ( $place['gtfsStopIds'] ?? array() ) ) );
+			$related_line_ids = array_merge( $related_line_ids, array_map( 'intval', (array) ( $place['relatedLineIds'] ?? array() ) ) );
+		}
+
+		$stop_ids         = array_values( array_unique( array_filter( $stop_ids ) ) );
+		$related_line_ids = array_values( array_unique( array_filter( $related_line_ids ) ) );
+		if ( empty( $stop_ids ) || empty( $related_line_ids ) ) {
+			return array();
+		}
+
+		foreach ( $related_line_ids as $line_id ) {
+			$stops_payload = $line_index[ $line_id ]['schedule']['stops'] ?? array();
+			if ( ! is_array( $stops_payload ) ) {
+				continue;
+			}
+
+			foreach ( $stops_payload as $stop_payload ) {
+				$stop_id = isset( $stop_payload['stopId'] ) ? sanitize_text_field( (string) $stop_payload['stopId'] ) : '';
+				if ( '' === $stop_id || ! in_array( $stop_id, $stop_ids, true ) ) {
+					continue;
+				}
+
+				foreach ( (array) ( $stop_payload['directions'] ?? array() ) as $direction_payload ) {
+					$label = $this->get_transport_direction_destination_label( $direction_payload );
+					if ( '' === $label ) {
+						continue;
+					}
+
+					$direction_labels[ $label ] = $label;
+				}
+			}
+		}
+
+		natcasesort( $direction_labels );
+		return array_values( $direction_labels );
+	}
+
+	/**
+	 * Extract the effective destination/terminus label from one direction payload.
+	 *
+	 * @param array $direction_payload Direction payload.
+	 * @return string
+	 */
+	private function get_transport_direction_destination_label( array $direction_payload ) {
+		$headsign = isset( $direction_payload['headsign'] ) ? trim( (string) $direction_payload['headsign'] ) : '';
+		if ( '' === $headsign ) {
+			return '';
+		}
+
+		$segments = preg_split( '/\s*(?:→|->)\s*/u', $headsign );
+		if ( is_array( $segments ) && count( $segments ) > 1 ) {
+			$destination = trim( (string) end( $segments ) );
+			if ( '' !== $destination ) {
+				return sanitize_text_field( $destination );
+			}
+		}
+
+		return sanitize_text_field( $headsign );
 	}
 
 	/**

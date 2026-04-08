@@ -1733,6 +1733,9 @@
 			const lineTags = Array.isArray(item.relatedLineCodes) && item.relatedLineCodes.length
 				? item.relatedLineCodes.map((code) => '<span>' + this.escapeHtml(code) + '</span>').join("")
 				: "";
+			const directionTags = Array.isArray(item.directionLabels) && item.directionLabels.length
+				? item.directionLabels.map((label) => '<span>' + this.escapeHtml(label) + '</span>').join("")
+				: "";
 			const parkingStats = [];
 			if (item.parkingType) {
 				parkingStats.push('<li><strong>Type</strong> ' + this.escapeHtml(item.parkingType) + '</li>');
@@ -1769,6 +1772,7 @@
 
 			return (
 				(modeTags ? '<div class="tccm-map__popup-tags">' + modeTags + '</div>' : "") +
+				(directionTags ? '<div class="tccm-map__popup-section"><p class="tccm-map__popup-section-title">Directions</p><div class="tccm-map__popup-tags">' + directionTags + '</div></div>' : "") +
 				(lineTags ? '<div class="tccm-map__popup-section"><p class="tccm-map__popup-section-title">Lignes liées</p><div class="tccm-map__popup-tags">' + lineTags + '</div></div>' : "") +
 				statsList +
 				departures +
