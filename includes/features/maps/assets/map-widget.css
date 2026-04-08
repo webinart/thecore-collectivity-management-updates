@@ -61,8 +61,46 @@
 }
 
 .tccm-map__select {
+	appearance: none;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	box-sizing: border-box;
 	width: auto;
 	min-width: 12rem;
+	padding-right: 2.7rem;
+	color: var(--tccm-map-text);
+	cursor: pointer;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 0.95rem center;
+	background-size: 12px 8px;
+	transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.tccm-map__select:hover {
+	border-color: color-mix(in srgb, var(--tccm-map-accent) 38%, var(--tccm-map-border));
+	background-color: color-mix(in srgb, var(--tccm-map-accent) 2.5%, #fff);
+}
+
+.tccm-map__select:focus,
+.tccm-map__select:focus-visible {
+	border-color: var(--tccm-map-accent);
+	outline: none;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--tccm-map-accent) 14%, transparent);
+}
+
+.tccm-map__select option,
+.tccm-map__select optgroup {
+	background: #fff;
+	color: var(--tccm-map-text);
+}
+
+.tccm-map__select option {
+	padding: 0.45rem 0.55rem;
+}
+
+.tccm-map__select::-ms-expand {
+	display: none;
 }
 
 .tccm-map__toggle-group {
