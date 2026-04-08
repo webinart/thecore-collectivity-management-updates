@@ -160,6 +160,9 @@ final class TheCore_Collectivity_Transports_Normalizer {
 		$provider_label  = $this->resolve_provider_label( $provider_key );
 		$transport_modes = $this->get_line_transport_modes( $schedule );
 		$mode_labels     = array_values( array_filter( wp_list_pluck( $transport_modes, 'name' ) ) );
+		$transport_url   = (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_EXTERNAL_URL, true );
+		$map_url         = (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_MAP_URL, true );
+		$map_url         = '' !== $map_url ? $map_url : $transport_url;
 
 		return array(
 			'id'            => (int) $post->ID,
@@ -181,7 +184,9 @@ final class TheCore_Collectivity_Transports_Normalizer {
 			'theme'         => $line_theme,
 			'isAccessible'  => '1' === (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_IS_ACCESSIBLE, true ),
 			'serviceDays'   => $service_days,
-			'externalUrl'   => (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_EXTERNAL_URL, true ),
+			'externalUrl'   => $transport_url,
+			'transportUrl'  => $transport_url,
+			'mapUrl'        => $map_url,
 			'sortOrder'     => (int) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_SORT_ORDER, true ),
 			'searchText'    => implode( ' ', array_filter( array_merge( array( $title, $line_code, $route_label, $frequency_label, $hours_label, $summary_text, $provider_label, $keywords ), $mode_labels ) ) ),
 		);

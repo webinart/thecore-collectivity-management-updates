@@ -32,6 +32,7 @@ final class TheCore_Collectivity_Transports_Meta {
 	const META_IS_ACCESSIBLE    = '_bellevue_transport_is_accessible';
 	const META_SERVICE_DAYS     = '_bellevue_transport_service_days';
 	const META_EXTERNAL_URL     = '_bellevue_transport_external_url';
+	const META_MAP_URL          = '_bellevue_transport_map_url';
 	const META_SEARCH_KEYWORDS  = '_bellevue_transport_search_keywords';
 	const META_SORT_ORDER       = '_bellevue_transport_sort_order';
 
@@ -115,6 +116,7 @@ final class TheCore_Collectivity_Transports_Meta {
 			$is_accessible   = (string) get_post_meta( $post->ID, self::META_IS_ACCESSIBLE, true );
 			$service_days    = get_post_meta( $post->ID, self::META_SERVICE_DAYS, true );
 			$external_url    = (string) get_post_meta( $post->ID, self::META_EXTERNAL_URL, true );
+			$map_url         = (string) get_post_meta( $post->ID, self::META_MAP_URL, true );
 			$search_keywords = (string) get_post_meta( $post->ID, self::META_SEARCH_KEYWORDS, true );
 			$sort_order      = (string) get_post_meta( $post->ID, self::META_SORT_ORDER, true );
 			$schedule_repository   = new TheCore_Collectivity_Transports_Schedule_Repository();
@@ -207,8 +209,14 @@ final class TheCore_Collectivity_Transports_Meta {
 			<label><input type="checkbox" name="bellevue_transport_is_accessible" value="1" <?php checked( '1', $is_accessible ); ?> /> <?php esc_html_e( 'Accessible PMR', 'bellevue' ); ?></label>
 		</p>
 		<p>
-			<label for="bellevue-transport-external-url"><strong><?php esc_html_e( 'Lien externe', 'bellevue' ); ?></strong></label><br />
+			<label for="bellevue-transport-external-url"><strong><?php esc_html_e( 'Lien horaires module Transport', 'bellevue' ); ?></strong></label><br />
 			<input type="url" id="bellevue-transport-external-url" name="bellevue_transport_external_url" class="widefat" value="<?php echo esc_attr( $external_url ); ?>" />
+			<span class="description"><?php esc_html_e( 'Utilisé dans le widget Transports, par exemple pour renvoyer vers la source officielle.', 'bellevue' ); ?></span>
+		</p>
+		<p>
+			<label for="bellevue-transport-map-url"><strong><?php esc_html_e( 'Lien module MAP', 'bellevue' ); ?></strong></label><br />
+			<input type="url" id="bellevue-transport-map-url" name="bellevue_transport_map_url" class="widefat" value="<?php echo esc_attr( $map_url ); ?>" />
+			<span class="description"><?php esc_html_e( 'Utilisé dans les vignettes du module MAP. Laissez vide pour réutiliser le lien du module Transport.', 'bellevue' ); ?></span>
 		</p>
 		<p>
 			<label for="bellevue-transport-search-keywords"><strong><?php esc_html_e( 'Mots-cles de recherche', 'bellevue' ); ?></strong></label><br />
@@ -385,6 +393,7 @@ final class TheCore_Collectivity_Transports_Meta {
 		update_post_meta( $post_id, self::META_REFERENCE_STOPS, wp_slash( wp_json_encode( $this->sanitize_reference_stop_map( $_POST['bellevue_transport_reference_stops'] ?? array() ) ) ) );
 		update_post_meta( $post_id, self::META_IS_ACCESSIBLE, isset( $_POST['bellevue_transport_is_accessible'] ) ? '1' : '0' );
 		update_post_meta( $post_id, self::META_EXTERNAL_URL, esc_url_raw( wp_unslash( $_POST['bellevue_transport_external_url'] ?? '' ) ) );
+		update_post_meta( $post_id, self::META_MAP_URL, esc_url_raw( wp_unslash( $_POST['bellevue_transport_map_url'] ?? '' ) ) );
 		update_post_meta( $post_id, self::META_SEARCH_KEYWORDS, sanitize_text_field( wp_unslash( $_POST['bellevue_transport_search_keywords'] ?? '' ) ) );
 		update_post_meta( $post_id, self::META_SORT_ORDER, intval( wp_unslash( $_POST['bellevue_transport_sort_order'] ?? 0 ) ) );
 

@@ -266,8 +266,8 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'geometryType'        => TheCore_Collectivity_Maps_Meta::GEOMETRY_ROUTE,
 			'subtitle'            => $route_label,
 			'summary'             => $summary,
-			'ctaLabel'            => ! empty( $line['externalUrl'] ) ? __( 'Voir la fiche transport', 'thecore-collectivity-management' ) : '',
-			'ctaUrl'              => ! empty( $line['externalUrl'] ) ? esc_url_raw( (string) $line['externalUrl'] ) : '',
+			'ctaLabel'            => ! empty( $line['mapUrl'] ) ? __( 'Voir la fiche transport', 'thecore-collectivity-management' ) : '',
+			'ctaUrl'              => ! empty( $line['mapUrl'] ) ? esc_url_raw( (string) $line['mapUrl'] ) : '',
 			'displayOrder'        => isset( $line['sortOrder'] ) ? (int) $line['sortOrder'] : 0,
 			'accentColor'         => $accent_color ?: $this->get_mode_color( $primary_mode_slug ),
 			'iconKey'             => $primary_mode_slug ?: $line_code,
@@ -583,14 +583,14 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		}
 
 		$line_id = (int) $related_line_ids[0];
-		if ( empty( $line_index[ $line_id ]['externalUrl'] ) ) {
+		if ( empty( $line_index[ $line_id ]['mapUrl'] ) ) {
 			return array(
 				'label' => '',
 				'url'   => '',
 			);
 		}
 
-		$line_url = esc_url_raw( (string) $line_index[ $line_id ]['externalUrl'] );
+		$line_url = esc_url_raw( (string) $line_index[ $line_id ]['mapUrl'] );
 		if ( '' === $line_url ) {
 			return array(
 				'label' => '',

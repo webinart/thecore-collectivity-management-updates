@@ -1369,7 +1369,8 @@
 			renderBusLineDetail(line) {
 				const trackedStops = this.getGroupedScheduleStops(line);
 				const selection = this.getCurrentLineScheduleSelection(line);
-				const action = line.externalUrl ? '<a class="bte-card__action" href="' + escapeHtml(line.externalUrl) + '">Source officielle ' + getIconMarkup("arrow") + '</a>' : "";
+				const transportUrl = String(line.transportUrl || line.externalUrl || "");
+				const action = transportUrl ? '<a class="bte-card__action" href="' + escapeHtml(transportUrl) + '">Source officielle ' + getIconMarkup("arrow") + '</a>' : "";
 				const detailTitle = line.routeLabel || line.title || line.lineCode || "";
 				const detailSubtitleParts = [];
 				if (line.routeLabel && line.title && line.title !== line.routeLabel) {
