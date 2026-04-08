@@ -310,6 +310,10 @@ class TheCore_Collectivity_Map_Types_Widget extends TheCore_Collectivity_Map_Lin
 			return $value;
 		}
 
+		if ( preg_match( '/^var\\(--[a-z0-9_-]+\\)$/i', $value ) ) {
+			return $value;
+		}
+
 		return '';
 	}
 }

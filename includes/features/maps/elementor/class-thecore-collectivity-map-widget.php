@@ -2239,6 +2239,10 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			return $value;
 		}
 
+		if ( preg_match( '/^var\\(--[a-z0-9_-]+\\)$/i', $value ) ) {
+			return $value;
+		}
+
 		return '';
 	}
 }
