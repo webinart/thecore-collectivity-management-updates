@@ -670,7 +670,7 @@
 			const lines = Array.isArray(place.relatedLineCodes) && place.relatedLineCodes.length ? '<p class="bte__popup-lines">Lignes: ' + escapeHtml(place.relatedLineCodes.join(", ")) + '</p>' : "";
 			const subtitle = place.subtitle ? '<p class="bte__popup-subtitle">' + escapeHtml(place.subtitle) + '</p>' : "";
 			const address = place.address ? '<p class="bte__popup-address">' + escapeHtml(place.address) + '</p>' : "";
-			const directions = this.getPlaceDirectionLabels(place);
+			const directions = Array.isArray(place.destinationLabels) && place.destinationLabels.length ? place.destinationLabels : this.getPlaceDirectionLabels(place);
 			const directionMarkup = directions.length ? '<p class="bte__popup-lines">Directions: ' + escapeHtml(directions.join(" · ")) + '</p>' : "";
 			return '<div class="bte__popup">' +
 				'<p class="bte__popup-title">' + escapeHtml(place.title) + '</p>' +
@@ -951,6 +951,7 @@
 				longitude: coordinates.count ? coordinates.lng / coordinates.count : primaryPlace.longitude,
 				isAccessible: group.some((place) => !!place.isAccessible),
 				gtfsStopIds: this.mergeUniquePlaceList(effectivePlaces, "gtfsStopIds"),
+				destinationLabels: this.mergeUniquePlaceList(effectivePlaces, "destinationLabels"),
 				relatedLineIds: this.mergeUniquePlaceList(effectivePlaces, "relatedLineIds"),
 				relatedLineCodes: this.mergeUniquePlaceList(effectivePlaces, "relatedLineCodes"),
 				relatedLineTitles: this.mergeUniquePlaceList(effectivePlaces, "relatedLineTitles"),

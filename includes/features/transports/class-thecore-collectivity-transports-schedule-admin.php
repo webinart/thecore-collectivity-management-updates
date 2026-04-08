@@ -517,6 +517,16 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 						</td>
 					</tr>
 					<tr>
+						<th scope="row"><?php esc_html_e( 'Calcul des directions d arrêt', 'bellevue' ); ?></th>
+						<td>
+							<select name="bellevue_transport_gtfs_sources[<?php echo esc_attr( $index ); ?>][stop_direction_strategy]" class="regular-text">
+								<option value="<?php echo esc_attr( TheCore_Collectivity_Transports_Schedule_Repository::STOP_DIRECTION_STRATEGY_GTFS ); ?>" <?php selected( $source['stop_direction_strategy'], TheCore_Collectivity_Transports_Schedule_Repository::STOP_DIRECTION_STRATEGY_GTFS ); ?>><?php esc_html_e( 'Robuste: terminus calcule depuis le GTFS', 'bellevue' ); ?></option>
+								<option value="<?php echo esc_attr( TheCore_Collectivity_Transports_Schedule_Repository::STOP_DIRECTION_STRATEGY_PARSE ); ?>" <?php selected( $source['stop_direction_strategy'], TheCore_Collectivity_Transports_Schedule_Repository::STOP_DIRECTION_STRATEGY_PARSE ); ?>><?php esc_html_e( 'Leger: analyse du libelle de direction', 'bellevue' ); ?></option>
+							</select>
+							<p class="description"><?php esc_html_e( 'Le mode robuste calcule les destinations finales à partir des trips et des terminus GTFS. Le mode léger se contente d analyser le headsign du trip.', 'bellevue' ); ?></p>
+						</td>
+					</tr>
+					<tr>
 						<th scope="row"><?php esc_html_e( 'Activer le temps réel', 'bellevue' ); ?></th>
 						<td><label><input type="checkbox" name="bellevue_transport_gtfs_sources[<?php echo esc_attr( $index ); ?>][realtime_is_enabled]" value="1" <?php checked( ! empty( $source['realtime_is_enabled'] ) ); ?> /> <?php esc_html_e( 'Met a jour les prochains departs a partir d un flux temps réel.', 'bellevue' ); ?></label></td>
 					</tr>
@@ -646,6 +656,7 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 			'provider_label'   => '',
 			'provider_key'     => '',
 			'gtfs_url'         => '',
+			'stop_direction_strategy' => TheCore_Collectivity_Transports_Schedule_Repository::STOP_DIRECTION_STRATEGY_GTFS,
 			'realtime_format'  => 'none',
 			'trip_updates_url' => '',
 			'service_alerts_url' => '',
@@ -714,6 +725,7 @@ final class TheCore_Collectivity_Transports_Schedule_Admin {
 				'provider_label'         => sanitize_text_field( $source['provider_label'] ?? '' ),
 				'provider_key'           => sanitize_key( $source['provider_key'] ?? '' ),
 				'gtfs_url'               => esc_url_raw( $source['gtfs_url'] ?? '' ),
+				'stop_direction_strategy'=> sanitize_key( $source['stop_direction_strategy'] ?? '' ),
 				'realtime_format'        => sanitize_key( $source['realtime_format'] ?? '' ),
 				'trip_updates_url'       => esc_url_raw( $source['trip_updates_url'] ?? '' ),
 				'service_alerts_url'     => esc_url_raw( $source['service_alerts_url'] ?? '' ),

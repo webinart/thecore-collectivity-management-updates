@@ -16,7 +16,7 @@ final class TheCore_Collectivity_Transports_Schedule_Schema {
 	/**
 	 * Current schema version.
 	 */
-	const DB_VERSION = '2.3.0';
+	const DB_VERSION = '2.5.0';
 
 	/**
 	 * Legacy single-source option.
@@ -115,6 +115,10 @@ final class TheCore_Collectivity_Transports_Schedule_Schema {
 				trip_headsign varchar(191) DEFAULT '',
 				direction_id varchar(16) DEFAULT '',
 				shape_id varchar(64) DEFAULT '',
+				terminal_stop_id varchar(64) DEFAULT '',
+				terminal_stop_name varchar(191) DEFAULT '',
+				terminal_stop_locality varchar(191) DEFAULT '',
+				terminal_stop_sequence int(10) unsigned DEFAULT 0,
 				PRIMARY KEY  (id),
 				UNIQUE KEY provider_trip (provider_key, trip_id),
 				KEY provider_route (provider_key, route_id),

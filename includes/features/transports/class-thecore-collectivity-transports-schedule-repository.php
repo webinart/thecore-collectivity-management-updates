@@ -44,6 +44,23 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 	const DEFAULT_GTFS_URL = 'https://eu.ftp.opendatasoft.com/stif/GTFS/IDFM-gtfs.zip';
 
 	/**
+	 * Stop direction strategy: compute destination from GTFS terminal stop.
+	 */
+	const STOP_DIRECTION_STRATEGY_GTFS = 'gtfs_terminal';
+
+	/**
+	 * Stop direction strategy: parse destination from trip headsign.
+	 */
+	const STOP_DIRECTION_STRATEGY_PARSE = 'parse_headsign';
+
+	/**
+	 * In-request cache for stop destination labels.
+	 *
+	 * @var array
+	 */
+	private $stop_destination_cache = array();
+
+	/**
 	 * Get last import status.
 	 *
 	 * @return array
@@ -645,6 +662,55 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		}
 
 	/**
+	 * Resolve destination labels for one stop or stop hub.
+	 *
+	 * @param array  $stop_ids     Exact GTFS stop ids.
+	 * @param array  $line_ids     Related transport line post ids.
+	 * @param string $provider_key Optional provider key.
+	 * @param string $strategy     Optional strategy override.
+	 * @return array
+	 */
+	public function get_stop_destination_labels( array $stop_ids, array $line_ids = array(), $provider_key = '', $strategy = '' ) {
+		$provider_key = $this->resolve_provider_key( $provider_key );
+		$stop_ids     = array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $stop_ids ) ) ) );
+		$line_ids     = array_values( array_unique( array_filter( array_map( 'intval', $line_ids ) ) ) );
+
+		if ( empty( $stop_ids ) || empty( $line_ids ) ) {
+			return array();
+		}
+
+		$source_config = $this->get_gtfs_source_config( $provider_key );
+		$strategy      = $this->normalize_stop_direction_strategy( $strategy ?: ( $source_config['stop_direction_strategy'] ?? self::STOP_DIRECTION_STRATEGY_GTFS ) );
+		$cache_key     = md5( wp_json_encode( array( $provider_key, $strategy, $stop_ids, $line_ids ) ) );
+
+		if ( isset( $this->stop_destination_cache[ $cache_key ] ) ) {
+			return $this->stop_destination_cache[ $cache_key ];
+		}
+
+		$route_ids = $this->get_route_ids_for_line_posts( $line_ids, $provider_key );
+		if ( empty( $route_ids ) ) {
+			$this->stop_destination_cache[ $cache_key ] = array();
+			return array();
+		}
+
+		$labels = array();
+		if ( self::STOP_DIRECTION_STRATEGY_GTFS === $strategy ) {
+			$labels = $this->build_stop_destination_labels_from_gtfs( $provider_key, $route_ids, $stop_ids );
+			if ( empty( $labels ) ) {
+				$labels = $this->build_stop_destination_labels_from_headsigns( $provider_key, $route_ids, $stop_ids );
+			}
+		} else {
+			$labels = $this->build_stop_destination_labels_from_headsigns( $provider_key, $route_ids, $stop_ids );
+		}
+
+		natcasesort( $labels );
+		$labels = array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $labels ) ) ) );
+		$this->stop_destination_cache[ $cache_key ] = $labels;
+
+		return $labels;
+	}
+
+	/**
 	 * Build stop payload for all directions and day types.
 	 *
 	 * @param string $stop_id       Stop id.
@@ -748,6 +814,129 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 	}
 
 	/**
+	 * Resolve GTFS route ids for related transport lines.
+	 *
+	 * @param array  $line_ids     Transport line post ids.
+	 * @param string $provider_key Provider key.
+	 * @return array
+	 */
+	private function get_route_ids_for_line_posts( array $line_ids, $provider_key ) {
+		$route_ids   = array();
+		$short_names = array();
+
+		foreach ( $line_ids as $line_id ) {
+			$line_id = absint( $line_id );
+			if ( $line_id <= 0 || ! $this->is_gtfs_provider_match( $line_id, $provider_key ) ) {
+				continue;
+			}
+
+			$route_ids   = array_merge( $route_ids, $this->parse_meta_list( get_post_meta( $line_id, TheCore_Collectivity_Transports_Meta::META_GTFS_ROUTE_IDS, true ) ) );
+			$short_names = array_merge( $short_names, $this->parse_meta_list( get_post_meta( $line_id, TheCore_Collectivity_Transports_Meta::META_GTFS_SHORT_NAMES, true ) ) );
+		}
+
+		$route_ids   = array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $route_ids ) ) ) );
+		$short_names = array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $short_names ) ) ) );
+
+		if ( ! empty( $short_names ) ) {
+			$route_rows = $this->get_routes_for_mapping( $provider_key, $route_ids, $short_names );
+			$route_ids  = array_values( array_unique( array_merge( $route_ids, wp_list_pluck( $route_rows, 'route_id' ) ) ) );
+		}
+
+		return $route_ids;
+	}
+
+	/**
+	 * Build stop destination labels from GTFS terminal stops.
+	 *
+	 * @param string $provider_key Provider key.
+	 * @param array  $route_ids    GTFS route ids.
+	 * @param array  $stop_ids     Exact stop ids.
+	 * @return array
+	 */
+	private function build_stop_destination_labels_from_gtfs( $provider_key, array $route_ids, array $stop_ids ) {
+		$trip_rows = $this->get_trips_for_routes( $provider_key, $route_ids );
+		if ( empty( $trip_rows ) ) {
+			return array();
+		}
+
+		$matched_trip_ids = $this->get_trip_ids_serving_stops( $provider_key, $trip_rows, $stop_ids );
+		if ( empty( $matched_trip_ids ) ) {
+			return array();
+		}
+
+		$trip_ids            = array_keys( $matched_trip_ids );
+		$stop_sequence_index = $this->get_trip_stop_sequence_index( $provider_key, $trip_ids, $stop_ids );
+		$labels              = array();
+
+		foreach ( $trip_rows as $trip_row ) {
+			$trip_id = ! empty( $trip_row['trip_id'] ) ? (string) $trip_row['trip_id'] : '';
+			if ( '' === $trip_id || ! isset( $matched_trip_ids[ $trip_id ] ) || empty( $stop_sequence_index[ $trip_id ] ) ) {
+				continue;
+			}
+
+			$current_sequence  = intval( $stop_sequence_index[ $trip_id ]['stop_sequence'] ?? 0 );
+			$terminal_sequence = intval( $trip_row['terminal_stop_sequence'] ?? 0 );
+			if ( $terminal_sequence <= $current_sequence ) {
+				continue;
+			}
+
+			$label = $this->normalize_stop_destination_label( $trip_row['terminal_stop_locality'] ?? '' );
+			if ( '' === $label ) {
+				$label = $this->normalize_stop_destination_label( $trip_row['terminal_stop_name'] ?? '' );
+			}
+			if ( '' !== $label ) {
+				$labels[ $label ] = $label;
+			}
+		}
+
+		return array_values( $labels );
+	}
+
+	/**
+	 * Build stop destination labels by parsing GTFS headsigns.
+	 *
+	 * @param string $provider_key Provider key.
+	 * @param array  $route_ids    GTFS route ids.
+	 * @param array  $stop_ids     Exact stop ids.
+	 * @return array
+	 */
+	private function build_stop_destination_labels_from_headsigns( $provider_key, array $route_ids, array $stop_ids ) {
+		$trip_rows = $this->get_trips_for_routes( $provider_key, $route_ids );
+		if ( empty( $trip_rows ) ) {
+			return array();
+		}
+
+		$matched_trip_ids = $this->get_trip_ids_serving_stops( $provider_key, $trip_rows, $stop_ids );
+		if ( empty( $matched_trip_ids ) ) {
+			return array();
+		}
+
+		$trip_ids            = array_keys( $matched_trip_ids );
+		$stop_sequence_index = $this->get_trip_stop_sequence_index( $provider_key, $trip_ids, $stop_ids );
+		$labels              = array();
+
+		foreach ( $trip_rows as $trip_row ) {
+			$trip_id = ! empty( $trip_row['trip_id'] ) ? (string) $trip_row['trip_id'] : '';
+			if ( '' === $trip_id || ! isset( $matched_trip_ids[ $trip_id ] ) || empty( $stop_sequence_index[ $trip_id ] ) ) {
+				continue;
+			}
+
+			$current_sequence  = intval( $stop_sequence_index[ $trip_id ]['stop_sequence'] ?? 0 );
+			$terminal_sequence = intval( $trip_row['terminal_stop_sequence'] ?? 0 );
+			if ( $terminal_sequence > 0 && $terminal_sequence <= $current_sequence ) {
+				continue;
+			}
+
+			$label = $this->parse_stop_destination_label_from_headsign( $trip_row['trip_headsign'] ?? '' );
+			if ( '' !== $label ) {
+				$labels[ $label ] = $label;
+			}
+		}
+
+		return array_values( $labels );
+	}
+
+	/**
 	 * Resolve route rows for a line mapping.
 	 *
 	 * @param array $route_ids   Exact route ids.
@@ -842,7 +1031,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 
 		$table        = TheCore_Collectivity_Transports_Schedule_Schema::get_table_name( TheCore_Collectivity_Transports_Schedule_Schema::TABLE_TRIPS );
 		$placeholders = implode( ', ', array_fill( 0, count( $route_ids ), '%s' ) );
-		$sql          = "SELECT trip_id, route_id, service_id, trip_headsign, direction_id, shape_id FROM {$table} WHERE provider_key = %s AND route_id IN ({$placeholders})";
+		$sql          = "SELECT trip_id, route_id, service_id, trip_headsign, direction_id, shape_id, terminal_stop_id, terminal_stop_name, terminal_stop_locality, terminal_stop_sequence FROM {$table} WHERE provider_key = %s AND route_id IN ({$placeholders})";
 		$query        = $wpdb->prepare( $sql, array_merge( array( sanitize_key( (string) $provider_key ) ), $route_ids ) );
 		$rows         = $wpdb->get_results( $query, ARRAY_A );
 
@@ -1013,6 +1202,36 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		}
 
 		return $matched_trip_ids;
+	}
+
+	/**
+	 * Get the selected stop sequence for each trip serving one stop set.
+	 *
+	 * @param string $provider_key Provider key.
+	 * @param array  $trip_ids     Trip ids.
+	 * @param array  $stop_ids     Selected stop ids.
+	 * @return array
+	 */
+	private function get_trip_stop_sequence_index( $provider_key, array $trip_ids, array $stop_ids ) {
+		$stop_times = $this->get_stop_times_for_trips_and_stops( $provider_key, $trip_ids, $stop_ids );
+		if ( empty( $stop_times ) ) {
+			return array();
+		}
+
+		$index = array();
+		foreach ( $stop_times as $stop_time ) {
+			$trip_id = ! empty( $stop_time['trip_id'] ) ? (string) $stop_time['trip_id'] : '';
+			if ( '' === $trip_id ) {
+				continue;
+			}
+
+			$sequence = intval( $stop_time['stop_sequence'] ?? 0 );
+			if ( empty( $index[ $trip_id ] ) || $sequence < intval( $index[ $trip_id ]['stop_sequence'] ?? PHP_INT_MAX ) ) {
+				$index[ $trip_id ] = $stop_time;
+			}
+		}
+
+		return $index;
 	}
 
 	/**
@@ -1367,6 +1586,36 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 	}
 
 	/**
+	 * Parse one destination label from a headsign string.
+	 *
+	 * @param string $headsign Raw headsign.
+	 * @return string
+	 */
+	private function parse_stop_destination_label_from_headsign( $headsign ) {
+		$headsign = trim( sanitize_text_field( (string) $headsign ) );
+		if ( '' === $headsign ) {
+			return '';
+		}
+
+		$segments = preg_split( '/\s*(?:→|->)\s*/u', $headsign );
+		if ( is_array( $segments ) && count( $segments ) > 1 ) {
+			$headsign = (string) end( $segments );
+		}
+
+		return $this->normalize_stop_destination_label( $headsign );
+	}
+
+	/**
+	 * Normalize one stop destination label.
+	 *
+	 * @param string $label Raw label.
+	 * @return string
+	 */
+	private function normalize_stop_destination_label( $label ) {
+		return trim( sanitize_text_field( (string) $label ) );
+	}
+
+	/**
 	 * Build an exact stop option label.
 	 *
 	 * @param string $stop_id      Exact stop id.
@@ -1644,6 +1893,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 			'provider_label'   => $provider_label,
 			'provider_key'     => $provider_key,
 			'gtfs_url'         => $gtfs_url,
+			'stop_direction_strategy' => $this->normalize_stop_direction_strategy( $config['stop_direction_strategy'] ?? self::STOP_DIRECTION_STRATEGY_GTFS ),
 			'realtime_format'  => $this->normalize_realtime_format( $config['realtime_format'] ?? 'none' ),
 			'trip_updates_url' => esc_url_raw( (string) ( $config['trip_updates_url'] ?? '' ) ),
 			'service_alerts_url' => esc_url_raw( (string) ( $config['service_alerts_url'] ?? '' ) ),
@@ -1677,6 +1927,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 				'provider_label'   => $first['provider_label'],
 				'provider_key'     => $first['provider_key'],
 				'gtfs_url'         => $first['gtfs_url'],
+				'stop_direction_strategy' => $first['stop_direction_strategy'],
 				'realtime_format'  => $first['realtime_format'],
 				'trip_updates_url' => $first['trip_updates_url'],
 				'service_alerts_url' => $first['service_alerts_url'],
@@ -1747,6 +1998,21 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		}
 
 		return 'none';
+	}
+
+	/**
+	 * Normalize stop direction strategy.
+	 *
+	 * @param string $strategy Raw strategy.
+	 * @return string
+	 */
+	private function normalize_stop_direction_strategy( $strategy ) {
+		$strategy = sanitize_key( (string) $strategy );
+		if ( in_array( $strategy, array( self::STOP_DIRECTION_STRATEGY_GTFS, self::STOP_DIRECTION_STRATEGY_PARSE ), true ) ) {
+			return $strategy;
+		}
+
+		return self::STOP_DIRECTION_STRATEGY_GTFS;
 	}
 
 	/**

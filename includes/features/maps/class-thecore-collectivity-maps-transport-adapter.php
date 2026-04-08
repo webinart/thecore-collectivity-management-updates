@@ -612,6 +612,12 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 	 * @return array
 	 */
 	private function build_transport_direction_labels( array $places, array $line_index ) {
+		$destination_labels = $this->merge_unique_text_lists( $places, 'destinationLabels' );
+		if ( ! empty( $destination_labels ) ) {
+			natcasesort( $destination_labels );
+			return array_values( $destination_labels );
+		}
+
 		$stop_ids          = array();
 		$related_line_ids  = array();
 		$direction_labels  = array();

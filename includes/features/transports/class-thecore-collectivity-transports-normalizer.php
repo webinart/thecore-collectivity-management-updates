@@ -234,6 +234,8 @@ final class TheCore_Collectivity_Transports_Normalizer {
 		$train_information = $this->split_multiline_meta( (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_TRAIN_INFORMATION, true ) );
 		$provider_key      = sanitize_key( (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_PROVIDER_KEY, true ) );
 		$provider_label    = $this->resolve_provider_label( $provider_key );
+		$gtfs_stop_ids     = $this->schedule_repository->parse_meta_list( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, true ) );
+		$destination_labels = $this->schedule_repository->get_stop_destination_labels( $gtfs_stop_ids, $related_lines, $provider_key );
 
 		return array(
 			'id'               => (int) $post->ID,
@@ -247,7 +249,8 @@ final class TheCore_Collectivity_Transports_Normalizer {
 			'providerLabel'    => $provider_label,
 			'latitude'         => $this->normalize_coordinate( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_LATITUDE, true ) ),
 			'longitude'        => $this->normalize_coordinate( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_LONGITUDE, true ) ),
-			'gtfsStopIds'      => $this->schedule_repository->parse_meta_list( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, true ) ),
+			'gtfsStopIds'      => $gtfs_stop_ids,
+			'destinationLabels'=> $destination_labels,
 			'isAccessible'     => '1' === (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_IS_ACCESSIBLE, true ),
 			'externalUrl'      => (string) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_EXTERNAL_URL, true ),
 			'sortOrder'        => (int) get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_SORT_ORDER, true ),
@@ -264,7 +267,7 @@ final class TheCore_Collectivity_Transports_Normalizer {
 			'electricBikes'    => $this->normalize_integer_meta( get_post_meta( $post->ID, TheCore_Collectivity_Transports_Meta::META_ELECTRIC_BIKES, true ) ),
 			'trainDepartures'  => $train_departures,
 			'trainInformation' => $train_information,
-			'searchText'       => implode( ' ', array_filter( array_merge( array( $title, $subtitle, $address, $parking_type, $provider_label, $keywords ), $line_codes, $line_titles, $train_departures, $train_information ) ) ),
+			'searchText'       => implode( ' ', array_filter( array_merge( array( $title, $subtitle, $address, $parking_type, $provider_label, $keywords ), $line_codes, $line_titles, $destination_labels, $train_departures, $train_information ) ) ),
 		);
 	}
 

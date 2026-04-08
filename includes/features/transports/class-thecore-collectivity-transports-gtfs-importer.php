@@ -235,6 +235,10 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 					'trip_headsign'  => isset( $row['trip_headsign'] ) ? sanitize_text_field( $row['trip_headsign'] ) : '',
 					'direction_id'   => isset( $row['direction_id'] ) ? sanitize_text_field( $row['direction_id'] ) : '',
 					'shape_id'       => $shape_id,
+					'terminal_stop_id'       => '',
+					'terminal_stop_name'     => '',
+					'terminal_stop_locality' => '',
+					'terminal_stop_sequence' => 0,
 				);
 				}
 			);
@@ -307,34 +311,29 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 				}
 			);
 
-			$stops = array();
-			$this->iterate_csv_rows(
-				$zip,
-				'stops.txt',
-				function ( array $row ) use ( &$stops, $tracked_stops ) {
-				$stop_id = isset( $row['stop_id'] ) ? sanitize_text_field( $row['stop_id'] ) : '';
-				if ( '' === $stop_id || empty( $tracked_stops[ $stop_id ] ) ) {
-					return;
-				}
-
-				$stops[ $stop_id ] = array(
-					'stop_id'        => $stop_id,
-					'stop_name'      => isset( $row['stop_name'] ) ? sanitize_text_field( $row['stop_name'] ) : '',
-					'parent_station' => isset( $row['parent_station'] ) ? sanitize_text_field( $row['parent_station'] ) : '',
-					'stop_lat'       => isset( $row['stop_lat'] ) && '' !== $row['stop_lat'] ? (float) $row['stop_lat'] : null,
-					'stop_lon'       => isset( $row['stop_lon'] ) && '' !== $row['stop_lon'] ? (float) $row['stop_lon'] : null,
-				);
-				}
-			);
-
 			$stop_times = array();
+			$trip_terminals = array();
+			$terminal_stop_ids = array();
 			$this->iterate_csv_rows(
 				$zip,
 				'stop_times.txt',
-				function ( array $row ) use ( &$stop_times, $trip_ids, $tracked_stops ) {
+				function ( array $row ) use ( &$stop_times, &$trip_terminals, &$terminal_stop_ids, $trip_ids, $tracked_stops ) {
 				$trip_id = isset( $row['trip_id'] ) ? sanitize_text_field( $row['trip_id'] ) : '';
 				$stop_id = isset( $row['stop_id'] ) ? sanitize_text_field( $row['stop_id'] ) : '';
-				if ( '' === $trip_id || '' === $stop_id || empty( $trip_ids[ $trip_id ] ) || empty( $tracked_stops[ $stop_id ] ) ) {
+				if ( '' === $trip_id || '' === $stop_id || empty( $trip_ids[ $trip_id ] ) ) {
+					return;
+				}
+
+				$stop_sequence = isset( $row['stop_sequence'] ) ? absint( $row['stop_sequence'] ) : 0;
+				if ( empty( $trip_terminals[ $trip_id ] ) || $stop_sequence >= intval( $trip_terminals[ $trip_id ]['stop_sequence'] ?? 0 ) ) {
+					$trip_terminals[ $trip_id ] = array(
+						'stop_id'       => $stop_id,
+						'stop_sequence' => $stop_sequence,
+					);
+					$terminal_stop_ids[ $stop_id ] = true;
+				}
+
+				if ( empty( $tracked_stops[ $stop_id ] ) ) {
 					return;
 				}
 
@@ -355,12 +354,58 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 				$stop_times[] = array(
 					'trip_id'        => $trip_id,
 					'stop_id'        => $stop_id,
-					'stop_sequence'  => isset( $row['stop_sequence'] ) ? absint( $row['stop_sequence'] ) : 0,
+					'stop_sequence'  => $stop_sequence,
 					'arrival_secs'   => $arrival_secs,
 					'departure_secs' => $departure_secs,
 				);
 				}
 			);
+
+			$stops                   = array();
+			$terminal_stop_names     = array();
+			$terminal_stop_localities = array();
+			$this->iterate_csv_rows(
+				$zip,
+				'stops.txt',
+				function ( array $row ) use ( &$stops, &$terminal_stop_names, &$terminal_stop_localities, $tracked_stops, $terminal_stop_ids ) {
+				$stop_id = isset( $row['stop_id'] ) ? sanitize_text_field( $row['stop_id'] ) : '';
+				if ( '' === $stop_id ) {
+					return;
+				}
+
+				$stop_name = isset( $row['stop_name'] ) ? sanitize_text_field( $row['stop_name'] ) : '';
+				if ( ! empty( $terminal_stop_ids[ $stop_id ] ) ) {
+					$terminal_stop_names[ $stop_id ] = $stop_name;
+					$terminal_stop_localities[ $stop_id ] = isset( $row['city_name'] ) && '' !== trim( (string) $row['city_name'] )
+						? sanitize_text_field( (string) $row['city_name'] )
+						: ( isset( $row['area_name'] ) ? sanitize_text_field( (string) $row['area_name'] ) : '' );
+				}
+
+				if ( empty( $tracked_stops[ $stop_id ] ) ) {
+					return;
+				}
+
+				$stops[ $stop_id ] = array(
+					'stop_id'        => $stop_id,
+					'stop_name'      => $stop_name,
+					'parent_station' => isset( $row['parent_station'] ) ? sanitize_text_field( $row['parent_station'] ) : '',
+					'stop_lat'       => isset( $row['stop_lat'] ) && '' !== $row['stop_lat'] ? (float) $row['stop_lat'] : null,
+					'stop_lon'       => isset( $row['stop_lon'] ) && '' !== $row['stop_lon'] ? (float) $row['stop_lon'] : null,
+				);
+				}
+			);
+
+			foreach ( $trip_terminals as $trip_id => $terminal_row ) {
+				if ( empty( $trips[ $trip_id ] ) ) {
+					continue;
+				}
+
+				$terminal_stop_id                         = sanitize_text_field( (string) ( $terminal_row['stop_id'] ?? '' ) );
+				$trips[ $trip_id ]['terminal_stop_id']   = $terminal_stop_id;
+				$trips[ $trip_id ]['terminal_stop_name'] = ! empty( $terminal_stop_names[ $terminal_stop_id ] ) ? sanitize_text_field( (string) $terminal_stop_names[ $terminal_stop_id ] ) : $terminal_stop_id;
+				$trips[ $trip_id ]['terminal_stop_locality'] = ! empty( $terminal_stop_localities[ $terminal_stop_id ] ) ? sanitize_text_field( (string) $terminal_stop_localities[ $terminal_stop_id ] ) : '';
+				$trips[ $trip_id ]['terminal_stop_sequence'] = intval( $terminal_row['stop_sequence'] ?? 0 );
+			}
 
 			$shapes = array();
 			if ( false !== $zip->locateName( 'shapes.txt' ) && ! empty( $shape_ids ) ) {
@@ -489,9 +534,9 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 			);
 			$this->insert_rows(
 				$trips_table,
-				array( 'provider_key', 'trip_id', 'route_id', 'service_id', 'trip_headsign', 'direction_id', 'shape_id' ),
+				array( 'provider_key', 'trip_id', 'route_id', 'service_id', 'trip_headsign', 'direction_id', 'shape_id', 'terminal_stop_id', 'terminal_stop_name', 'terminal_stop_locality', 'terminal_stop_sequence' ),
 				$this->prepend_provider_key( array_values( $trips ), $provider_key ),
-				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s' ),
+				array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d' ),
 				250
 			);
 			$this->insert_rows(
