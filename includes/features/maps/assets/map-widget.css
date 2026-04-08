@@ -365,6 +365,7 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 .tccm-map__empty {
 	position: absolute;
 	inset: 1rem;
+	z-index: 440;
 	display: grid;
 	place-items: center;
 	padding: 1rem;
@@ -373,6 +374,10 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 	border: 1px solid var(--tccm-map-border);
 	font-weight: 600;
 	text-align: center;
+}
+
+.tccm-map__empty[hidden] {
+	display: none !important;
 }
 
 .tccm-map__marker-wrapper {
