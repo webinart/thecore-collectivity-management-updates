@@ -570,16 +570,22 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_background_color',
 			array(
-				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-bg: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_border_color',
 			array(
-				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-border: {{VALUE}};',
+				),
 			)
 		);
 
@@ -634,8 +640,11 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_title_color',
 			array(
-				'label' => esc_html__( 'Couleur', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Couleur', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-title: {{VALUE}};',
+				),
 			)
 		);
 
@@ -659,32 +668,44 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_text_color',
 			array(
-				'label' => esc_html__( 'Texte principal', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte principal', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-text: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_muted_color',
 			array(
-				'label' => esc_html__( 'Texte secondaire', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte secondaire', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-muted: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_link_color',
 			array(
-				'label' => esc_html__( 'Liens texte', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Liens texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-link: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_section_title_color',
 			array(
-				'label' => esc_html__( 'Titres de sections', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Titres de sections', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-section-title: {{VALUE}};',
+				),
 			)
 		);
 
@@ -716,24 +737,33 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_primary_button_background_color',
 			array(
-				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-primary-bg: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_primary_button_text_color',
 			array(
-				'label' => esc_html__( 'Texte', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-primary-text: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_primary_button_border_color',
 			array(
-				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-primary-border: {{VALUE}};',
+				),
 			)
 		);
 
@@ -757,24 +787,33 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_secondary_button_background_color',
 			array(
-				'label' => esc_html__( 'Fond', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Fond', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-secondary-bg: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_secondary_button_text_color',
 			array(
-				'label' => esc_html__( 'Texte', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-secondary-text: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_secondary_button_border_color',
 			array(
-				'label' => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Bordure', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-secondary-border: {{VALUE}};',
+				),
 			)
 		);
 
@@ -798,16 +837,22 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_tag_background_color',
 			array(
-				'label' => esc_html__( 'Fond des tags', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Fond des tags', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-tag-bg: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_tag_text_color',
 			array(
-				'label' => esc_html__( 'Texte des tags', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte des tags', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-tag-text: {{VALUE}};',
+				),
 			)
 		);
 
@@ -822,16 +867,22 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->add_control(
 			'popup_chip_background_color',
 			array(
-				'label' => esc_html__( 'Fond des pastilles de liens', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Fond des pastilles de liens', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-chip-bg: {{VALUE}};',
+				),
 			)
 		);
 
 		$this->add_control(
 			'popup_chip_text_color',
 			array(
-				'label' => esc_html__( 'Texte des pastilles de liens', 'thecore-collectivity-management' ),
-				'type'  => Controls_Manager::COLOR,
+				'label'     => esc_html__( 'Texte des pastilles de liens', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-popup-chip-text: {{VALUE}};',
+				),
 			)
 		);
 
