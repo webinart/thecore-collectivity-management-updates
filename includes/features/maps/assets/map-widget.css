@@ -420,8 +420,8 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 
 .tccm-map__popup a.leaflet-popup-close-button {
 	top: 15px;
-	left: 15px;
-	right: auto;
+	left: auto;
+	right: 15px;
 }
 
 .tccm-map__popup-card {
