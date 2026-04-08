@@ -431,6 +431,7 @@
 			this.unsubscribe = null;
 			this.state = cloneState(this.store.state);
 			this.lastStateSignature = "";
+			this.loadingHideTimeout = null;
 			this.hasAppliedManualView = false;
 			this.gestureStartZoom = null;
 			this.onPinchWheel = this.handlePinchWheel.bind(this);
@@ -500,12 +501,32 @@
 			this.render();
 		}
 
-		setLoading(isLoading) {
+		setLoading(isLoading, delayMs = 0) {
 			if (!this.loadingElement) {
 				return;
 			}
 
-			this.loadingElement.hidden = !isLoading;
+			if (this.loadingHideTimeout) {
+				window.clearTimeout(this.loadingHideTimeout);
+				this.loadingHideTimeout = null;
+			}
+
+			if (isLoading) {
+				this.loadingElement.hidden = false;
+				return;
+			}
+
+			if (delayMs > 0) {
+				this.loadingHideTimeout = window.setTimeout(() => {
+					if (this.loadingElement) {
+						this.loadingElement.hidden = true;
+					}
+					this.loadingHideTimeout = null;
+				}, delayMs);
+				return;
+			}
+
+			this.loadingElement.hidden = true;
 		}
 
 		reportInitFailure(data) {
@@ -536,6 +557,11 @@
 			if (typeof this.unsubscribe === "function") {
 				this.unsubscribe();
 				this.unsubscribe = null;
+			}
+
+			if (this.loadingHideTimeout) {
+				window.clearTimeout(this.loadingHideTimeout);
+				this.loadingHideTimeout = null;
 			}
 
 			if (this.controls) {
@@ -797,7 +823,7 @@
 				if (this.emptyElement) {
 					this.emptyElement.hidden = hasLayers;
 				}
-				this.setLoading(false);
+				this.setLoading(false, 1000);
 			};
 			if (typeof window !== "undefined" && typeof window.requestAnimationFrame === "function") {
 				window.requestAnimationFrame(() => window.requestAnimationFrame(finalizeVisibility));

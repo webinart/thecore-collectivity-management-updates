@@ -242,12 +242,10 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 	position: absolute;
 	inset: 0;
 	z-index: 450;
-	display: grid;
-	place-items: center;
-	gap: 0.75rem;
+	display: block;
 	border-radius: 18px;
-	background: rgba(255, 255, 255, 0.78);
-	backdrop-filter: blur(3px);
+	background: rgba(255, 255, 255, 1);
+	opacity: 1;
 }
 
 .tccm-map__loading[hidden] {
@@ -255,15 +253,26 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 }
 
 .tccm-map__loading-spinner {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 	width: 42px;
 	height: 42px;
 	border-radius: 999px;
-	border: 3px solid color-mix(in srgb, var(--tccm-map-accent) 16%, #fff);
-	border-top-color: var(--tccm-map-accent);
+	border: 3px solid color-mix(in srgb, var(--tccm-map-loading-spinner-color, var(--tccm-map-accent)) 16%, #fff);
+	border-top-color: var(--tccm-map-loading-spinner-color, var(--tccm-map-accent));
 	animation: tccm-map-spin 0.9s linear infinite;
 }
 
 .tccm-map__loading-label {
+	position: absolute;
+	top: calc(50% + 40px);
+	left: 50%;
+	transform: translateX(-50%);
+	width: max-content;
+	max-width: calc(100% - 2rem);
+	text-align: center;
 	font-size: 0.92rem;
 	font-weight: 600;
 	color: var(--tccm-map-text);

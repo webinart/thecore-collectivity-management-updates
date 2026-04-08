@@ -552,6 +552,27 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$this->end_controls_section();
 
 		$this->start_controls_section(
+			'section_map_styles',
+			array(
+				'label' => esc_html__( 'Styles de la carte', 'thecore-collectivity-management' ),
+				'tab'   => Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'loader_spinner_color',
+			array(
+				'label'     => esc_html__( 'Couleur du spinner', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}}' => '--tccm-map-loading-spinner-color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->end_controls_section();
+
+		$this->start_controls_section(
 			'section_popup_styles',
 			array(
 				'label' => esc_html__( 'Styles des vignettes', 'thecore-collectivity-management' ),
