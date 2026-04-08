@@ -570,6 +570,25 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			)
 		);
 
+		$this->add_control(
+			'loader_text_color',
+			array(
+				'label'     => esc_html__( 'Couleur du texte de chargement', 'thecore-collectivity-management' ),
+				'type'      => Controls_Manager::COLOR,
+				'selectors' => array(
+					'{{WRAPPER}} .tccm-map__loading-label' => 'color: {{VALUE}};',
+				),
+			)
+		);
+
+		$this->add_group_control(
+			Group_Control_Typography::get_type(),
+			array(
+				'name'     => 'loader_text_typography',
+				'selector' => '{{WRAPPER}} .tccm-map__loading-label',
+			)
+		);
+
 		$this->end_controls_section();
 
 		$this->start_controls_section(
@@ -1077,8 +1096,10 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 
 			<div class="tccm-map__canvas-wrap">
 				<div class="tccm-map__loading" data-map-loading>
-					<span class="tccm-map__loading-spinner" aria-hidden="true"></span>
-					<span class="tccm-map__loading-label"><?php esc_html_e( 'Chargement de la carte…', 'thecore-collectivity-management' ); ?></span>
+					<div class="tccm-map__loading-inner">
+						<span class="tccm-map__loading-spinner" aria-hidden="true"></span>
+						<span class="tccm-map__loading-label"><?php esc_html_e( 'Chargement de la carte…', 'thecore-collectivity-management' ); ?></span>
+					</div>
 				</div>
 				<div class="tccm-map__canvas" data-map></div>
 				<div class="tccm-map__empty" data-map-empty hidden><?php esc_html_e( 'Aucun élément ne correspond aux filtres actuels.', 'thecore-collectivity-management' ); ?></div>
