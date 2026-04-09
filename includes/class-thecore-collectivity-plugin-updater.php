@@ -71,6 +71,7 @@ final class TheCore_Collectivity_Plugin_Updater {
 		}
 
 		add_filter( 'update_plugins_' . $context['hostname'], array( __CLASS__, 'filter_update_response' ), 10, 4 );
+		add_filter( 'plugins_api', array( __CLASS__, 'filter_plugin_information' ), 10, 3 );
 		add_filter( 'upgrader_source_selection', array( __CLASS__, 'normalize_package_source' ), 10, 4 );
 		add_action( 'admin_menu', array( __CLASS__, 'register_admin_page' ) );
 		add_action( 'admin_post_' . self::ACTION_SAVE_SETTINGS, array( __CLASS__, 'handle_save_settings' ) );
@@ -272,6 +273,48 @@ final class TheCore_Collectivity_Plugin_Updater {
 		$payload = self::build_update_payload_from_headers( $context, $remote_headers );
 
 		return false !== $payload ? $payload : $update;
+	}
+
+	/**
+	 * Provide plugin information for the WordPress update details modal.
+	 *
+	 * @param false|object|array<string,mixed>|WP_Error $result Existing result.
+	 * @param string                                    $action Requested API action.
+	 * @param object                                    $args   API arguments.
+	 * @return false|object|array<string,mixed>|WP_Error
+	 */
+	public static function filter_plugin_information( $result, $action, $args ) {
+		if ( 'plugin_information' !== (string) $action || ! is_object( $args ) ) {
+			return $result;
+		}
+
+		$context = self::get_context();
+
+		if ( null === $context ) {
+			return $result;
+		}
+
+		$requested_slug = isset( $args->slug ) ? sanitize_text_field( (string) $args->slug ) : '';
+		$valid_slugs    = array_filter(
+			array(
+				(string) $context['slug'],
+				(string) THECORE_COLLECTIVITY_MANAGEMENT_BASENAME,
+				basename( (string) THECORE_COLLECTIVITY_MANAGEMENT_BASENAME ),
+			)
+		);
+
+		if ( '' === $requested_slug || ! in_array( $requested_slug, $valid_slugs, true ) ) {
+			return $result;
+		}
+
+		$manifest       = self::fetch_remote_manifest( $context['manifest_url'] );
+		$remote_headers = self::fetch_remote_plugin_headers(
+			$context['repository'],
+			$context['branch'],
+			$context['entry_file']
+		);
+
+		return self::build_plugin_information( $context, $manifest, $remote_headers );
 	}
 
 	/**
@@ -566,6 +609,52 @@ final class TheCore_Collectivity_Plugin_Updater {
 	}
 
 	/**
+	 * Build one plugin information object for WordPress admin.
+	 *
+	 * @param array<string,string>            $context        Local updater context.
+	 * @param array<string,mixed>|null        $manifest       Remote manifest.
+	 * @param array<string,string>|null       $remote_headers Remote plugin headers.
+	 * @return object
+	 */
+	public static function build_plugin_information( array $context, $manifest = null, $remote_headers = null ) {
+		$local_headers   = self::read_plugin_headers();
+		$remote_headers  = is_array( $remote_headers ) ? $remote_headers : array();
+		$manifest        = is_array( $manifest ) ? $manifest : array();
+		$version         = self::pick_manifest_string( $manifest, array( 'version' ), $remote_headers['Version'] ?? ( $context['version'] ?? '' ) );
+		$requires_php    = self::pick_manifest_string( $manifest, array( 'requires_php' ), $remote_headers['RequiresPHP'] ?? ( $local_headers['RequiresPHP'] ?? '' ) );
+		$requires_wp     = self::pick_manifest_string( $manifest, array( 'requires_wp', 'requires' ), $remote_headers['RequiresWP'] ?? ( $local_headers['RequiresWP'] ?? '' ) );
+		$tested          = self::pick_manifest_string( $manifest, array( 'tested' ), $remote_headers['TestedUpTo'] ?? ( $local_headers['TestedUpTo'] ?? '' ) );
+		$download_link   = self::pick_manifest_string( $manifest, array( 'package' ), self::build_package_url( (string) ( $context['distribution_repository'] ?? '' ), (string) ( $context['branch'] ?? self::DEFAULT_BRANCH ) ) );
+		$homepage        = self::pick_manifest_string( $manifest, array( 'details_url', 'url' ), (string) ( $context['details_url'] ?? '' ) );
+		$name            = ! empty( $remote_headers['PluginName'] ) ? (string) $remote_headers['PluginName'] : ( ! empty( $local_headers['PluginName'] ) ? (string) $local_headers['PluginName'] : 'The Core - Collectivity Management' );
+		$description     = ! empty( $remote_headers['Description'] ) ? (string) $remote_headers['Description'] : ( ! empty( $local_headers['Description'] ) ? (string) $local_headers['Description'] : '' );
+		$author_name     = ! empty( $remote_headers['Author'] ) ? (string) $remote_headers['Author'] : ( ! empty( $local_headers['Author'] ) ? (string) $local_headers['Author'] : 'The Core' );
+		$plugin_uri      = ! empty( $remote_headers['PluginURI'] ) ? (string) $remote_headers['PluginURI'] : ( ! empty( $local_headers['PluginURI'] ) ? (string) $local_headers['PluginURI'] : $homepage );
+		$sections        = self::get_plugin_information_sections( $description, $homepage, $context, $manifest );
+		$info            = new stdClass();
+
+		$info->name              = $name;
+		$info->slug              = (string) ( $context['slug'] ?? '' );
+		$info->plugin_name       = (string) THECORE_COLLECTIVITY_MANAGEMENT_BASENAME;
+		$info->version           = $version;
+		$info->author            = $author_name ? wp_kses_post( $author_name ) : '';
+		$info->author_profile    = '';
+		$info->homepage          = esc_url_raw( $plugin_uri ?: $homepage );
+		$info->requires          = $requires_wp;
+		$info->tested            = $tested;
+		$info->requires_php      = $requires_php;
+		$info->download_link     = esc_url_raw( $download_link );
+		$info->trunk             = esc_url_raw( $download_link );
+		$info->last_updated      = current_time( 'mysql' );
+		$info->sections          = $sections;
+		$info->banners           = array();
+		$info->icons             = array();
+		$info->external          = false;
+
+		return $info;
+	}
+
+	/**
 	 * Build the local updater context.
 	 *
 	 * @return array<string,string>|null
@@ -661,6 +750,10 @@ final class TheCore_Collectivity_Plugin_Updater {
 		$headers = get_file_data(
 			THECORE_COLLECTIVITY_MANAGEMENT_FILE,
 			array(
+				'PluginName'  => 'Plugin Name',
+				'PluginURI'   => 'Plugin URI',
+				'Description' => 'Description',
+				'Author'      => 'Author',
 				'Version'     => 'Version',
 				'UpdateURI'   => 'Update URI',
 				'RequiresPHP' => 'Requires PHP',
@@ -813,6 +906,10 @@ final class TheCore_Collectivity_Plugin_Updater {
 	public static function parse_plugin_headers( $plugin_file ) {
 		$headers  = array();
 		$patterns = array(
+			'PluginName'  => '/^[ \t\/*#@]*Plugin Name:\s*(.+)$/mi',
+			'PluginURI'   => '/^[ \t\/*#@]*Plugin URI:\s*(.+)$/mi',
+			'Description' => '/^[ \t\/*#@]*Description:\s*(.+)$/mi',
+			'Author'      => '/^[ \t\/*#@]*Author:\s*(.+)$/mi',
 			'Version'     => '/^[ \t\/*#@]*Version:\s*(.+)$/mi',
 			'RequiresPHP' => '/^[ \t\/*#@]*Requires PHP:\s*(.+)$/mi',
 			'RequiresWP'  => '/^[ \t\/*#@]*Requires at least:\s*(.+)$/mi',
@@ -826,6 +923,60 @@ final class TheCore_Collectivity_Plugin_Updater {
 		}
 
 		return $headers;
+	}
+
+	/**
+	 * Build plugin information sections for the WordPress modal.
+	 *
+	 * @param string              $description Plugin description.
+	 * @param string              $homepage    Homepage URL.
+	 * @param array<string,string> $context    Local updater context.
+	 * @param array<string,mixed> $manifest    Remote manifest.
+	 * @return array<string,string>
+	 */
+	private static function get_plugin_information_sections( $description, $homepage, array $context, array $manifest ) {
+		$sections = array();
+
+		if ( ! empty( $manifest['sections'] ) && is_array( $manifest['sections'] ) ) {
+			foreach ( $manifest['sections'] as $key => $value ) {
+				$key   = sanitize_key( (string) $key );
+				$value = is_string( $value ) ? trim( $value ) : '';
+
+				if ( '' !== $key && '' !== $value ) {
+					$sections[ $key ] = wp_kses_post( $value );
+				}
+			}
+		}
+
+		if ( empty( $sections['description'] ) ) {
+			$extra = '';
+			if ( '' !== $homepage ) {
+				$extra = '<p><a href="' . esc_url( $homepage ) . '" target="_blank" rel="noopener noreferrer">Repository et historique des versions</a></p>';
+			}
+			$sections['description'] = wpautop( esc_html( $description ) ) . $extra;
+		}
+
+		if ( empty( $sections['installation'] ) ) {
+			$sections['installation'] =
+				'<ol>' .
+					'<li>Choisir le canal de mise a jour du plugin dans <strong>Reglages &gt; The Core Collectivity</strong>.</li>' .
+					'<li>Verifier les mises a jour disponibles dans l administration WordPress.</li>' .
+					'<li>Lancer la mise a jour automatique du plugin.</li>' .
+				'</ol>';
+		}
+
+		if ( empty( $sections['changelog'] ) ) {
+			$version = self::pick_manifest_string( $manifest, array( 'version' ), (string) ( $context['version'] ?? '' ) );
+			$channel = ! empty( $context['channel'] ) ? (string) $context['channel'] : 'prod';
+			$link    = ! empty( $context['source_details_url'] ) ? (string) $context['source_details_url'] : $homepage;
+
+			$sections['changelog'] =
+				'<p><strong>Version publiee:</strong> ' . esc_html( $version ) . '</p>' .
+				'<p><strong>Canal:</strong> ' . esc_html( $channel ) . '</p>' .
+				( '' !== $link ? '<p><a href="' . esc_url( $link ) . '" target="_blank" rel="noopener noreferrer">Voir le code source et l historique GitHub</a></p>' : '' );
+		}
+
+		return $sections;
 	}
 
 	/**

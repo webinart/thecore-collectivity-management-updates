@@ -117,6 +117,19 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 			)
 		);
 
+		$this->add_control(
+			'show_all_route_vehicles_on_map',
+			array(
+				'label'        => esc_html__( 'Afficher tous les véhicules de la ligne sur la carte', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+				'description'  => esc_html__( 'Si non, la carte n affiche que les véhicules dont le trip dessert au moins un arrêt suivi localement pour la ligne.', 'bellevue' ),
+			)
+		);
+
 		$this->add_responsive_control(
 			'map_height',
 			array(
@@ -265,6 +278,7 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		$title            = ! empty( $settings['title'] ) ? (string) $settings['title'] : __( 'Transports & Mobilites', 'bellevue' );
 		$description      = ! empty( $settings['description'] ) ? (string) $settings['description'] : '';
 		$show_alerts      = isset( $settings['show_alerts'] ) && 'yes' === $settings['show_alerts'];
+		$show_all_route_vehicles_on_map = isset( $settings['show_all_route_vehicles_on_map'] ) && 'yes' === $settings['show_all_route_vehicles_on_map'];
 		$map_height       = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
 		$vehicle_pulse    = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
 		$widget_id        = 'bte-' . $this->get_id();
@@ -316,6 +330,7 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 					)
 				),
 				'id'    => $widget_id,
+				'data-show-all-route-vehicles-on-map' => $show_all_route_vehicles_on_map ? '1' : '0',
 				'style' => implode( ';', $wrapper_styles ) . ';',
 			)
 		);

@@ -105,6 +105,7 @@
 			constructor(root) {
 				this.root = root;
 				this.root.__bteInstance = this;
+				this.showAllRouteVehiclesOnMap = this.root.getAttribute("data-show-all-route-vehicles-on-map") !== "0";
 				this.data = this.getPayload();
 				this.state = {
 					query: "",
@@ -705,11 +706,13 @@
 		getVehiclePopupMarkup(vehicle) {
 			const title = vehicle.lineCode ? 'Ligne ' + vehicle.lineCode : (vehicle.lineTitle || "Véhicule");
 			const label = vehicle.vehicleLabel || vehicle.vehicleId || "";
+			const direction = this.getVehicleDirectionLabel(vehicle);
 			const status = this.getVehicleStatusLabel(vehicle.currentStatus);
 			const time = vehicle.timestamp ? this.formatRealtimeTimestamp(vehicle.timestamp) : "";
 			const provider = vehicle.providerLabel ? '<p class="bte__popup-subtitle">' + escapeHtml(vehicle.providerLabel) + '</p>' : "";
 			const meta = [
 				label ? '<p class="bte__popup-lines">Véhicule: ' + escapeHtml(label) + '</p>' : "",
+				direction ? '<p class="bte__popup-lines">Direction: ' + escapeHtml(direction) + '</p>' : "",
 				status ? '<p class="bte__popup-lines">Statut: ' + escapeHtml(status) + '</p>' : "",
 				time ? '<p class="bte__popup-lines">Position: ' + escapeHtml(time) + '</p>' : ""
 			].filter(Boolean).join("");
@@ -805,6 +808,7 @@
 			busStops = this.groupBusStops(busStops).sort((a, b) => this.compareByTitle(a, b));
 			const vehicles = (this.data.realtime && Array.isArray(this.data.realtime.vehicles) ? this.data.realtime.vehicles : [])
 				.filter((vehicle) => visibleTypes.indexOf("bus") !== -1 && visibleLineIds.has(vehicle.lineId))
+				.filter((vehicle) => this.showAllRouteVehiclesOnMap || vehicle.servesTrackedStops !== false)
 				.filter((vehicle) => matchesQuery(vehicle.searchText || "", query))
 				.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 			const realtimeAlerts = (this.data.realtime && Array.isArray(this.data.realtime.alerts) ? this.data.realtime.alerts : [])
@@ -1385,6 +1389,26 @@
 				}
 			}
 
+			getVehicleDirectionLabel(vehicle) {
+				if (!vehicle) {
+					return "";
+				}
+
+				if (vehicle.headsign) {
+					return String(vehicle.headsign);
+				}
+
+				if (vehicle.terminalLocality) {
+					return String(vehicle.terminalLocality);
+				}
+
+				if (vehicle.terminalStopName) {
+					return String(vehicle.terminalStopName);
+				}
+
+				return "";
+			}
+
 			formatRealtimeTimestamp(timestamp) {
 				if (!timestamp) {
 					return "";
@@ -1449,10 +1473,12 @@
 				}
 
 				const label = vehicle.vehicleLabel || vehicle.vehicleId || "Véhicule";
+				const direction = this.getVehicleDirectionLabel(vehicle);
 				const timestamp = this.formatRealtimeTimestamp(vehicle.timestamp);
 				const status = this.getVehicleStatusLabel(vehicle.currentStatus);
 				return '<li class="bte-card__vehicle-item">' +
 					'<span class="bte-card__vehicle-name">' + escapeHtml(label) + '</span>' +
+					(direction ? '<span class="bte-card__vehicle-meta">' + escapeHtml(direction) + '</span>' : '') +
 					(status ? '<span class="bte-card__vehicle-meta">' + escapeHtml(status) + '</span>' : '') +
 					(timestamp ? '<span class="bte-card__vehicle-meta">' + escapeHtml(timestamp) + '</span>' : '') +
 				'</li>';

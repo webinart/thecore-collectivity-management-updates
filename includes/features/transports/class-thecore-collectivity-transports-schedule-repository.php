@@ -561,6 +561,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		$realtime_index      = array();
 		$realtime_alerts     = array();
 		$realtime_vehicles   = array();
+		$tracked_trip_ids    = ! empty( $primary_stops ) ? $this->get_trip_ids_serving_stops( $provider_key, $trip_rows, $primary_stops ) : array();
 
 		if ( ! empty( $source_config['realtime_is_enabled'] ) && $realtime_repository ) {
 			$realtime_index = $realtime_repository->get_prediction_index(
@@ -582,6 +583,14 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 				$route_ids,
 				$trip_ids
 			);
+
+			if ( ! empty( $realtime_vehicles ) ) {
+				foreach ( $realtime_vehicles as $index => $vehicle ) {
+					$trip_id = ! empty( $vehicle['tripId'] ) ? (string) $vehicle['tripId'] : '';
+					$realtime_vehicles[ $index ]['servesTrackedStops'] = empty( $primary_stops ) || '' === $trip_id || isset( $tracked_trip_ids[ $trip_id ] );
+				}
+				unset( $vehicle, $index );
+			}
 		}
 
 		foreach ( $primary_stops as $stop_id ) {
