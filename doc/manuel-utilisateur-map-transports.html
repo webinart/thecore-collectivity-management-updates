@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Manuel utilisateur - Modules MAP et Transports</title>
+<style>
+  body {
+    font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+    color: #1b1f23;
+    line-height: 1.45;
+    margin: 2.2cm;
+    font-size: 11pt;
+  }
+  h1, h2, h3, h4 {
+    color: #12324a;
+    margin-top: 1.1em;
+    margin-bottom: 0.35em;
+    page-break-after: avoid;
+  }
+  h1 {
+    font-size: 24pt;
+    margin-top: 0;
+    border-bottom: 3px solid #1c6ea4;
+    padding-bottom: 0.3em;
+  }
+  h2 {
+    font-size: 18pt;
+    border-bottom: 1px solid #cfdbe6;
+    padding-bottom: 0.15em;
+    margin-top: 1.8em;
+  }
+  h3 {
+    font-size: 14pt;
+  }
+  h4 {
+    font-size: 12pt;
+  }
+  p, li, td, th {
+    font-size: 11pt;
+  }
+  .subtitle {
+    color: #4b5965;
+    font-size: 12pt;
+    margin: 0.3em 0 1.2em 0;
+  }
+  .meta {
+    color: #5b6874;
+    font-size: 10pt;
+    margin-bottom: 1.8em;
+  }
+  .lead {
+    background: #f3f8fc;
+    border-left: 4px solid #1c6ea4;
+    padding: 0.9em 1em;
+    margin: 1em 0 1.4em 0;
+  }
+  .note {
+    background: #fff8e8;
+    border-left: 4px solid #d08b00;
+    padding: 0.8em 1em;
+    margin: 1em 0;
+  }
+  .tip {
+    background: #eef8ef;
+    border-left: 4px solid #3c8b4f;
+    padding: 0.8em 1em;
+    margin: 1em 0;
+  }
+  .warning {
+    background: #fff0f0;
+    border-left: 4px solid #b63b3b;
+    padding: 0.8em 1em;
+    margin: 1em 0;
+  }
+  ul, ol {
+    margin-top: 0.4em;
+    margin-bottom: 0.9em;
+  }
+  li {
+    margin: 0.18em 0;
+  }
+  code {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    background: #f4f6f8;
+    padding: 0.06em 0.28em;
+    border-radius: 3px;
+    font-size: 10pt;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.8em 0 1.2em 0;
+  }
+  th, td {
+    border: 1px solid #cfd8df;
+    padding: 0.5em 0.6em;
+    vertical-align: top;
+  }
+  th {
+    background: #edf4f9;
+    text-align: left;
+  }
+  .toc ul {
+    list-style: none;
+    padding-left: 0;
+  }
+  .toc li {
+    margin: 0.25em 0;
+  }
+  .section-break {
+    page-break-before: always;
+  }
+  .small {
+    color: #5d6a75;
+    font-size: 10pt;
+  }
+</style>
+</head>
+<body>
+
+<h1>Manuel utilisateur</h1>
+<p class="subtitle">Modules <strong>MAP</strong> et <strong>Transports</strong> du plugin The Core - Collectivity Management</p>
+<p class="meta">Version du manuel: 7 avril 2026<br />Version du plugin: 1.0.1-beta.9<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
+
+<div class="lead">
+  <p><strong>Objectif de ce document</strong><br />Ce manuel explique comment utiliser les deux modules les plus structurants du plugin:</p>
+  <ul>
+    <li>le module <strong>MAP</strong>, pour gérer des lieux, circuits, balades, randonnées et affichages cartographiques interactifs;</li>
+    <li>le module <strong>Transports</strong>, pour gérer des lignes, arrêts, parkings, horaires GTFS et données temps réel.</li>
+  </ul>
+  <p>Le document est volontairement orienté usage. Il ne décrit pas l’architecture PHP interne du plugin, sauf quand cela aide à comprendre le fonctionnement côté WordPress ou Elementor.</p>
+</div>
+
+<h2>Sommaire</h2>
+<div class="toc">
+  <ul>
+    <li>1. Vue d’ensemble</li>
+    <li>2. Module MAP</li>
+    <li>3. Module Transports</li>
+    <li>4. Cas d’usage et scénarios recommandés</li>
+    <li>5. Dépannage rapide</li>
+  </ul>
+</div>
+
+<h2>1. Vue d’ensemble</h2>
+<h3>1.1. Ce que couvre le module MAP</h3>
+<p>Le module MAP sert à produire des cartes éditoriales réutilisables sur les sites de communes. Il permet d’afficher dans une même carte:</p>
+<ul>
+  <li>des <strong>lieux</strong>: monument, commerce, plage, office de tourisme, fontaine, point de vue, équipement;</li>
+  <li>des <strong>circuits</strong>: balade, randonnée, parcours thématique, circuit patrimonial;</li>
+  <li>des <strong>lignes de transport</strong> si l’option d’intégration avec le module Transports est activée.</li>
+</ul>
+
+<h3>1.2. Ce que couvre le module Transports</h3>
+<p>Le module Transports sert à produire une page transports complète avec:</p>
+<ul>
+  <li>les lignes de transport;</li>
+  <li>les lieux transport: arrêts, parkings, parkings vélos, gares ou points assimilés;</li>
+  <li>les horaires théoriques issus d’un flux GTFS;</li>
+  <li>éventuellement le temps réel si l’opérateur publie un flux compatible.</li>
+</ul>
+
+<h3>1.3. Comment les deux modules travaillent ensemble</h3>
+<p>Les deux modules sont séparés, mais compatibles:</p>
+<ul>
+  <li>le module <strong>Transports</strong> reste la source de vérité pour les lignes, arrêts et horaires;</li>
+  <li>le module <strong>MAP</strong> peut inclure des lieux et lignes de transport sur une carte plus éditoriale.</li>
+</ul>
+
+<div class="tip">
+  <p><strong>Règle de cadrage</strong><br />Utilisez <strong>Transports</strong> pour une page dédiée au réseau et aux horaires. Utilisez <strong>MAP</strong> pour une carte éditoriale plus large, éventuellement enrichie de transports.</p>
+</div>
+
+<div class="section-break"></div>
+<h2>2. Module MAP</h2>
+
+<h3>2.1. Vocabulaire utile</h3>
+<table>
+  <tr><th>Terme</th><th>Signification pratique</th></tr>
+  <tr><td>Lieu</td><td>Point géolocalisé: commerce, plage, chapelle, office de tourisme, point de vue, etc.</td></tr>
+  <tr><td>Circuit</td><td>Parcours éditorial: balade, randonnée, boucle, circuit patrimonial.</td></tr>
+  <tr><td>Ligne de transport</td><td>Tracé issu du module Transports. Ne pas confondre avec un circuit éditorial.</td></tr>
+  <tr><td>Univers</td><td>Contexte éditorial du contenu dans la cartographie: patrimoine, itinéraires, tourisme, équipements.</td></tr>
+  <tr><td>Catégorie</td><td>Nature du contenu: plage, commerce, randonnée, chapelle, restaurant, etc.</td></tr>
+  <tr><td>Thème</td><td>Axe transverse entre plusieurs contenus du site, par exemple un article, un élément de carte ou un document: patrimoine, nature, tourisme, mobilité, etc.</td></tr>
+  <tr><td>Public</td><td>Public visé: familles, seniors, touristes, etc.</td></tr>
+  <tr><td>Territoire</td><td>Zone géographique ou secteur éditorial.</td></tr>
+</table>
+
+<div class="note">
+  <p><strong>Univers vs Catégorie</strong><br />L’<strong>univers</strong> répond à la question “dans quel grand ensemble éditorial la donnée apparaît-elle ?”. La <strong>catégorie</strong> répond à la question “qu’est-ce que cet élément est précisément ?”.</p>
+</div>
+
+<div class="note">
+  <p><strong>Peut-on attribuer plusieurs Univers au même élément ?</strong><br />Oui. En pratique, un élément peut recevoir plusieurs <strong>Univers</strong> si cela a un sens éditorial réel. Par exemple, la <em>Maison de Georges Clemenceau</em> peut relever à la fois de <code>patrimoine</code> et de <code>tourisme</code> si vous voulez qu’elle apparaisse dans une carte patrimoine et dans une carte touristique. Il faut éviter d’en mettre plusieurs “par sécurité” : l’intérêt d’un univers est de dire dans quels grands contextes cartographiques un contenu doit ressortir.</p>
+</div>
+
+<h3>2.2. Créer un élément de carte</h3>
+<p>Chaque lieu ou circuit est créé dans le même type de contenu. C’est le champ <strong>Type cartographique</strong> qui détermine si l’élément est un lieu ou un parcours.</p>
+
+<ol>
+  <li>Dans l’administration WordPress, ouvrir le menu <strong>Cartographie &gt; Éléments cartographiques</strong>.</li>
+  <li>Cliquer sur <strong>Ajouter</strong>.</li>
+  <li>Saisir le <strong>titre WordPress</strong> de l’élément.</li>
+  <li>Dans le bloc <strong>Paramètres cartographiques</strong>, choisir le <strong>Type cartographique</strong> : <strong>Lieu</strong> ou <strong>Parcours</strong>.</li>
+  <li>Renseigner les <strong>champs communs</strong>.</li>
+  <li>Renseigner ensuite les champs spécifiques au type choisi.</li>
+  <li>Attribuer les taxonomies utiles : <strong>Univers</strong>, <strong>Catégories</strong>, <strong>Accessibilité</strong>, puis si besoin <strong>Thèmes</strong>, <strong>Publics</strong> et <strong>Territoires</strong>.</li>
+  <li>Publier ou mettre à jour le contenu.</li>
+</ol>
+
+<h4>2.2.1. Champs communs</h4>
+<p>Dans <strong>Paramètres cartographiques</strong>, quel que soit le type choisi, l’éditeur renseigne généralement :</p>
+<ul>
+  <li><strong>Titre WordPress</strong>: nom de l’élément;</li>
+  <li><strong>Sous-titre</strong>: information secondaire affichée dans la vignette;</li>
+  <li><strong>Résumé court</strong>: texte bref pour la popup;</li>
+  <li><strong>Libellé CTA</strong> et <strong>URL CTA</strong>: bouton principal éventuel;</li>
+  <li><strong>Ordre d’affichage</strong>: utile pour stabiliser certains affichages;</li>
+  <li><strong>Couleur d’accent</strong> et <strong>Clé icône</strong>: réglages de secours si aucun style Elementor ne prend la main;</li>
+  <li><strong>Notes d’accessibilité</strong>: texte libre affiché dans la vignette.</li>
+</ul>
+
+<h4>2.2.2. Champs d’un lieu</h4>
+<p>Si <strong>Type cartographique = Lieu</strong>, l’écran affiche un bloc <strong>Coordonnées du lieu</strong> avec:</p>
+<ul>
+  <li>latitude;</li>
+  <li>longitude;</li>
+  <li>adresse ou repère;</li>
+  <li>site internet;</li>
+  <li>réseaux sociaux, ajoutables dynamiquement.</li>
+</ul>
+
+<p>Pour chaque réseau social, l’éditeur peut choisir un réseau puis coller l’URL correspondante.</p>
+
+<h4>2.2.3. Champs d’un circuit</h4>
+<p>Si <strong>Type cartographique = Parcours</strong>, l’écran affiche un bloc <strong>Trace du parcours</strong> avec:</p>
+<ul>
+  <li>un champ <strong>GeoJSON</strong> pour coller la géométrie;</li>
+  <li>la distance;</li>
+  <li>la durée;</li>
+  <li>la difficulté;</li>
+  <li>les <strong>points liés</strong>, utiles pour rattacher des lieux à un circuit.</li>
+</ul>
+
+<p>Les <strong>points liés</strong> servent à associer au parcours des lieux déjà saisis dans MAP. Cela permet de relier un circuit à ses points d’intérêt ou à ses étapes utiles.</p>
+<ul>
+  <li>sur le plan éditorial, vous donnez du contexte au parcours ;</li>
+  <li>sur la carte, vous reliez un tracé à des lieux concrets déjà existants ;</li>
+  <li>dans la vignette, cela facilite la compréhension de ce que l’usager va trouver sur le trajet.</li>
+</ul>
+
+<div class="example">
+  <p><strong>Exemple :</strong> un circuit peut avoir comme points liés :</p>
+  <ul>
+    <li>un point de départ ;</li>
+    <li>un dolmen ou une chapelle sur le trajet ;</li>
+    <li>un restaurant ou un commerce utile à l’arrivée.</li>
+  </ul>
+</div>
+
+<div class="warning">
+  <p><strong>Point important</strong><br />Le parcours n’est pas dessiné à la souris dans l’admin. Il faut disposer d’un GeoJSON déjà prêt. Si vous n’avez qu’une trace GPX, il faut d’abord la convertir.</p>
+</div>
+
+<h4>2.2.4. Publications liées</h4>
+<p>Chaque élément de carte peut embarquer des contenus éditoriaux liés, directement dans sa vignette:</p>
+<ul>
+  <li><strong>Publications principales</strong>: boutons forts, avec libellé personnalisable;</li>
+  <li><strong>Publications liées</strong>: liens secondaires.</li>
+</ul>
+
+<p>Cas d’usage typique:</p>
+<ul>
+  <li>un circuit de randonnée a une fiche de présentation principale;</li>
+  <li>le même circuit peut aussi être lié à des articles ponctuels: marche citoyenne, actualité locale, reportage photo, etc.</li>
+</ul>
+
+<h3>2.3. Taxonomies à renseigner</h3>
+<p>En plus des champs ci-dessus, l’éditeur attribue des taxonomies:</p>
+<ul>
+  <li><strong>Univers</strong> (un ou plusieurs si nécessaire);</li>
+  <li><strong>Catégories</strong>;</li>
+  <li><strong>Accessibilité</strong> pour le filtre binaire “accessible”;</li>
+  <li><strong>Thèmes</strong>, <strong>Publics</strong> et <strong>Territoires</strong> si pertinents.</li>
+</ul>
+
+<div class="note">
+  <p><strong>Toutes les taxonomies sont-elles obligatoires ?</strong><br />Non. Elles sont là pour structurer la donnée quand c’est utile, pas pour alourdir la saisie. Un site peut très bien utiliser seulement <strong>Catégories</strong>, ou <strong>Catégories + Univers</strong>, et laisser de côté <strong>Thèmes</strong>, <strong>Publics</strong> ou <strong>Territoires</strong> tant qu’il n’en a pas un besoin éditorial ou fonctionnel clair.</p>
+</div>
+
+<p>Exemples plus précis :</p>
+<table>
+  <tr><th>Élément</th><th>Univers</th><th>Catégorie</th><th>Thème</th></tr>
+  <tr><td>Maison de Georges Clemenceau</td><td>patrimoine, tourisme</td><td>maison-historique</td><td>patrimoine</td></tr>
+  <tr><td>Plage Clemenceau</td><td>tourisme</td><td>plage</td><td>nature, tourisme</td></tr>
+  <tr><td>Circuit sur les pas de Clemenceau</td><td>itinéraires, tourisme</td><td>circuit</td><td>patrimoine, tourisme</td></tr>
+</table>
+
+<div class="example">
+  <p><strong>Lecture correcte de ces trois colonnes :</strong></p>
+  <ul>
+    <li><strong>Univers</strong> : dans quelle ou quelles cartes thématiques l’élément doit-il apparaître ?</li>
+    <li><strong>Catégorie</strong> : qu’est-ce que cet élément est concrètement ?</li>
+    <li><strong>Thème</strong> : sous quel angle éditorial transverse veut-on pouvoir le retrouver avec d’autres contenus du site, par exemple des articles, d’autres éléments de carte ou des documents ?</li>
+  </ul>
+</div>
+
+<div class="example">
+  <p><strong>Exemple simple pour le thème :</strong></p>
+  <ul>
+    <li>un article d’actualité sur une visite guidée de la Maison de Georges Clemenceau ;</li>
+    <li>la fiche cartographique <em>Maison de Georges Clemenceau</em> ;</li>
+    <li>une brochure PDF de visite ;</li>
+  </ul>
+  <p>Ces trois contenus sont de nature différente, mais ils peuvent partager le même <strong>Thème = patrimoine</strong>. Le thème sert donc à les retrouver ensemble dans un même axe éditorial.</p>
+</div>
+
+<h3>2.4. Widget Elementor “Carte”</h3>
+<p>Le widget principal s’appelle <strong>Carte</strong>. Il porte les données, la carte Leaflet et les principaux réglages d’affichage.</p>
+
+<h4>2.4.1. Contrôles de contenu</h4>
+<p>Le widget permet notamment de:</p>
+<ul>
+  <li>définir un <strong>identifiant de groupe</strong> pour le relier à d’autres widgets de filtres;</li>
+  <li>préfiltrer la carte par <strong>Univers</strong>, <strong>Catégories</strong>, <strong>Thèmes</strong>, <strong>Publics</strong> et <strong>Territoires</strong>;</li>
+  <li>limiter à <strong>Accessible uniquement</strong>;</li>
+  <li>inclure ou non les <strong>transports</strong>;</li>
+  <li>limiter les transports à certains <strong>modes</strong>;</li>
+  <li>afficher ou non <strong>les lieux</strong> et <strong>les parcours</strong>;</li>
+  <li>afficher ou non <strong>les filtres internes</strong>, la recherche et le compteur;</li>
+  <li>définir la <strong>hauteur de la carte</strong>;</li>
+  <li>choisir le <strong>cadrage initial</strong> automatique ou manuel;</li>
+  <li>activer, dans Elementor seulement, le <strong>debug d’édition</strong>.</li>
+</ul>
+
+<h4>2.4.2. Styles par catégorie</h4>
+<p>Chaque catégorie peut recevoir son propre style de marqueur et, pour les parcours, son propre style de tracé:</p>
+<ul>
+  <li>couleur;</li>
+  <li>type d’icône;</li>
+  <li>icône Elementor ou SVG personnalisé;</li>
+  <li>libellé court si vous utilisez un marqueur textuel;</li>
+  <li>épaisseur du tracé;</li>
+  <li>type de trait;</li>
+  <li>position de l’icône sur le parcours;</li>
+  <li>décalage au début et à la fin du tracé.</li>
+</ul>
+
+<div class="tip">
+  <p><strong>Bon usage</strong><br />Les styles par catégorie conviennent quand tous les éléments d’une catégorie doivent partager le même rendu. Dès qu’un parcours doit garder un habillage spécifique, utilisez plutôt les <strong>presets de parcours</strong>.</p>
+</div>
+
+<h4>2.4.3. Styles des vignettes</h4>
+<p>Le widget permet aussi de styliser les popups:</p>
+<ul>
+  <li>fond de vignette;</li>
+  <li>couleur du texte principal et secondaire;</li>
+  <li>couleur de bordure;</li>
+  <li>couleurs des liens texte;</li>
+  <li>couleurs des tags;</li>
+  <li>couleurs des pastilles de liens;</li>
+  <li>couleurs des boutons principaux et secondaires;</li>
+  <li>typographies: titre, texte courant, titres de sections, tags, pastilles, boutons.</li>
+</ul>
+
+<h4>2.4.4. Styles des parcours</h4>
+<p>Le widget propose <strong>quatre presets de parcours</strong> réutilisables. Chaque preset peut définir:</p>
+<ul>
+  <li>couleur;</li>
+  <li>type d’icône;</li>
+  <li>icône Elementor ou SVG;</li>
+  <li>libellé éventuel;</li>
+  <li>épaisseur du tracé;</li>
+  <li>type de trait;</li>
+  <li>position de l’icône principale sur le tracé;</li>
+  <li>décalage en début et fin de tracé;</li>
+  <li>plusieurs <strong>icônes supplémentaires</strong>, chacune avec sa propre position, taille, couleur et option de contour.</li>
+</ul>
+
+<p>Ensuite, le bloc <strong>Affectation des parcours</strong> permet d’affecter un preset précis à un circuit ou à une ligne de transport.</p>
+
+<div class="note">
+  <p><strong>Comment lire les décalages de début et fin</strong><br />Les pourcentages sont relatifs à la moitié du parcours. En pratique, <code>0</code> signifie aucun rognage et <code>100</code> signifie un rognage jusqu’au milieu du tracé.</p>
+</div>
+
+<h3>2.5. Widgets de filtres séparés</h3>
+<p>Le module MAP peut être mis en page de deux manières:</p>
+<ol>
+  <li>avec les filtres directement dans le widget <strong>Carte</strong>;</li>
+  <li>avec des widgets séparés pour composer une interface plus libre.</li>
+</ol>
+
+<p>Widgets disponibles:</p>
+<table>
+  <tr><th>Widget</th><th>Usage</th></tr>
+  <tr><td>Carte</td><td>Porte la carte, les données et les réglages principaux.</td></tr>
+  <tr><td>Recherche de carte</td><td>Affiche uniquement le champ de recherche.</td></tr>
+  <tr><td>Types de résultats</td><td>Affiche uniquement les boutons <strong>Lieux</strong>, <strong>Circuits</strong> et <strong>Lignes de transport</strong>.</td></tr>
+  <tr><td>Catégories de carte</td><td>Affiche uniquement les facettes choisies: Univers, Catégories, Thèmes, Publics, Territoires, Modes de transport, Accessible.</td></tr>
+  <tr><td>Réinitialiser la carte</td><td>Affiche uniquement le bouton de reset.</td></tr>
+  <tr><td>Filtres de carte</td><td>Widget combiné. Utile pour des mises en page plus rapides, mais moins fin qu’un assemblage dédié.</td></tr>
+</table>
+
+<p><strong>Règle impérative</strong>: si vous utilisez des widgets séparés, ils doivent tous partager le même <strong>Identifiant de groupe</strong> que le widget Carte correspondant.</p>
+
+<h4>Exemple de mise en page</h4>
+<ol>
+  <li>Placez un widget <strong>Carte</strong> avec <code>Identifiant de groupe = carte-svsj</code>.</li>
+  <li>Désactivez ses filtres internes.</li>
+  <li>Ajoutez un widget <strong>Recherche de carte</strong> avec le même identifiant.</li>
+  <li>Ajoutez un widget <strong>Types de résultats</strong> avec le même identifiant.</li>
+  <li>Ajoutez un widget <strong>Catégories de carte</strong> avec le même identifiant.</li>
+  <li>Ajoutez un widget <strong>Réinitialiser la carte</strong> si nécessaire.</li>
+</ol>
+
+<h3>2.6. Intégration des transports dans la carte</h3>
+<p>Le widget Carte peut intégrer des données du module Transports.</p>
+<ul>
+  <li>les <strong>arrêts et lieux transport</strong> apparaissent comme des points;</li>
+  <li>les <strong>lignes transport</strong> apparaissent comme des tracés distincts des circuits éditoriaux;</li>
+  <li>le filtre de type distingue désormais <strong>Circuits</strong> et <strong>Lignes de transport</strong>.</li>
+</ul>
+
+<p>Cette distinction est importante: un itinéraire touristique ou une randonnée n’a pas le même sens qu’une ligne de bus.</p>
+
+<h4>Comportement spécifique</h4>
+<ul>
+  <li>un arrêt lié à une seule ligne peut reprendre automatiquement la couleur de cette ligne;</li>
+  <li>les hubs transport sont regroupés pour éviter les doublons dus aux quais ou directions GTFS;</li>
+  <li>les lignes transport peuvent être rognées visuellement via les presets de parcours pour éviter d’envahir toute la commune.</li>
+</ul>
+
+<h3>2.7. Cas d’usage MAP recommandés</h3>
+
+<h4>Cas 1 - Carte touristique complète</h4>
+<ul>
+  <li>Objectif: offrir sur une seule carte les lieux à voir, les itinéraires utiles et les transports.</li>
+  <li>Univers typiques: <code>tourisme</code>, éventuellement <code>patrimoine</code> et <code>itinéraires</code>.</li>
+  <li>Types affichés: <strong>lieux + circuits + lignes de transport</strong>.</li>
+  <li>Widgets séparés recommandés: recherche + types de résultats + catégories.</li>
+  <li>Catégories typiques: plage, maison historique, office de tourisme, point de vue, restaurant, commerce.</li>
+  <li>Intérêt: un visiteur prépare ou vit sa visite sans changer de carte selon le besoin.</li>
+</ul>
+
+<h4>Cas 2 - Carte spécifique “Où manger à Saint-Vincent-sur-Jard ?”</h4>
+<ul>
+  <li>Objectif: créer une carte simple dédiée aux restaurants, commerces alimentaires ou pauses utiles.</li>
+  <li>Univers typique: <code>tourisme</code>.</li>
+  <li>Types affichés: <strong>lieux uniquement</strong>.</li>
+  <li>Catégories typiques: restaurant, commerce.</li>
+  <li>Intérêt: page courte, lisible, facile à intégrer dans un parcours éditorial “bien manger” ou “adresses utiles”.</li>
+</ul>
+
+<h4>Cas 3 - Carte “Balades et circuits à Saint-Vincent-sur-Jard”</h4>
+<ul>
+  <li>Objectif: afficher les balades, randonnées et parcours thématiques de la commune.</li>
+  <li>Univers typique: <code>itinéraires</code>.</li>
+  <li>Types affichés: <strong>circuits</strong>, avec éventuellement quelques lieux liés si cela rend le parcours plus utile.</li>
+  <li>Presets de parcours utilisés pour distinguer randonnée, balade patrimoniale, parcours famille ou boucle courte.</li>
+  <li>Icônes supplémentaires utiles pour marquer départ, belvédère, étape ou arrivée.</li>
+  <li>Option éditoriale possible: afficher aussi quelques restaurants ou commerces liés pour enrichir l’expérience sans brouiller la lecture principale.</li>
+</ul>
+
+<h3>2.8. Bonnes pratiques MAP</h3>
+<ul>
+  <li>Utilisez <strong>Univers</strong> pour le contexte éditorial, pas pour décrire la nature précise d’un lieu.</li>
+  <li>Utilisez <strong>Catégorie</strong> pour décrire ce qu’est l’élément.</li>
+  <li>Réservez les <strong>Thèmes</strong> à un axe transversal réutilisable sur plusieurs types de contenus.</li>
+  <li>Pour une carte sophistiquée, préférez les widgets de filtres séparés plutôt qu’un seul bloc combiné.</li>
+  <li>Pour les parcours importants, utilisez un <strong>preset</strong> explicite afin de stabiliser la couleur et les icônes.</li>
+  <li>Quand une ligne transport déborde trop du périmètre communal, ajustez les décalages de début et fin au lieu de modifier la donnée source.</li>
+</ul>
+
+<div class="section-break"></div>
+<h2>3. Module Transports</h2>
+
+<h3>3.1. Principes généraux</h3>
+<p>Le module Transports repose sur deux couches:</p>
+<ol>
+  <li>une couche <strong>éditoriale</strong> dans WordPress: lignes et lieux;</li>
+  <li>une couche <strong>horaires</strong> importée depuis des flux externes, principalement GTFS.</li>
+</ol>
+
+<p>Cette séparation est importante: on ne stocke pas les horaires dans les champs WordPress des lignes ou des lieux.</p>
+
+<div class="note">
+  <p><strong>Qu’est-ce que GTFS ?</strong><br />GTFS signifie <em>General Transit Feed Specification</em>. C’est un format standard de données utilisé par les opérateurs de transport pour publier leur réseau. Un flux GTFS contient typiquement les lignes, les arrêts, les trajets, les horaires théoriques et parfois les géométries des parcours.</p>
+</div>
+
+<p>Dans ce plugin, GTFS sert à éviter une ressaisie manuelle lourde :</p>
+<ul>
+  <li>vous configurez une source opérateur ;</li>
+  <li>le plugin découvre les lignes et les arrêts utiles pour la commune ;</li>
+  <li>il importe ensuite les horaires théoriques dans ses tables techniques ;</li>
+  <li>et il peut aussi utiliser les géométries du feed pour tracer les lignes sur la carte.</li>
+</ul>
+
+<p>Si l’opérateur publie en plus un flux de <strong>temps réel</strong>, le module peut enrichir la page avec :</p>
+<ul>
+  <li>des prochains départs live ;</li>
+  <li>des perturbations ;</li>
+  <li>des positions de véhicules.</li>
+</ul>
+
+<h3>3.2. Les deux types de contenus</h3>
+<table>
+  <tr><th>Contenu</th><th>Rôle</th><th>Exemples</th></tr>
+  <tr><td>Ligne de transport</td><td>Décrit une ligne ou un service de mobilité</td><td>Ligne 550, navette centre-ville, ligne train</td></tr>
+  <tr><td>Lieu de transport</td><td>Décrit un point géolocalisé affiché sur la carte</td><td>Arrêt, gare, parking relais, parking vélo</td></tr>
+</table>
+
+<h3>3.3. La taxonomie “Modes”</h3>
+<p>Le mode de transport est une taxonomie partagée entre lignes et lieux. Les termes livrés par défaut sont:</p>
+<ul>
+  <li><code>bus</code></li>
+  <li><code>parking</code></li>
+  <li><code>velo</code></li>
+  <li><code>train</code></li>
+</ul>
+
+<p>Un arrêt de bus doit donc être assigné au mode <strong>bus</strong>, un parking vélo au mode <strong>velo</strong>, etc.</p>
+
+<h3>3.4. Configurer une source GTFS</h3>
+<p>Toute la configuration se fait dans <strong>Transports &gt; Horaires</strong>.</p>
+
+<h4>3.4.1. Paramètres d’une source</h4>
+<p>Chaque source GTFS possède sa propre fiche de configuration. Les principaux champs sont:</p>
+<ul>
+  <li><strong>Provider label</strong>: nom lisible de l’opérateur;</li>
+  <li><strong>Provider key</strong>: identifiant technique unique;</li>
+  <li><strong>GTFS ZIP URL</strong>: URL du flux statique;</li>
+  <li><strong>Realtime enabled</strong>: active ou non l’import temps réel;</li>
+  <li><strong>Realtime format</strong>: <code>GTFS-RT</code>, <code>SIRI</code> ou <code>SIRI-Lite</code>;</li>
+  <li><strong>TripUpdates URL</strong>, <strong>ServiceAlerts URL</strong>, <strong>VehiclePositions URL</strong> selon le fournisseur;</li>
+  <li><strong>Locality name</strong>: nom de commune tel qu’il apparaît dans le feed;</li>
+  <li><strong>Locality INSEE</strong> si disponible;</li>
+  <li><strong>Extra localities</strong>: communes supplémentaires à inclure;</li>
+  <li><strong>Extra route ids</strong>: lignes supplémentaires à inclure même hors commune;</li>
+  <li><strong>Extra stop ids</strong>: arrêts précis à inclure.</li>
+</ul>
+
+<p>Guide pratique pour remplir ces champs :</p>
+<table>
+  <tr><th>Champ</th><th>Que faut-il mettre ?</th><th>Où trouver l’information ?</th></tr>
+  <tr><td>Provider label</td><td>Le nom lisible de l’opérateur ou de la source, par exemple <em>Aléop Pays de la Loire</em>.</td><td>Sur la page du jeu de données ou sur le site de l’opérateur.</td></tr>
+  <tr><td>Provider key</td><td>Une clé technique courte, stable et unique, en minuscules, sans espace, par exemple <code>aleop</code> ou <code>idfm</code>.</td><td>À définir vous-même. Cette clé doit rester stable dans le temps.</td></tr>
+  <tr><td>GTFS ZIP URL</td><td>L’URL directe du fichier GTFS statique au format ZIP.</td><td>En priorité sur le Point d’Accès National <code>https://transport.data.gouv.fr/</code>, dans la ressource GTFS du jeu de données. À défaut, sur le portail open data officiel de l’opérateur ou de la région.</td></tr>
+  <tr><td>Realtime enabled</td><td><code>Oui</code> si vous voulez exploiter un flux temps réel, sinon <code>Non</code>.</td><td>Dépend de l’existence d’un flux temps réel publié par l’opérateur.</td></tr>
+  <tr><td>Realtime format</td><td>Le format du flux live: <code>GTFS-RT</code>, <code>SIRI</code> ou <code>SIRI-Lite</code>.</td><td>Indiqué dans la ressource temps réel du jeu de données ou dans la documentation du producteur. En France, le PAN documente ces formats sur <code>https://doc.transport.data.gouv.fr/</code>.</td></tr>
+  <tr><td>TripUpdates URL</td><td>L’URL du flux de prochains passages live.</td><td>Dans la ressource temps réel du dataset. Sur le PAN, cette URL peut être une URL directe du producteur ou une URL proxy du type <code>https://proxy.transport.data.gouv.fr/resource/...</code>.</td></tr>
+  <tr><td>ServiceAlerts URL</td><td>L’URL du flux de perturbations et messages de service.</td><td>Dans la même page dataset si le producteur publie ce flux.</td></tr>
+  <tr><td>VehiclePositions URL</td><td>L’URL du flux de positions de véhicules.</td><td>Dans la même page dataset si le producteur publie ce flux.</td></tr>
+  <tr><td>Locality name</td><td>Le nom de la commune tel qu’il apparaît dans le GTFS.</td><td>Souvent visible dans <code>stops.txt</code>, dans le champ <code>city_name</code> quand il existe. Si vous avez un doute, ouvrez le ZIP GTFS et contrôlez les libellés des arrêts.</td></tr>
+  <tr><td>Locality INSEE</td><td>Le code INSEE de la commune.</td><td>Sur le site de l’INSEE, sur le site de la commune, ou parfois directement dans le jeu de données.</td></tr>
+  <tr><td>Extra localities</td><td>Des communes supplémentaires si vous voulez élargir le périmètre.</td><td>À définir selon le besoin fonctionnel du site.</td></tr>
+  <tr><td>Extra route ids</td><td>Des <code>route_id</code> à forcer, même hors commune.</td><td>Dans le GTFS, généralement dans <code>routes.txt</code>, ou en inspectant le résultat de la découverte / les lignes déjà créées.</td></tr>
+  <tr><td>Extra stop ids</td><td>Des <code>stop_id</code> précis à forcer.</td><td>Dans <code>stops.txt</code> du GTFS ou dans les lieux créés après une première découverte.</td></tr>
+</table>
+
+<div class="note">
+  <p><strong>Par où commencer en pratique ?</strong><br />Le premier réflexe doit être de chercher le réseau ou l’opérateur sur <code>https://transport.data.gouv.fr/</code>. La page du dataset regroupe généralement la ressource GTFS statique, les éventuelles ressources temps réel et des informations de qualité ou de disponibilité. Si rien n’est publié sur le PAN, cherchez ensuite sur le portail open data officiel de la région, de l’AOM ou de l’opérateur.</p>
+</div>
+
+<div class="example">
+  <p><strong>Exemple concret de méthode :</strong></p>
+  <ol>
+    <li>ouvrir <code>https://transport.data.gouv.fr/</code> ;</li>
+    <li>rechercher l’opérateur ou le territoire, par exemple <em>Aléop</em> ou <em>Île-de-France Mobilités</em> ;</li>
+    <li>ouvrir le dataset concerné ;</li>
+    <li>copier l’URL de la ressource <strong>GTFS</strong> pour le champ <strong>GTFS ZIP URL</strong> ;</li>
+    <li>si des ressources temps réel existent, copier leurs URLs dans <strong>TripUpdates</strong>, <strong>ServiceAlerts</strong> et <strong>VehiclePositions</strong> ;</li>
+    <li>ouvrir le ZIP GTFS pour vérifier le nom exact de la commune et, si besoin, les <code>route_id</code> ou <code>stop_id</code>.</li>
+  </ol>
+</div>
+
+<div class="tip">
+  <p><strong>Cas multi-opérateurs</strong><br />Le plugin gère plusieurs sources GTFS en parallèle. Chaque source est isolée par son <strong>provider key</strong>. Une commune peut donc agréger plusieurs opérateurs sans écraser les données précédentes.</p>
+</div>
+
+<div class="tip">
+  <p><strong>Transfert de configuration entre environnements</strong><br />Depuis <strong>Transports &gt; Horaires</strong>, vous pouvez désormais <strong>exporter la configuration GTFS</strong> au format JSON puis la <strong>réimporter</strong> sur un autre site. C’est la méthode recommandée pour passer une configuration de dev à préproduction ou production sans tout ressaisir.</p>
+</div>
+
+<h4>3.4.2. Workflow standard</h4>
+<ol>
+  <li>Créer ou compléter une source GTFS.</li>
+  <li>Cliquer sur <strong>Découvrir et synchroniser</strong>.</li>
+  <li>Vérifier les lignes et lieux créés ou mis à jour.</li>
+  <li>Cliquer sur <strong>Importer les horaires</strong>.</li>
+  <li>Si un flux temps réel existe, cliquer sur <strong>Importer le temps réel</strong>.</li>
+  <li>Ouvrir ensuite chaque ligne si nécessaire pour définir les <strong>arrêts de référence par direction</strong>.</li>
+</ol>
+
+<h4>Exemple: Saint-Vincent-sur-Jard</h4>
+<table>
+  <tr><th>Champ</th><th>Valeur type</th></tr>
+  <tr><td>Provider label</td><td>Aléop Pays de la Loire</td></tr>
+  <tr><td>Provider key</td><td>aleop</td></tr>
+  <tr><td>Locality name</td><td>Saint-Vincent-sur-Jard</td></tr>
+  <tr><td>Locality INSEE</td><td>85278</td></tr>
+</table>
+
+<p>Si vous voulez inclure ponctuellement une ligne voisine utile à la commune, vous pouvez compléter:</p>
+<ul>
+  <li><strong>Extra route ids</strong> pour forcer la ligne;</li>
+  <li><strong>Extra stop ids</strong> pour forcer des arrêts précis;</li>
+  <li>éventuellement <strong>Extra localities</strong> si le besoin est plus large.</li>
+</ul>
+
+<h3>3.5. Éditer une ligne de transport</h3>
+<p>Chaque ligne comporte une fiche avec:</p>
+<ul>
+  <li><strong>Code de ligne</strong>;</li>
+  <li><strong>Libellé du trajet</strong>;</li>
+  <li><strong>Fréquence</strong>;</li>
+  <li><strong>Horaires</strong> (résumé éditorial, pas les tableaux GTFS);</li>
+  <li><strong>Mode de gestion</strong>: manuel, GTFS ou CSV;</li>
+  <li><strong>Source GTFS</strong>;</li>
+  <li><strong>GTFS route_id</strong>;</li>
+  <li><strong>GTFS route_short_name</strong>;</li>
+  <li><strong>GTFS stop_id suivis</strong>;</li>
+  <li><strong>Arrêts de référence par direction</strong>;</li>
+  <li><strong>Jours de service</strong>;</li>
+  <li><strong>Accessible PMR</strong>;</li>
+  <li><strong>Lien externe</strong>;</li>
+  <li><strong>Mots-clés de recherche</strong>;</li>
+  <li><strong>Ordre d’affichage</strong>.</li>
+</ul>
+
+<div class="note">
+  <p><strong>Arrêts de référence</strong><br />Ce réglage est important pour la page Transports. Il permet de présélectionner un arrêt exact par direction, au lieu d’afficher des horaires ambigus pour une station agrégée.</p>
+</div>
+
+<h3>3.6. Éditer un lieu de transport</h3>
+<p>Chaque lieu de transport peut représenter un arrêt, un parking, un parking vélo, une gare ou un point assimilé. L’éditeur dispose notamment de:</p>
+<ul>
+  <li>sous-titre;</li>
+  <li>adresse ou description courte;</li>
+  <li>latitude / longitude;</li>
+  <li><strong>GTFS stop_id</strong>;</li>
+  <li><strong>Source GTFS</strong>;</li>
+  <li><strong>Accessible PMR</strong>;</li>
+  <li><strong>Lignes reliées</strong>;</li>
+  <li>données parking: type, total, disponibles, PMR, gratuité;</li>
+  <li>données vélo: nombre de vélos, nombre de places, vélos électriques;</li>
+  <li>données train: départs et informations complémentaires.</li>
+</ul>
+
+<p>Le mode de transport n’est pas réglé dans la métabox principale, mais dans la taxonomie <strong>Modes</strong>.</p>
+
+<h3>3.7. Widget Elementor “Transport Explorer”</h3>
+<p>Le widget dédié aux transports s’appelle <strong>Transport Explorer</strong>.</p>
+
+<h4>3.7.1. Contrôles Elementor</h4>
+<p>Ses contrôles sont volontairement simples:</p>
+<ul>
+  <li><strong>Titre</strong>;</li>
+  <li><strong>Description</strong>;</li>
+  <li><strong>Afficher les alertes transport</strong>;</li>
+  <li><strong>Hauteur carte</strong>.</li>
+</ul>
+
+<h4>3.7.2. Comportement côté usager</h4>
+<p>Le widget affiche:</p>
+<ul>
+  <li>éventuellement des alertes transport;</li>
+  <li>une carte interactive des lignes et lieux de transport;</li>
+  <li>une recherche;</li>
+  <li>des filtres par mode;</li>
+  <li>un panneau bus avec les lignes disponibles;</li>
+  <li>des horaires par direction et par arrêt;</li>
+  <li>un bloc <strong>Temps réel</strong> quand des prédictions pertinentes existent;</li>
+  <li>des marqueurs véhicules si le flux temps réel fournit des positions compatibles.</li>
+</ul>
+
+<h3>3.8. Temps réel</h3>
+<p>Le temps réel est <strong>optionnel</strong>. Le plugin continue à fonctionner avec le seul GTFS statique.</p>
+
+<p>Quand un flux temps réel est configuré et compatible, le module peut aujourd’hui exploiter:</p>
+<ul>
+  <li><strong>TripUpdates</strong>;</li>
+  <li><strong>ServiceAlerts</strong>;</li>
+  <li><strong>VehiclePositions</strong>.</li>
+</ul>
+
+<p>Le temps réel ne remplace pas le théorique. Il vient en surcouche:</p>
+<ul>
+  <li>le théorique reste la base stable;</li>
+  <li>le bloc temps réel montre les prochains départs live;</li>
+  <li>les alertes de service sont affichées séparément;</li>
+  <li>les véhicules apparaissent sur la carte quand la correspondance avec les lignes visibles est possible.</li>
+</ul>
+
+<div class="warning">
+  <p><strong>Bonne pratique</strong><br />Le temps réel doit être considéré comme une amélioration, pas comme l’unique vérité. Si le flux live tombe, la page Transports doit rester utile grâce au GTFS statique.</p>
+</div>
+
+<h3>3.9. Cas d’usage Transports</h3>
+
+<h4>Cas 1 - Commune avec un seul opérateur</h4>
+<ul>
+  <li>Créer une seule source GTFS.</li>
+  <li>Découvrir la commune.</li>
+  <li>Importer les horaires.</li>
+  <li>Ajuster les arrêts de référence par direction.</li>
+</ul>
+
+<h4>Cas 2 - Commune avec plusieurs opérateurs</h4>
+<ul>
+  <li>Créer une source par opérateur.</li>
+  <li>Conserver un <strong>provider key</strong> unique par source.</li>
+  <li>Lancer découverte et import pour chaque source.</li>
+  <li>Vérifier que chaque ligne et chaque lieu pointent bien vers la bonne source GTFS.</li>
+</ul>
+
+<h4>Cas 3 - Ajouter une ligne d’une commune adjacente</h4>
+<ul>
+  <li>ajouter la ligne dans <strong>Extra route ids</strong>;</li>
+  <li>ajouter les arrêts utiles dans <strong>Extra stop ids</strong>;</li>
+  <li>relancer découverte puis import.</li>
+</ul>
+
+<p>Ce cas est particulièrement utile quand une ligne ou navette voisine dessert un équipement structurant intéressant pour la commune.</p>
+
+<div class="section-break"></div>
+<h2>4. Cas d’usage et scénarios recommandés</h2>
+
+<h3>4.1. Page “Carte interactive” d’une commune</h3>
+<ol>
+  <li>Créer les lieux et circuits dans le module MAP.</li>
+  <li>Construire la page Elementor avec un widget <strong>Carte</strong>.</li>
+  <li>Décider si les filtres restent intégrés ou s’ils sont séparés en plusieurs widgets.</li>
+  <li>Créer des presets de parcours pour stabiliser le rendu des circuits importants.</li>
+  <li>Activer les transports si vous voulez une carte mixte.</li>
+</ol>
+
+<h3>4.2. Page “Transports” d’une commune</h3>
+<ol>
+  <li>Configurer au moins une source GTFS dans <strong>Transports &gt; Horaires</strong>.</li>
+  <li>Lancer découverte et import.</li>
+  <li>Vérifier ou corriger les libellés des lignes.</li>
+  <li>Renseigner les arrêts de référence.</li>
+  <li>Placer le widget <strong>Transport Explorer</strong> sur la page.</li>
+</ol>
+
+<h3>4.3. Site multi-communes</h3>
+<p>En multisite, chaque commune peut vivre sur son propre sous-site. C’est l’option la plus propre pour:</p>
+<ul>
+  <li>isoler ses lignes, lieux, cartes et imports;</li>
+  <li>garder une gouvernance éditoriale plus claire;</li>
+  <li>limiter les effets de bord entre communes.</li>
+</ul>
+
+<h3>4.4. Quand utiliser MAP ou Transports</h3>
+<table>
+  <tr><th>Besoin</th><th>Module recommandé</th></tr>
+  <tr><td>Afficher une randonnée, un circuit patrimoine ou une balade nature</td><td>MAP</td></tr>
+  <tr><td>Afficher une page réseau avec horaires, directions et arrêts</td><td>Transports</td></tr>
+  <tr><td>Montrer quelques arrêts ou une ligne sur une carte éditoriale communale</td><td>MAP avec intégration Transports</td></tr>
+  <tr><td>Afficher des départs temps réel et des perturbations</td><td>Transports</td></tr>
+</table>
+
+<div class="section-break"></div>
+<h2>5. Dépannage rapide</h2>
+
+<h3>5.1. Une carte n’affiche rien</h3>
+<ol>
+  <li>Vérifier que des éléments MAP existent et sont publiés.</li>
+  <li>Vérifier les pré-filtres du widget Carte: Univers, Catégories, Thèmes, etc.</li>
+  <li>Vérifier si la carte affiche bien les lieux et/ou les parcours.</li>
+  <li>Si vous utilisez des widgets séparés, vérifier que l’<strong>Identifiant de groupe</strong> est exactement le même partout.</li>
+</ol>
+
+<h3>5.2. Les filtres séparés n’agissent pas sur la carte</h3>
+<ol>
+  <li>Vérifier l’identifiant de groupe de tous les widgets concernés.</li>
+  <li>Vérifier que le widget Carte est bien présent sur la page.</li>
+  <li>Vérifier qu’il n’y a pas deux cartes avec le même identifiant de groupe par erreur.</li>
+</ol>
+
+<h3>5.3. Un parcours ne ressemble pas au style attendu</h3>
+<ol>
+  <li>Vérifier l’affectation du preset dans <strong>Styles des parcours</strong>.</li>
+  <li>Vérifier que le parcours visé est bien le bon, surtout si des lignes de transport sont aussi présentes.</li>
+  <li>Vérifier si un style de catégorie ne prend pas le dessus en absence d’affectation explicite.</li>
+</ol>
+
+<h3>5.4. Les transports n’apparaissent pas sur la carte MAP</h3>
+<ol>
+  <li>Vérifier que <strong>Inclure les transports</strong> est activé sur le widget Carte.</li>
+  <li>Vérifier que des lignes ou lieux transport existent bien sur le sous-site.</li>
+  <li>Vérifier la taxonomie <strong>Modes</strong>.</li>
+  <li>Vérifier les filtres de type: <strong>Lignes de transport</strong> peut être désactivé.</li>
+</ol>
+
+<h3>5.5. La page Transports n’a pas d’horaires</h3>
+<ol>
+  <li>Vérifier la configuration de la source GTFS.</li>
+  <li>Lancer <strong>Découvrir et synchroniser</strong>.</li>
+  <li>Lancer <strong>Importer les horaires</strong>.</li>
+  <li>Vérifier que la ligne est bien reliée à la bonne <strong>Source GTFS</strong>.</li>
+  <li>Vérifier que des <strong>stop_id</strong> ou <strong>route_id</strong> sont bien présents.</li>
+</ol>
+
+<h3>5.6. Le temps réel n’apparaît pas</h3>
+<ol>
+  <li>Vérifier que le temps réel est activé sur la source.</li>
+  <li>Vérifier que les URL TripUpdates / ServiceAlerts / VehiclePositions sont renseignées.</li>
+  <li>Lancer <strong>Importer le temps réel</strong>.</li>
+  <li>Garder en tête qu’une ligne peut exister sans prédiction live utile au moment précis du test.</li>
+</ol>
+
+<h2>Conclusion</h2>
+<p>Le couple <strong>MAP + Transports</strong> permet de couvrir deux besoins complémentaires:</p>
+<ul>
+  <li>une cartographie éditoriale souple, très pilotable dans Elementor;</li>
+  <li>une page Transports plus structurée, branchée sur des flux GTFS et éventuellement du temps réel.</li>
+</ul>
+
+<p>Pour rester robuste sur plusieurs communes, gardez une logique simple:</p>
+<ul>
+  <li>le module MAP pour l’éditorial et la mise en scène cartographique;</li>
+  <li>le module Transports pour le réseau, les horaires et les opérateurs;</li>
+  <li>des identifiants de groupe propres dans Elementor;</li>
+  <li>des presets stables pour les parcours importants;</li>
+  <li>des imports GTFS clairement séparés par source et par commune.</li>
+</ul>
+
+</body>
+</html>

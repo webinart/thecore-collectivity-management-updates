@@ -96,6 +96,11 @@
 		return "rgba(" + red + ", " + green + ", " + blue + ", " + alpha + ")";
 	}
 
+	function parseCssPx(value, fallback) {
+		const parsed = parseFloat(String(value || "").trim());
+		return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+	}
+
 		class BellevueTransportExplorer {
 			constructor(root) {
 				this.root = root;
@@ -655,14 +660,16 @@
 
 		createVehicleMarkerIcon(vehicle) {
 			const theme = vehicle && vehicle.theme ? vehicle.theme : {};
+			const styles = window.getComputedStyle(this.root);
+			const size = parseCssPx(styles.getPropertyValue("--bte-vehicle-marker-size"), 30);
 			const background = sanitizeThemeHex(theme.color) || "#0f766e";
 			const border = sanitizeThemeHex(theme.textColor) || "#ffffff";
 			return window.L.divIcon({
 				className: "bte__marker bte__marker--vehicle",
-				html: '<span class="bte__marker-inner bte__marker-inner--vehicle" style="background:' + background + ';border-color:' + border + ';">' + getIconMarkup("bus") + '</span>',
-				iconSize: [30, 30],
-				iconAnchor: [15, 15],
-				popupAnchor: [0, -16]
+				html: '<span class="bte__marker-inner bte__marker-inner--vehicle" style="--bte-vehicle-marker-theme-bg:' + background + ';--bte-vehicle-marker-theme-border:' + border + ';--bte-vehicle-marker-theme-icon:' + border + ';">' + getIconMarkup("bus") + '</span>',
+				iconSize: [size, size],
+				iconAnchor: [size / 2, size / 2],
+				popupAnchor: [0, (-1 * size / 2) - 1]
 			});
 		}
 

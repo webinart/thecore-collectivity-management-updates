@@ -1115,9 +1115,18 @@
 }
 
 .bte__marker-inner--vehicle {
-	width: 1.9rem;
-	height: 1.9rem;
+	position: relative;
+	width: var(--bte-vehicle-marker-size, 30px);
+	height: var(--bte-vehicle-marker-size, 30px);
+	background: var(--bte-vehicle-marker-bg, var(--bte-vehicle-marker-theme-bg, #0f766e));
+	border-color: var(--bte-vehicle-marker-border, var(--bte-vehicle-marker-theme-border, #ffffff));
+	color: var(--bte-vehicle-marker-icon-color, var(--bte-vehicle-marker-theme-icon, #ffffff));
 	box-shadow: 0 8px 18px rgba(15, 23, 42, 0.2);
+}
+
+.bte__marker-inner--vehicle svg {
+	width: var(--bte-vehicle-icon-size, 14px);
+	height: var(--bte-vehicle-icon-size, 14px);
 }
 
 .bte__popup-title,
@@ -1391,11 +1400,52 @@
 }
 
 .bte__marker--vehicle .bte__marker-inner--vehicle {
-	width: 2.4rem;
-	height: 2.4rem;
 	box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+}
+
+.bte--vehicle-pulse .bte__marker--vehicle .bte__marker-inner--vehicle {
+	animation: bte-vehicle-pulse var(--bte-vehicle-pulse-duration, 1.4s) ease-in-out infinite;
+}
+
+.bte--vehicle-pulse .bte__marker--vehicle .bte__marker-inner--vehicle::after {
+	content: "";
+	position: absolute;
+	inset: -4px;
+	border-radius: inherit;
+	border: 2px solid var(--bte-vehicle-pulse-color, var(--bte-vehicle-marker-bg, var(--bte-vehicle-marker-theme-bg, #0f766e)));
+	opacity: 0.6;
+	animation: bte-vehicle-pulse-ring var(--bte-vehicle-pulse-duration, 1.4s) ease-out infinite;
+	pointer-events: none;
 }
 
 .bte__popup--vehicle .bte__popup-title {
 	font-size: 1rem;
+}
+
+@keyframes bte-vehicle-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+	}
+
+	50% {
+		transform: scale(0.92);
+	}
+}
+
+@keyframes bte-vehicle-pulse-ring {
+	0% {
+		transform: scale(0.9);
+		opacity: 0.7;
+	}
+
+	70% {
+		transform: scale(1.25);
+		opacity: 0;
+	}
+
+	100% {
+		transform: scale(1.25);
+		opacity: 0;
+	}
 }

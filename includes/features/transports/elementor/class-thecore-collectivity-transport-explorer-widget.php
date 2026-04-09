@@ -137,6 +137,124 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		);
 
 		$this->end_controls_section();
+
+		$this->start_controls_section(
+			'section_realtime_vehicle_style',
+			array(
+				'label' => esc_html__( 'Véhicules temps réel', 'bellevue' ),
+				'tab'   => Controls_Manager::TAB_STYLE,
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_pulse',
+			array(
+				'label'        => esc_html__( 'Animation du véhicule', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_background',
+			array(
+				'label' => esc_html__( 'Fond', 'bellevue' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_border',
+			array(
+				'label' => esc_html__( 'Contour', 'bellevue' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_icon_color',
+			array(
+				'label' => esc_html__( 'Couleur de l’icône', 'bellevue' ),
+				'type'  => Controls_Manager::COLOR,
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_pulse_color',
+			array(
+				'label' => esc_html__( 'Couleur de l’animation', 'bellevue' ),
+				'type'  => Controls_Manager::COLOR,
+				'condition' => array(
+					'realtime_vehicle_pulse' => 'yes',
+				),
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_size',
+			array(
+				'label'      => esc_html__( 'Taille du marqueur', 'bellevue' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array(
+					'px' => array(
+						'min' => 18,
+						'max' => 48,
+					),
+				),
+				'default'    => array(
+					'unit' => 'px',
+					'size' => 30,
+				),
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_icon_size',
+			array(
+				'label'      => esc_html__( 'Taille de l’icône', 'bellevue' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => array( 'px' ),
+				'range'      => array(
+					'px' => array(
+						'min' => 10,
+						'max' => 24,
+					),
+				),
+				'default'    => array(
+					'unit' => 'px',
+					'size' => 14,
+				),
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_pulse_duration',
+			array(
+				'label'      => esc_html__( 'Durée de l’animation', 'bellevue' ),
+				'type'       => Controls_Manager::SLIDER,
+				'size_units' => array( 's' ),
+				'range'      => array(
+					's' => array(
+						'min'  => 0.8,
+						'max'  => 3,
+						'step' => 0.1,
+					),
+				),
+				'default'    => array(
+					'unit' => 's',
+					'size' => 1.4,
+				),
+				'condition' => array(
+					'realtime_vehicle_pulse' => 'yes',
+				),
+			)
+		);
+
+		$this->end_controls_section();
 	}
 
 	/**
@@ -148,6 +266,7 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		$description      = ! empty( $settings['description'] ) ? (string) $settings['description'] : '';
 		$show_alerts      = isset( $settings['show_alerts'] ) && 'yes' === $settings['show_alerts'];
 		$map_height       = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
+		$vehicle_pulse    = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
 		$widget_id        = 'bte-' . $this->get_id();
 		$transports       = TheCore_Collectivity_Management::instance()->get_transports_module();
 		$alerts_module    = TheCore_Collectivity_Management::instance()->get_alerts_module();
@@ -155,12 +274,49 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		$transport_alerts = $show_alerts ? $alerts_module->get_repository()->get_active_alerts( TheCore_Collectivity_Alerts_Post_Type::TOPIC_TRANSPORT ) : array();
 		$alerts_markup    = $show_alerts ? $alerts_module->get_renderer()->render_banner_list( $transport_alerts, array( 'wrapper_class' => 'bte__alerts' ) ) : '';
 
+		$wrapper_styles = array(
+			'--bte-map-height:' . max( 280, $map_height ) . 'px',
+		);
+
+		if ( ! empty( $settings['realtime_vehicle_background'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-marker-bg:' . (string) $settings['realtime_vehicle_background'];
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_border'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-marker-border:' . (string) $settings['realtime_vehicle_border'];
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_icon_color'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-marker-icon-color:' . (string) $settings['realtime_vehicle_icon_color'];
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_pulse_color'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-pulse-color:' . (string) $settings['realtime_vehicle_pulse_color'];
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_size']['size'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-marker-size:' . floatval( $settings['realtime_vehicle_size']['size'] ) . 'px';
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_icon_size']['size'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-icon-size:' . floatval( $settings['realtime_vehicle_icon_size']['size'] ) . 'px';
+		}
+
+		if ( ! empty( $settings['realtime_vehicle_pulse_duration']['size'] ) ) {
+			$wrapper_styles[] = '--bte-vehicle-pulse-duration:' . floatval( $settings['realtime_vehicle_pulse_duration']['size'] ) . 's';
+		}
+
 		$this->add_render_attribute(
 			'wrapper',
 			array(
-				'class' => 'bte',
+				'class' => array_filter(
+					array(
+						'bte',
+						$vehicle_pulse ? 'bte--vehicle-pulse' : '',
+					)
+				),
 				'id'    => $widget_id,
-				'style' => '--bte-map-height:' . max( 280, $map_height ) . 'px;',
+				'style' => implode( ';', $wrapper_styles ) . ';',
 			)
 		);
 		?>
