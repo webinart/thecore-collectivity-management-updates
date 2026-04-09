@@ -1458,9 +1458,43 @@
 				'</li>';
 			}
 
-			renderRealtimeVehiclesForLine(line) {
+			getRealtimeVehiclesForDirection(line, direction) {
 				const realtime = line && line.schedule && line.schedule.realtime ? line.schedule.realtime : null;
 				const vehicles = realtime && Array.isArray(realtime.vehicles) ? realtime.vehicles : [];
+				if (!vehicles.length) {
+					return [];
+				}
+
+				if (!direction) {
+					return vehicles;
+				}
+
+				const selectedKey = this.getDirectionKey(direction);
+				const selectedDirectionId = String(direction.directionId || "");
+				const selectedHeadsign = normalizeText(direction.headsign || "");
+
+				return vehicles.filter((vehicle) => {
+					const vehicleKey = this.getDirectionKey(vehicle);
+					if (vehicleKey && selectedKey) {
+						return vehicleKey === selectedKey;
+					}
+
+					const vehicleDirectionId = String(vehicle && vehicle.directionId ? vehicle.directionId : "");
+					if (selectedDirectionId && vehicleDirectionId) {
+						return vehicleDirectionId === selectedDirectionId;
+					}
+
+					const vehicleHeadsign = normalizeText(vehicle && vehicle.headsign ? vehicle.headsign : "");
+					if (selectedHeadsign && vehicleHeadsign) {
+						return vehicleHeadsign === selectedHeadsign;
+					}
+
+					return true;
+				});
+			}
+
+			renderRealtimeVehiclesForLine(line, direction) {
+				const vehicles = this.getRealtimeVehiclesForDirection(line, direction);
 				if (!vehicles.length) {
 					return "";
 				}
@@ -1569,7 +1603,7 @@
 				const alertMarkup = line && line.schedule && line.schedule.realtime && Array.isArray(line.schedule.realtime.alerts) && line.schedule.realtime.alerts.length
 					? '<section class="bte-card__line-alerts"><div class="bte-card__vehicles-head"><p class="bte-card__vehicles-title">Perturbations</p></div>' + line.schedule.realtime.alerts.slice(0, 4).map((alert) => this.renderRealtimeAlertCard(alert)).join("") + '</section>'
 					: "";
-				const vehiclesMarkup = this.renderRealtimeVehiclesForLine(line);
+				const vehiclesMarkup = this.renderRealtimeVehiclesForLine(line, selection.selectedDirection);
 				const metaItems = [
 					line.frequencyLabel ? '<span class="bte-card__meta">' + getIconMarkup("clock") + '<span>' + escapeHtml(line.frequencyLabel) + '</span></span>' : "",
 					trackedStops.length ? '<span class="bte-card__meta">' + getIconMarkup("pin") + '<span>' + escapeHtml(trackedStops.length) + ' arrêt(s) suivis</span></span>' : "",

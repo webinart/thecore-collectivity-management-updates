@@ -464,31 +464,36 @@ final class TheCore_Collectivity_Transports_Realtime_Repository {
 		$route_ids    = $this->normalize_text_list( $route_ids );
 		$trip_ids     = $this->normalize_text_list( $trip_ids );
 		$table        = TheCore_Collectivity_Transports_Schedule_Schema::get_table_name( TheCore_Collectivity_Transports_Schedule_Schema::TABLE_REALTIME_VEHICLES );
-		$where        = array( 'provider_key = %s', 'expires_at_gmt >= %s' );
+		$trips_table  = TheCore_Collectivity_Transports_Schedule_Schema::get_table_name( TheCore_Collectivity_Transports_Schedule_Schema::TABLE_TRIPS );
+		$where        = array( 'v.provider_key = %s', 'v.expires_at_gmt >= %s' );
 		$params       = array( $provider_key, current_time( 'mysql', true ) );
 
 		if ( ! empty( $route_ids ) ) {
 			$route_placeholders = implode( ', ', array_fill( 0, count( $route_ids ), '%s' ) );
-			$where[]            = "(route_id IN ({$route_placeholders})";
+			$where[]            = "(v.route_id IN ({$route_placeholders})";
 			$params             = array_merge( $params, $route_ids );
 
 			if ( ! empty( $trip_ids ) ) {
 				$trip_placeholders = implode( ', ', array_fill( 0, count( $trip_ids ), '%s' ) );
-				$where[ count( $where ) - 1 ] .= " OR trip_id IN ({$trip_placeholders})";
+				$where[ count( $where ) - 1 ] .= " OR v.trip_id IN ({$trip_placeholders})";
 				$params = array_merge( $params, $trip_ids );
 			}
 
 			$where[ count( $where ) - 1 ] .= ')';
 		} elseif ( ! empty( $trip_ids ) ) {
 			$trip_placeholders = implode( ', ', array_fill( 0, count( $trip_ids ), '%s' ) );
-			$where[]           = "trip_id IN ({$trip_placeholders})";
+			$where[]           = "v.trip_id IN ({$trip_placeholders})";
 			$params            = array_merge( $params, $trip_ids );
 		}
 
-		$sql   = "SELECT entity_id, vehicle_id, vehicle_label, license_plate, trip_id, route_id, stop_id, current_stop_sequence, current_status, latitude, longitude, bearing, speed, congestion_level, occupancy_status, timestamp, feed_timestamp, fetched_at_gmt, expires_at_gmt
-			FROM {$table}
+		$sql   = "SELECT v.entity_id, v.vehicle_id, v.vehicle_label, v.license_plate, v.trip_id, v.route_id, v.stop_id, v.current_stop_sequence, v.current_status, v.latitude, v.longitude, v.bearing, v.speed, v.congestion_level, v.occupancy_status, v.timestamp, v.feed_timestamp, v.fetched_at_gmt, v.expires_at_gmt,
+				t.direction_id, t.trip_headsign, t.terminal_stop_id, t.terminal_stop_name, t.terminal_stop_locality
+			FROM {$table} v
+			LEFT JOIN {$trips_table} t
+				ON t.provider_key = v.provider_key
+				AND t.trip_id = v.trip_id
 			WHERE " . implode( ' AND ', $where ) . "
-			ORDER BY timestamp DESC";
+			ORDER BY v.timestamp DESC";
 		$query = $wpdb->prepare( $sql, $params );
 		$rows  = $wpdb->get_results( $query, ARRAY_A );
 
@@ -505,6 +510,11 @@ final class TheCore_Collectivity_Transports_Realtime_Repository {
 				'licensePlate'      => ! empty( $row['license_plate'] ) ? (string) $row['license_plate'] : '',
 				'tripId'            => ! empty( $row['trip_id'] ) ? (string) $row['trip_id'] : '',
 				'routeId'           => ! empty( $row['route_id'] ) ? (string) $row['route_id'] : '',
+				'directionId'       => ! empty( $row['direction_id'] ) ? (string) $row['direction_id'] : '',
+				'headsign'          => ! empty( $row['trip_headsign'] ) ? (string) $row['trip_headsign'] : '',
+				'terminalStopId'    => ! empty( $row['terminal_stop_id'] ) ? (string) $row['terminal_stop_id'] : '',
+				'terminalStopName'  => ! empty( $row['terminal_stop_name'] ) ? (string) $row['terminal_stop_name'] : '',
+				'terminalLocality'  => ! empty( $row['terminal_stop_locality'] ) ? (string) $row['terminal_stop_locality'] : '',
 				'stopId'            => ! empty( $row['stop_id'] ) ? (string) $row['stop_id'] : '',
 				'currentStopSequence' => isset( $row['current_stop_sequence'] ) ? intval( $row['current_stop_sequence'] ) : 0,
 				'currentStatus'     => ! empty( $row['current_status'] ) ? (string) $row['current_status'] : '',
