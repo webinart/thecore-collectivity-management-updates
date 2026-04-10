@@ -130,6 +130,33 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 			)
 		);
 
+		$this->add_control(
+			'realtime_auto_refresh',
+			array(
+				'label'        => esc_html__( 'Actualiser le temps réel automatiquement', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => 'yes',
+			)
+		);
+
+		$this->add_control(
+			'realtime_refresh_interval',
+			array(
+				'label'       => esc_html__( 'Intervalle de rafraîchissement (secondes)', 'bellevue' ),
+				'type'        => Controls_Manager::NUMBER,
+				'min'         => 15,
+				'max'         => 300,
+				'step'        => 5,
+				'default'     => 30,
+				'condition'   => array(
+					'realtime_auto_refresh' => 'yes',
+				),
+			)
+		);
+
 		$this->add_responsive_control(
 			'map_height',
 			array(
@@ -279,6 +306,8 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		$description      = ! empty( $settings['description'] ) ? (string) $settings['description'] : '';
 		$show_alerts      = isset( $settings['show_alerts'] ) && 'yes' === $settings['show_alerts'];
 		$show_all_route_vehicles_on_map = isset( $settings['show_all_route_vehicles_on_map'] ) && 'yes' === $settings['show_all_route_vehicles_on_map'];
+		$realtime_auto_refresh          = isset( $settings['realtime_auto_refresh'] ) && 'yes' === $settings['realtime_auto_refresh'];
+		$realtime_refresh_interval      = isset( $settings['realtime_refresh_interval'] ) ? max( 15, intval( $settings['realtime_refresh_interval'] ) ) : 30;
 		$map_height       = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
 		$vehicle_pulse    = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
 		$widget_id        = 'bte-' . $this->get_id();
@@ -331,6 +360,9 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 				),
 				'id'    => $widget_id,
 				'data-show-all-route-vehicles-on-map' => $show_all_route_vehicles_on_map ? '1' : '0',
+				'data-realtime-refresh-enabled'       => $realtime_auto_refresh ? '1' : '0',
+				'data-realtime-refresh-interval'      => (string) $realtime_refresh_interval,
+				'data-realtime-refresh-endpoint'      => esc_url_raw( rest_url( 'thecore-collectivity/v1/transports/widget-payload' ) ),
 				'style' => implode( ';', $wrapper_styles ) . ';',
 			)
 		);

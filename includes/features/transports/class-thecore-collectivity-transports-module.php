@@ -67,6 +67,41 @@ final class TheCore_Collectivity_Transports_Module {
 		$this->post_types->register_hooks();
 		$this->meta->register_hooks();
 		$this->schedules->register_hooks();
+		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+	}
+
+	/**
+	 * Register public REST routes used by the transport explorer widget.
+	 *
+	 * @return void
+	 */
+	public function register_rest_routes() {
+		register_rest_route(
+			'thecore-collectivity/v1',
+			'/transports/widget-payload',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_widget_payload_response' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+	}
+
+	/**
+	 * Return the latest transport widget payload.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_widget_payload_response() {
+		$response = rest_ensure_response(
+			array(
+				'payload'    => $this->normalizer->get_widget_payload(),
+				'generatedAt' => current_time( 'mysql' ),
+			)
+		);
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
+
+		return $response;
 	}
 
 	/**

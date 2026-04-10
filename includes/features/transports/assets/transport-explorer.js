@@ -106,6 +106,11 @@
 				this.root = root;
 				this.root.__bteInstance = this;
 				this.showAllRouteVehiclesOnMap = this.root.getAttribute("data-show-all-route-vehicles-on-map") !== "0";
+				this.realtimeRefreshEnabled = this.root.getAttribute("data-realtime-refresh-enabled") !== "0";
+				this.realtimeRefreshInterval = Math.max(15, parseInt(this.root.getAttribute("data-realtime-refresh-interval") || "30", 10) || 30);
+				this.realtimeRefreshEndpoint = String(this.root.getAttribute("data-realtime-refresh-endpoint") || "");
+				this.realtimeRefreshTimer = null;
+				this.realtimeRefreshInFlight = false;
 				this.data = this.getPayload();
 				this.state = {
 					query: "",
@@ -127,9 +132,11 @@
 			this.bindEvents();
 			this.initMap();
 			this.render();
+			this.initRealtimeRefresh();
 		}
 
 			cacheDom() {
+			this.payloadNode = this.root.querySelector(".bte__data");
 			this.searchInput = this.root.querySelector(".bte__search-input");
 			this.searchButton = this.root.querySelector(".bte__search-button");
 			this.typeButtons = Array.from(this.root.querySelectorAll(".bte__type-filter"));
@@ -172,24 +179,127 @@
 			}
 
 		getPayload() {
-			const payloadNode = this.root.querySelector(".bte__data");
-			if (!payloadNode) {
-				return { lines: [], places: [], realtime: { alerts: [], vehicles: [] } };
+			if (!this.payloadNode) {
+				return this.normalizePayload(null);
 			}
 
 			try {
-				const parsed = JSON.parse(payloadNode.textContent || "{}");
-				return {
-					lines: Array.isArray(parsed.lines) ? parsed.lines : [],
-					places: Array.isArray(parsed.places) ? parsed.places : [],
-					realtime: parsed.realtime && typeof parsed.realtime === "object" ? {
-						alerts: Array.isArray(parsed.realtime.alerts) ? parsed.realtime.alerts : [],
-						vehicles: Array.isArray(parsed.realtime.vehicles) ? parsed.realtime.vehicles : []
-					} : { alerts: [], vehicles: [] }
-				};
+				return this.normalizePayload(JSON.parse(this.payloadNode.textContent || "{}"));
 			} catch (error) {
-				return { lines: [], places: [], realtime: { alerts: [], vehicles: [] } };
+				return this.normalizePayload(null);
 			}
+		}
+
+		normalizePayload(parsed) {
+			return {
+				lines: Array.isArray(parsed && parsed.lines) ? parsed.lines : [],
+				places: Array.isArray(parsed && parsed.places) ? parsed.places : [],
+				realtime: parsed && parsed.realtime && typeof parsed.realtime === "object" ? {
+					alerts: Array.isArray(parsed.realtime.alerts) ? parsed.realtime.alerts : [],
+					vehicles: Array.isArray(parsed.realtime.vehicles) ? parsed.realtime.vehicles : []
+				} : { alerts: [], vehicles: [] }
+			};
+		}
+
+		initRealtimeRefresh() {
+			if (!this.realtimeRefreshEnabled || !this.realtimeRefreshEndpoint || typeof window.fetch !== "function") {
+				return;
+			}
+
+			document.addEventListener("visibilitychange", () => {
+				if (document.hidden) {
+					return;
+				}
+				this.scheduleRealtimeRefresh(1000);
+			});
+
+			this.scheduleRealtimeRefresh(this.realtimeRefreshInterval * 1000);
+		}
+
+		scheduleRealtimeRefresh(delay) {
+			if (!this.realtimeRefreshEnabled || !this.realtimeRefreshEndpoint) {
+				return;
+			}
+
+			if (this.realtimeRefreshTimer) {
+				window.clearTimeout(this.realtimeRefreshTimer);
+			}
+
+			this.realtimeRefreshTimer = window.setTimeout(() => {
+				this.refreshRealtimePayload();
+			}, Math.max(1000, parseInt(delay || 0, 10) || (this.realtimeRefreshInterval * 1000)));
+		}
+
+		captureMapView() {
+			if (!this.map) {
+				return null;
+			}
+
+			const center = this.map.getCenter();
+			return {
+				lat: center.lat,
+				lng: center.lng,
+				zoom: this.map.getZoom()
+			};
+		}
+
+		restoreMapView(view) {
+			if (!this.map || !view || typeof view.lat !== "number" || typeof view.lng !== "number" || !Number.isFinite(view.zoom)) {
+				return;
+			}
+
+			this.map.setView([view.lat, view.lng], view.zoom, { animate: false });
+		}
+
+		refreshRealtimePayload() {
+			if (!this.realtimeRefreshEnabled || !this.realtimeRefreshEndpoint) {
+				return Promise.resolve(false);
+			}
+
+			if (this.realtimeRefreshInFlight) {
+				this.scheduleRealtimeRefresh(this.realtimeRefreshInterval * 1000);
+				return Promise.resolve(false);
+			}
+
+			if (document.hidden) {
+				this.scheduleRealtimeRefresh(this.realtimeRefreshInterval * 1000);
+				return Promise.resolve(false);
+			}
+
+			this.realtimeRefreshInFlight = true;
+
+			return window.fetch(this.realtimeRefreshEndpoint, {
+				method: "GET",
+				credentials: "same-origin",
+				cache: "no-store",
+				headers: {
+					Accept: "application/json"
+				}
+			})
+				.then((response) => {
+					if (!response.ok) {
+						throw new Error("Transport refresh failed");
+					}
+
+					return response.json();
+				})
+				.then((response) => {
+					const payload = response && typeof response === "object" && response.payload ? response.payload : response;
+					const nextData = this.normalizePayload(payload);
+					const preservedView = this.captureMapView();
+					this.data = nextData;
+					if (this.payloadNode) {
+						this.payloadNode.textContent = JSON.stringify(nextData);
+					}
+					this.render();
+					this.restoreMapView(preservedView);
+					return true;
+				})
+				.catch(() => false)
+				.finally(() => {
+					this.realtimeRefreshInFlight = false;
+					this.scheduleRealtimeRefresh(this.realtimeRefreshInterval * 1000);
+				});
 		}
 
 		bindEvents() {
