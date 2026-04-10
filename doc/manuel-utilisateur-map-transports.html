@@ -120,7 +120,7 @@
 
 <h1>Manuel utilisateur</h1>
 <p class="subtitle">Modules <strong>MAP</strong> et <strong>Transports</strong> du plugin The Core - Collectivity Management</p>
-<p class="meta">Version du manuel: 9 avril 2026<br />Version du plugin: 1.0.1-beta.23<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
+<p class="meta">Version du manuel: 10 avril 2026<br />Version du plugin: 1.0.1-beta.29<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
 
 <div class="lead">
   <p><strong>Objectif de ce document</strong><br />Ce manuel explique comment utiliser les deux modules les plus structurants du plugin:</p>
@@ -582,6 +582,10 @@
   <p><strong>Transfert de configuration entre environnements</strong><br />Depuis <strong>Transports &gt; Horaires</strong>, vous pouvez désormais <strong>exporter la configuration GTFS</strong> au format JSON puis la <strong>réimporter</strong> sur un autre site. C’est la méthode recommandée pour passer une configuration de dev à préproduction ou production sans tout ressaisir.</p>
 </div>
 
+<div class="warning">
+  <p><strong>Fuseau horaire du site</strong><br />Les données temps réel reposent en partie sur des <strong>timestamps</strong>. Elles sont affichées selon le <strong>fuseau horaire WordPress du site</strong>. Si <strong>Réglages &gt; Général &gt; Fuseau horaire</strong> reste sur <code>UTC</code> ou sur un décalage <code>gmt_offset = 0</code>, les horaires live et le bloc <strong>Dernier passage</strong> peuvent apparaître décalés d’une ou deux heures. Pour un site en France, réglez le fuseau sur <strong>Paris</strong>.</p>
+</div>
+
 <h4>3.4.2. Workflow standard</h4>
 <ol>
   <li>Créer ou compléter une source GTFS.</li>
@@ -818,6 +822,7 @@
   <li>Garder en tête qu’une ligne peut exister sans prédiction live utile au moment précis du test.</li>
   <li>Si la carte n’affiche pas un véhicule attendu, vérifier le réglage <strong>Afficher tous les véhicules de la ligne sur la carte</strong> du widget Transport Explorer.</li>
   <li>Un véhicule peut appartenir à une autre branche de la ligne et ne pas desservir l’arrêt suivi localement: dans ce cas, il peut être masqué volontairement.</li>
+  <li>Si les heures live semblent décalées de 1 ou 2 heures, vérifier <strong>Réglages &gt; Général &gt; Fuseau horaire</strong> et choisir le fuseau réel du site, par exemple <strong>Paris</strong>.</li>
 </ol>
 
 <h2>Conclusion</h2>
