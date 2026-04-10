@@ -111,6 +111,7 @@
 				this.realtimeRefreshEndpoint = String(this.root.getAttribute("data-realtime-refresh-endpoint") || "");
 				this.realtimeRefreshTimer = null;
 				this.realtimeRefreshInFlight = false;
+				this.cacheDom();
 				this.data = this.getPayload();
 				this.state = {
 					query: "",
@@ -128,7 +129,6 @@
 			this.markersLayer = null;
 			this.markerIndex = {};
 			this.hasFittedBounds = false;
-			this.cacheDom();
 			this.bindEvents();
 			this.initMap();
 			this.render();
@@ -179,6 +179,10 @@
 			}
 
 		getPayload() {
+			if (!this.payloadNode) {
+				this.payloadNode = this.root.querySelector(".bte__data");
+			}
+
 			if (!this.payloadNode) {
 				return this.normalizePayload(null);
 			}
