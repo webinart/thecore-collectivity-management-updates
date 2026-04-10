@@ -120,7 +120,7 @@
 
 <h1>Manuel utilisateur</h1>
 <p class="subtitle">Modules <strong>MAP</strong> et <strong>Transports</strong> du plugin The Core - Collectivity Management</p>
-<p class="meta">Version du manuel: 7 avril 2026<br />Version du plugin: 1.0.1-beta.9<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
+<p class="meta">Version du manuel: 9 avril 2026<br />Version du plugin: 1.0.1-beta.23<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
 
 <div class="lead">
   <p><strong>Objectif de ce document</strong><br />Ce manuel explique comment utiliser les deux modules les plus structurants du plugin:</p>
@@ -658,7 +658,9 @@
   <li><strong>Titre</strong>;</li>
   <li><strong>Description</strong>;</li>
   <li><strong>Afficher les alertes transport</strong>;</li>
-  <li><strong>Hauteur carte</strong>.</li>
+  <li><strong>Afficher tous les véhicules de la ligne sur la carte</strong> : si non, la carte ne montre que les véhicules dont le trip dessert au moins un arrêt suivi localement pour la ligne;</li>
+  <li><strong>Hauteur carte</strong>;</li>
+  <li>une section de style <strong>Véhicules temps réel</strong> pour régler l’animation, les couleurs, la taille du marqueur et la taille de l’icône.</li>
 </ul>
 
 <h4>3.7.2. Comportement côté usager</h4>
@@ -671,7 +673,10 @@
   <li>un panneau bus avec les lignes disponibles;</li>
   <li>des horaires par direction et par arrêt;</li>
   <li>un bloc <strong>Temps réel</strong> quand des prédictions pertinentes existent;</li>
-  <li>des marqueurs véhicules si le flux temps réel fournit des positions compatibles.</li>
+  <li>des marqueurs véhicules si le flux temps réel fournit des positions compatibles;</li>
+  <li>un regroupement des arrêts proches de type bus pour éviter les doublons entre quais ou directions d’un même arrêt;</li>
+  <li>dans le détail d’une ligne, un bloc <strong>Véhicules en circulation</strong> filtré par la direction sélectionnée;</li>
+  <li>au clic sur un véhicule, une vignette qui affiche aussi la <strong>direction réelle du trajet</strong>.</li>
 </ul>
 
 <h3>3.8. Temps réel</h3>
@@ -689,7 +694,8 @@
   <li>le théorique reste la base stable;</li>
   <li>le bloc temps réel montre les prochains départs live;</li>
   <li>les alertes de service sont affichées séparément;</li>
-  <li>les véhicules apparaissent sur la carte quand la correspondance avec les lignes visibles est possible.</li>
+  <li>les véhicules apparaissent sur la carte quand la correspondance avec les lignes visibles est possible;</li>
+  <li>si le widget est configuré ainsi, la carte peut limiter l’affichage aux véhicules dont le trip dessert réellement les arrêts suivis localement.</li>
 </ul>
 
 <div class="warning">
@@ -742,6 +748,7 @@
   <li>Vérifier ou corriger les libellés des lignes.</li>
   <li>Renseigner les arrêts de référence.</li>
   <li>Placer le widget <strong>Transport Explorer</strong> sur la page.</li>
+  <li>Décider si la carte doit montrer tous les véhicules de la ligne, ou seulement ceux qui desservent les arrêts suivis localement.</li>
 </ol>
 
 <h3>4.3. Site multi-communes</h3>
@@ -809,6 +816,8 @@
   <li>Vérifier que les URL TripUpdates / ServiceAlerts / VehiclePositions sont renseignées.</li>
   <li>Lancer <strong>Importer le temps réel</strong>.</li>
   <li>Garder en tête qu’une ligne peut exister sans prédiction live utile au moment précis du test.</li>
+  <li>Si la carte n’affiche pas un véhicule attendu, vérifier le réglage <strong>Afficher tous les véhicules de la ligne sur la carte</strong> du widget Transport Explorer.</li>
+  <li>Un véhicule peut appartenir à une autre branche de la ligne et ne pas desservir l’arrêt suivi localement: dans ce cas, il peut être masqué volontairement.</li>
 </ol>
 
 <h2>Conclusion</h2>
