@@ -1535,6 +1535,101 @@
 				'</section>';
 			}
 
+			getLastPassedVehicleForSelection(line, selection) {
+				if (!line || !selection || !selection.selectedDirection || !selection.selectedStop) {
+					return null;
+				}
+
+				const vehicles = this.getRealtimeVehiclesForDirection(line, selection.selectedDirection);
+				const todayTrips = Array.isArray(selection.selectedDirection.todayTrips) ? selection.selectedDirection.todayTrips : [];
+				if (!vehicles.length || !todayTrips.length) {
+					return null;
+				}
+
+				const tripIndex = new Map();
+				todayTrips.forEach((item) => {
+					const tripId = String(item && item.tripId ? item.tripId : "");
+					if (!tripId || tripIndex.has(tripId)) {
+						return;
+					}
+					tripIndex.set(tripId, item);
+				});
+
+				const candidates = vehicles.map((vehicle) => {
+					const tripId = String(vehicle && vehicle.tripId ? vehicle.tripId : "");
+					if (!tripId || !tripIndex.has(tripId)) {
+						return null;
+					}
+
+					const passage = tripIndex.get(tripId);
+					const vehicleSequence = parseInt(vehicle && vehicle.currentStopSequence ? vehicle.currentStopSequence : 0, 10);
+					const stopSequence = parseInt(passage && passage.stopSequence ? passage.stopSequence : 0, 10);
+					if (!vehicleSequence || !stopSequence || vehicleSequence <= stopSequence) {
+						return null;
+					}
+
+					return {
+						vehicle,
+						passage
+					};
+				}).filter(Boolean);
+
+				if (!candidates.length) {
+					return null;
+				}
+
+				candidates.sort((left, right) => {
+					const leftTime = parseInt(left.passage && left.passage.displayTimestamp ? left.passage.displayTimestamp : 0, 10);
+					const rightTime = parseInt(right.passage && right.passage.displayTimestamp ? right.passage.displayTimestamp : 0, 10);
+					if (rightTime !== leftTime) {
+						return rightTime - leftTime;
+					}
+
+					const leftVehicleTs = parseInt(left.vehicle && left.vehicle.timestamp ? left.vehicle.timestamp : 0, 10);
+					const rightVehicleTs = parseInt(right.vehicle && right.vehicle.timestamp ? right.vehicle.timestamp : 0, 10);
+					return rightVehicleTs - leftVehicleTs;
+				});
+
+				return candidates[0];
+			}
+
+			renderLastPassedForSelection(line, selection) {
+				if (!selection || !selection.selectedDirection) {
+					return "";
+				}
+
+				const futureItems = selection.selectedDirection.liveDepartures && Array.isArray(selection.selectedDirection.liveDepartures.items)
+					? selection.selectedDirection.liveDepartures.items
+					: [];
+				if (futureItems.length) {
+					return "";
+				}
+
+				const match = this.getLastPassedVehicleForSelection(line, selection);
+				if (!match || !match.passage) {
+					return "";
+				}
+
+				const time = match.passage.displayTime || match.passage.realtime || match.passage.scheduled || "";
+				const vehicleLabel = match.vehicle && (match.vehicle.vehicleLabel || match.vehicle.vehicleId) ? String(match.vehicle.vehicleLabel || match.vehicle.vehicleId) : "";
+				const direction = this.getVehicleDirectionLabel(match.vehicle);
+				const updatedAt = line && line.schedule && line.schedule.realtime && line.schedule.realtime.updatedAt ? '<span class="bte-card__realtime-updated">Mis à jour ' + escapeHtml(line.schedule.realtime.updatedAt) + '</span>' : "";
+
+				return '<section class="bte-card__realtime bte-card__realtime--last-passed">' +
+					'<div class="bte-card__realtime-head">' +
+						'<p class="bte-card__realtime-title">Dernier passage</p>' +
+						updatedAt +
+					'</div>' +
+					'<ul class="bte-card__realtime-list">' +
+						'<li class="bte-card__realtime-item bte-card__realtime-item--passed">' +
+							(time ? '<span class="bte-card__realtime-time">' + escapeHtml(time) + '</span>' : '') +
+							'<span class="bte-card__realtime-secondary">Déjà passé à cet arrêt' + (vehicleLabel ? ' · véhicule ' + escapeHtml(vehicleLabel) : '') + '</span>' +
+							(direction ? '<span class="bte-card__realtime-badge">' + escapeHtml(direction) + '</span>' : '') +
+						'</li>' +
+					'</ul>' +
+				'</section>';
+			}
+
 			renderLiveDepartureItem(item) {
 				if (!item) {
 					return "";
@@ -1626,6 +1721,7 @@
 				const dayMarkup = dayKeys.map((dayKey) => this.renderScheduleDayType(dayTypes[dayKey])).join("");
 				const emptyMarkup = dayMarkup ? "" : '<p class="bte-card__schedule-empty">Aucun horaire disponible pour les filtres actuels.</p>';
 				const realtimeMarkup = this.renderLiveDepartures(line, selection.selectedDirection, line.schedule ? line.schedule.realtime : null);
+				const lastPassedMarkup = this.renderLastPassedForSelection(line, selection);
 				const alertMarkup = line && line.schedule && line.schedule.realtime && Array.isArray(line.schedule.realtime.alerts) && line.schedule.realtime.alerts.length
 					? '<section class="bte-card__line-alerts"><div class="bte-card__vehicles-head"><p class="bte-card__vehicles-title">Perturbations</p></div>' + line.schedule.realtime.alerts.slice(0, 4).map((alert) => this.renderRealtimeAlertCard(alert)).join("") + '</section>'
 					: "";
@@ -1658,6 +1754,7 @@
 						alertMarkup +
 						vehiclesMarkup +
 						realtimeMarkup +
+						lastPassedMarkup +
 						dayMarkup +
 						emptyMarkup +
 					'</section>' +

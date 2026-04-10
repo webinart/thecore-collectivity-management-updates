@@ -750,6 +750,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 					'directionId' => $trip['direction_id'],
 					'headsign'    => $trip['trip_headsign'],
 					'dayTypes'    => array(),
+					'todayTrips'  => array(),
 					'liveDepartures' => array(
 						'label'         => __( 'Prochains départs', 'bellevue' ),
 						'referenceDate' => $today_ref['date'],
@@ -785,7 +786,11 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 
 			if ( ! empty( $service_index[ $trip['service_id'] ] ) && $this->is_service_active_on_date( $service_index[ $trip['service_id'] ], $today_ref['date'] ) ) {
 				$prediction = $this->get_realtime_prediction_for_stop_time_row( $row, $realtime_index );
-				$live_item  = $this->build_live_departure_payload( $row, $prediction, $today_ref, $now_ts );
+				$today_item = $this->build_stop_passage_payload( $row, $prediction, $today_ref );
+				if ( ! empty( $today_item ) ) {
+					$directions[ $direction_key ]['todayTrips'][] = $today_item;
+				}
+				$live_item  = $this->build_live_departure_payload( $today_item, $now_ts );
 				if ( ! empty( $live_item ) ) {
 					$directions[ $direction_key ]['liveDepartures']['items'][] = $live_item;
 				}
@@ -810,6 +815,17 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 					}
 				);
 				$directions[ $direction_key ]['liveDepartures']['items'] = array_slice( $items, 0, 6 );
+			}
+
+			if ( ! empty( $direction_payload['todayTrips'] ) ) {
+				$items = $direction_payload['todayTrips'];
+				usort(
+					$items,
+					static function ( $left, $right ) {
+						return intval( $left['displayTimestamp'] ?? 0 ) <=> intval( $right['displayTimestamp'] ?? 0 );
+					}
+				);
+				$directions[ $direction_key ]['todayTrips'] = $items;
 			}
 
 			ksort( $directions[ $direction_key ]['dayTypes'] );
@@ -1719,7 +1735,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 	 * @param int        $now_ts     Current timestamp.
 	 * @return array|null
 	 */
-	private function build_live_departure_payload( array $row, $prediction, array $today_ref, $now_ts ) {
+	private function build_stop_passage_payload( array $row, $prediction, array $today_ref ) {
 		$scheduled_secs = isset( $row['departure_secs'] ) ? intval( $row['departure_secs'] ) : 0;
 		$scheduled_ts   = $this->build_gtfs_timestamp( $today_ref['date'], $scheduled_secs );
 		$status         = 'scheduled';
@@ -1749,9 +1765,6 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		}
 
 		$display_ts = null !== $realtime_ts ? $realtime_ts : $scheduled_ts;
-		if ( $display_ts < ( $now_ts - 5 * MINUTE_IN_SECONDS ) ) {
-			return null;
-		}
 
 		return array(
 			'tripId'           => ! empty( $row['trip_id'] ) ? (string) $row['trip_id'] : '',
@@ -1768,6 +1781,25 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 			'delayMinutes'     => null !== $delay_seconds ? intval( round( $delay_seconds / 60 ) ) : null,
 			'isRealtime'       => 'realtime' === $status,
 		);
+	}
+
+	/**
+	 * Keep only upcoming or very recent live departures for the realtime block.
+	 *
+	 * @param array|null $departure_item Prepared passage payload.
+	 * @param int        $now_ts         Current timestamp.
+	 * @return array|null
+	 */
+	private function build_live_departure_payload( $departure_item, $now_ts ) {
+		if ( ! is_array( $departure_item ) || empty( $departure_item['displayTimestamp'] ) ) {
+			return null;
+		}
+
+		if ( intval( $departure_item['displayTimestamp'] ) < ( $now_ts - 5 * MINUTE_IN_SECONDS ) ) {
+			return null;
+		}
+
+		return $departure_item;
 	}
 
 	/**
