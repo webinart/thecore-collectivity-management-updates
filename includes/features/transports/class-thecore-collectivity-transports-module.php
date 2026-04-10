@@ -85,6 +85,16 @@ final class TheCore_Collectivity_Transports_Module {
 				'permission_callback' => '__return_true',
 			)
 		);
+
+		register_rest_route(
+			'thecore-collectivity/v1',
+			'/transports/widget-realtime',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( $this, 'get_widget_realtime_response' ),
+				'permission_callback' => '__return_true',
+			)
+		);
 	}
 
 	/**
@@ -96,6 +106,23 @@ final class TheCore_Collectivity_Transports_Module {
 		$response = rest_ensure_response(
 			array(
 				'payload'    => $this->normalizer->get_widget_payload(),
+				'generatedAt' => current_time( 'mysql' ),
+			)
+		);
+		$response->header( 'Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0' );
+
+		return $response;
+	}
+
+	/**
+	 * Return the latest realtime-only widget payload.
+	 *
+	 * @return WP_REST_Response
+	 */
+	public function get_widget_realtime_response() {
+		$response = rest_ensure_response(
+			array(
+				'payload'     => $this->normalizer->get_widget_realtime_payload(),
 				'generatedAt' => current_time( 'mysql' ),
 			)
 		);

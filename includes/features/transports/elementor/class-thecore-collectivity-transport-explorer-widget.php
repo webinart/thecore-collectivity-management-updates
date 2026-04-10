@@ -362,7 +362,7 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 				'data-show-all-route-vehicles-on-map' => $show_all_route_vehicles_on_map ? '1' : '0',
 				'data-realtime-refresh-enabled'       => $realtime_auto_refresh ? '1' : '0',
 				'data-realtime-refresh-interval'      => (string) $realtime_refresh_interval,
-				'data-realtime-refresh-endpoint'      => esc_url_raw( rest_url( 'thecore-collectivity/v1/transports/widget-payload' ) ),
+				'data-realtime-refresh-endpoint'      => esc_url_raw( rest_url( 'thecore-collectivity/v1/transports/widget-realtime' ) ),
 				'style' => implode( ';', $wrapper_styles ) . ';',
 			)
 		);

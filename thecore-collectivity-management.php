@@ -4,7 +4,7 @@
  * Plugin URI:  https://the-core.local/
  * Description: Common collectivity management module for The Core based sites.
  * Update URI:  https://github.com/webinart/thecore-collectivity-management
- * Version:     1.0.1-beta.27
+ * Version:     1.0.1-beta.28
  * Author:      The Core
  * Text Domain: thecore-collectivity-management
  */
@@ -17,7 +17,7 @@ define( 'THECORE_COLLECTIVITY_MANAGEMENT_FILE', __FILE__ );
 define( 'THECORE_COLLECTIVITY_MANAGEMENT_BASENAME', plugin_basename( __FILE__ ) );
 define( 'THECORE_COLLECTIVITY_MANAGEMENT_DIR', plugin_dir_path( __FILE__ ) );
 define( 'THECORE_COLLECTIVITY_MANAGEMENT_URL', plugin_dir_url( __FILE__ ) );
-define( 'THECORE_COLLECTIVITY_MANAGEMENT_VERSION', '1.0.1-beta.27' );
+define( 'THECORE_COLLECTIVITY_MANAGEMENT_VERSION', '1.0.1-beta.28' );
 
 $thecore_collectivity_management_autoload = THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'vendor/autoload.php';
 if ( file_exists( $thecore_collectivity_management_autoload ) ) {

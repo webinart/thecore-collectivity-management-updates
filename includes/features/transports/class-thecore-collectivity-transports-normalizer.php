@@ -68,6 +68,35 @@ final class TheCore_Collectivity_Transports_Normalizer {
 	}
 
 	/**
+	 * Build a realtime-only widget payload.
+	 *
+	 * This payload keeps the full realtime detail needed by the frontend:
+	 * line-level realtime, per-stop live departures, and same-day trips used
+	 * for "dernier passage" calculations, without returning the static cartography.
+	 *
+	 * @return array
+	 */
+	public function get_widget_realtime_payload() {
+		$line_payloads     = array();
+		$realtime_alerts   = array();
+		$realtime_vehicles = array();
+
+		foreach ( $this->repository->get_lines() as $line ) {
+			$normalized      = $this->normalize_line( $line );
+			$line_payloads[] = $this->extract_realtime_line_payload( $normalized );
+			$this->collect_line_realtime_payloads( $normalized, $realtime_alerts, $realtime_vehicles );
+		}
+
+		return array(
+			'lines'    => $line_payloads,
+			'realtime' => array(
+				'alerts'   => array_values( $realtime_alerts ),
+				'vehicles' => array_values( $realtime_vehicles ),
+			),
+		);
+	}
+
+	/**
 	 * Collect realtime items for widget-level payloads.
 	 *
 	 * @param array $line_payload       Normalized line payload.
@@ -132,6 +161,42 @@ final class TheCore_Collectivity_Transports_Normalizer {
 
 			$realtime_vehicles[ $vehicle_key ] = $vehicle;
 		}
+	}
+
+	/**
+	 * Extract the realtime-only subset for one line.
+	 *
+	 * @param array $line_payload Full normalized line payload.
+	 * @return array
+	 */
+	private function extract_realtime_line_payload( array $line_payload ) {
+		$realtime_stops = array();
+		$stops          = ! empty( $line_payload['schedule']['stops'] ) && is_array( $line_payload['schedule']['stops'] ) ? $line_payload['schedule']['stops'] : array();
+
+		foreach ( $stops as $stop ) {
+			$realtime_directions = array();
+			foreach ( (array) ( $stop['directions'] ?? array() ) as $direction ) {
+				$realtime_directions[] = array(
+					'directionId'    => (string) ( $direction['directionId'] ?? '' ),
+					'headsign'       => (string) ( $direction['headsign'] ?? '' ),
+					'liveDepartures' => ! empty( $direction['liveDepartures'] ) && is_array( $direction['liveDepartures'] ) ? $direction['liveDepartures'] : array(),
+					'todayTrips'     => ! empty( $direction['todayTrips'] ) && is_array( $direction['todayTrips'] ) ? $direction['todayTrips'] : array(),
+				);
+			}
+
+			$realtime_stops[] = array(
+				'stopId'      => (string) ( $stop['stopId'] ?? '' ),
+				'directions'  => $realtime_directions,
+			);
+		}
+
+		return array(
+			'id'       => intval( $line_payload['id'] ?? 0 ),
+			'schedule' => array(
+				'realtime' => ! empty( $line_payload['schedule']['realtime'] ) && is_array( $line_payload['schedule']['realtime'] ) ? $line_payload['schedule']['realtime'] : array(),
+				'stops'    => $realtime_stops,
+			),
+		);
 	}
 
 	/**

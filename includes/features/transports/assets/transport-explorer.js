@@ -205,6 +205,104 @@
 			};
 		}
 
+		normalizeRealtimePatch(parsed) {
+			return {
+				lines: Array.isArray(parsed && parsed.lines) ? parsed.lines : [],
+				realtime: parsed && parsed.realtime && typeof parsed.realtime === "object" ? {
+					alerts: Array.isArray(parsed.realtime.alerts) ? parsed.realtime.alerts : [],
+					vehicles: Array.isArray(parsed.realtime.vehicles) ? parsed.realtime.vehicles : []
+				} : { alerts: [], vehicles: [] }
+			};
+		}
+
+		mergeDirectionRealtime(direction, patchDirection) {
+			if (!patchDirection || typeof patchDirection !== "object") {
+				return direction;
+			}
+
+			return Object.assign({}, direction, {
+				liveDepartures: patchDirection.liveDepartures && typeof patchDirection.liveDepartures === "object"
+					? patchDirection.liveDepartures
+					: (direction && direction.liveDepartures ? direction.liveDepartures : {}),
+				todayTrips: Array.isArray(patchDirection.todayTrips)
+					? patchDirection.todayTrips
+					: (Array.isArray(direction && direction.todayTrips) ? direction.todayTrips : [])
+			});
+		}
+
+		mergeStopRealtime(stop, patchStop) {
+			if (!patchStop || typeof patchStop !== "object") {
+				return stop;
+			}
+
+			const patchDirections = new Map();
+			(Array.isArray(patchStop.directions) ? patchStop.directions : []).forEach((direction) => {
+				patchDirections.set(this.getDirectionKey(direction), direction);
+			});
+
+			const mergedDirections = (Array.isArray(stop && stop.directions) ? stop.directions : []).map((direction) => {
+				const key = this.getDirectionKey(direction);
+				return patchDirections.has(key)
+					? this.mergeDirectionRealtime(direction, patchDirections.get(key))
+					: direction;
+			});
+
+			return Object.assign({}, stop, {
+				directions: mergedDirections
+			});
+		}
+
+		mergeLineRealtime(line, patchLine) {
+			if (!patchLine || typeof patchLine !== "object") {
+				return line;
+			}
+
+			const currentSchedule = line && line.schedule && typeof line.schedule === "object" ? line.schedule : {};
+			const patchSchedule = patchLine && patchLine.schedule && typeof patchLine.schedule === "object" ? patchLine.schedule : {};
+			const patchStops = new Map();
+			(Array.isArray(patchSchedule.stops) ? patchSchedule.stops : []).forEach((stop) => {
+				patchStops.set(String(stop && stop.stopId ? stop.stopId : ""), stop);
+			});
+
+			const mergedStops = (Array.isArray(currentSchedule.stops) ? currentSchedule.stops : []).map((stop) => {
+				const stopId = String(stop && stop.stopId ? stop.stopId : "");
+				return patchStops.has(stopId)
+					? this.mergeStopRealtime(stop, patchStops.get(stopId))
+					: stop;
+			});
+
+			return Object.assign({}, line, {
+				schedule: Object.assign({}, currentSchedule, {
+					realtime: patchSchedule.realtime && typeof patchSchedule.realtime === "object"
+						? patchSchedule.realtime
+						: (currentSchedule.realtime || {}),
+					stops: mergedStops
+				})
+			});
+		}
+
+		applyRealtimePatch(parsed) {
+			const patch = this.normalizeRealtimePatch(parsed);
+			const patchLines = new Map();
+			patch.lines.forEach((line) => {
+				patchLines.set(String(line && line.id ? line.id : ""), line);
+			});
+
+			const mergedLines = (Array.isArray(this.data.lines) ? this.data.lines : []).map((line) => {
+				const lineId = String(line && line.id ? line.id : "");
+				if (!lineId || !patchLines.has(lineId)) {
+					return line;
+				}
+
+				return this.mergeLineRealtime(line, patchLines.get(lineId));
+			});
+
+			this.data = Object.assign({}, this.data, {
+				lines: mergedLines,
+				realtime: patch.realtime
+			});
+		}
+
 		initRealtimeRefresh() {
 			if (!this.realtimeRefreshEnabled || !this.realtimeRefreshEndpoint || typeof window.fetch !== "function") {
 				return;
@@ -289,11 +387,10 @@
 				})
 				.then((response) => {
 					const payload = response && typeof response === "object" && response.payload ? response.payload : response;
-					const nextData = this.normalizePayload(payload);
 					const preservedView = this.captureMapView();
-					this.data = nextData;
+					this.applyRealtimePatch(payload);
 					if (this.payloadNode) {
-						this.payloadNode.textContent = JSON.stringify(nextData);
+						this.payloadNode.textContent = JSON.stringify(this.data);
 					}
 					this.render();
 					this.restoreMapView(preservedView);
