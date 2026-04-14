@@ -1709,24 +1709,23 @@
 					return vehicles;
 				}
 
-				const selectedKey = this.getDirectionKey(direction);
 				const selectedDirectionId = String(direction.directionId || "");
 				const selectedHeadsign = normalizeText(direction.headsign || "");
 
 				return vehicles.filter((vehicle) => {
-					const vehicleKey = this.getDirectionKey(vehicle);
-					if (vehicleKey && selectedKey) {
-						return vehicleKey === selectedKey;
-					}
-
 					const vehicleDirectionId = String(vehicle && vehicle.directionId ? vehicle.directionId : "");
-					if (selectedDirectionId && vehicleDirectionId) {
-						return vehicleDirectionId === selectedDirectionId;
+					const vehicleHeadsign = normalizeText(vehicle && vehicle.headsign ? vehicle.headsign : "");
+
+					if (selectedDirectionId && vehicleDirectionId && vehicleDirectionId !== selectedDirectionId) {
+						return false;
 					}
 
-					const vehicleHeadsign = normalizeText(vehicle && vehicle.headsign ? vehicle.headsign : "");
 					if (selectedHeadsign && vehicleHeadsign) {
 						return vehicleHeadsign === selectedHeadsign;
+					}
+
+					if (selectedDirectionId && vehicleDirectionId) {
+						return vehicleDirectionId === selectedDirectionId;
 					}
 
 					return true;
