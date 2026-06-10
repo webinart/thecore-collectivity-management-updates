@@ -175,6 +175,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			$line_index
 		);
 		$direction_labels  = $this->build_transport_direction_labels( array( $place ), $line_index );
+		$alert_meta        = $this->build_transport_alert_meta_for_places( array( $place ), $line_index );
 
 		return array(
 			'id'                 => 'transport-place-' . (int) ( $place['id'] ?? 0 ),
@@ -217,10 +218,15 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'transportModes'     => $transport_modes,
 			'transportMode'      => $primary_mode_slug,
 			'transportModeLabels'=> array_values( array_filter( wp_list_pluck( $transport_modes, 'name' ) ) ),
+			'transportPlaceIds'  => array_values( array_filter( array( (int) ( $place['id'] ?? 0 ) ) ) ),
+			'gtfsStopIds'        => $this->normalize_text_list( $place['gtfsStopIds'] ?? array() ),
 			'relatedLineIds'     => array_values( array_filter( array_map( 'intval', (array) ( $place['relatedLineIds'] ?? array() ) ) ) ),
 			'relatedLineCodes'   => array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $place['relatedLineCodes'] ?? array() ) ) ) ),
 			'relatedLineTitles'  => array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $place['relatedLineTitles'] ?? array() ) ) ) ),
 			'directionLabels'    => $direction_labels,
+			'hasTransportAlerts' => ! empty( $alert_meta['hasAlerts'] ),
+			'transportAlertSeverity' => $alert_meta['severity'],
+			'transportAlertLabels' => $alert_meta['labels'],
 			'parkingType'        => isset( $place['parkingType'] ) ? sanitize_text_field( (string) $place['parkingType'] ) : '',
 			'totalPlaces'        => $this->normalize_integer( $place['totalPlaces'] ?? null ),
 			'availablePlaces'    => $this->normalize_integer( $place['availablePlaces'] ?? null ),
@@ -250,6 +256,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		$route_label       = ! empty( $line['routeLabel'] ) ? sanitize_text_field( (string) $line['routeLabel'] ) : '';
 		$summary           = ! empty( $line['timetableSummary'] ) ? sanitize_text_field( (string) $line['timetableSummary'] ) : '';
 		$marker            = $this->resolve_transport_line_marker_coordinates( $line, $places );
+		$alert_meta        = $this->build_transport_alert_meta_for_line( $line );
 
 		if ( '' === $summary ) {
 			$summary = $route_label;
@@ -299,9 +306,13 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'transportModes'      => $transport_modes,
 			'transportMode'       => $primary_mode_slug,
 			'transportModeLabels' => array_values( array_filter( wp_list_pluck( $transport_modes, 'name' ) ) ),
+			'transportLineId'     => (int) ( $line['id'] ?? 0 ),
 			'relatedLineIds'      => array(),
 			'relatedLineCodes'    => array(),
 			'relatedLineTitles'   => array(),
+			'hasTransportAlerts'  => ! empty( $alert_meta['hasAlerts'] ),
+			'transportAlertSeverity' => $alert_meta['severity'],
+			'transportAlertLabels' => $alert_meta['labels'],
 			'parkingType'         => '',
 			'totalPlaces'         => null,
 			'availablePlaces'     => null,
@@ -437,6 +448,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		$related_line_codes = $this->merge_unique_text_lists( $reference_places, 'relatedLineCodes' );
 		$related_line_titles = $this->merge_unique_text_lists( $reference_places, 'relatedLineTitles' );
 		$direction_labels   = $this->build_transport_direction_labels( $reference_places, $line_index );
+		$alert_meta         = $this->build_transport_alert_meta_for_places( $reference_places, $line_index );
 		$cta                = $this->resolve_transport_cta(
 			$this->merge_unique_text_lists( $reference_places, 'externalUrl' ),
 			$related_line_ids,
@@ -516,10 +528,15 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 			'transportModes'      => $transport_modes,
 			'transportMode'       => $primary_mode_slug,
 			'transportModeLabels' => array_values( array_filter( wp_list_pluck( $transport_modes, 'name' ) ) ),
+			'transportPlaceIds'   => array_values( array_filter( array_map( 'intval', wp_list_pluck( $reference_places, 'id' ) ) ) ),
+			'gtfsStopIds'         => $this->merge_unique_text_lists( $reference_places, 'gtfsStopIds' ),
 			'relatedLineIds'      => $related_line_ids,
 			'relatedLineCodes'    => $related_line_codes,
 			'relatedLineTitles'   => $related_line_titles,
 			'directionLabels'     => $direction_labels,
+			'hasTransportAlerts'  => ! empty( $alert_meta['hasAlerts'] ),
+			'transportAlertSeverity' => $alert_meta['severity'],
+			'transportAlertLabels' => $alert_meta['labels'],
 			'parkingType'         => '',
 			'totalPlaces'         => null,
 			'availablePlaces'     => null,
@@ -681,6 +698,112 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		}
 
 		return sanitize_text_field( $headsign );
+	}
+
+	/**
+	 * Build a compact alert meta payload for one normalized transport line.
+	 *
+	 * @param array $line Normalized transport line payload.
+	 * @return array
+	 */
+	private function build_transport_alert_meta_for_line( array $line ) {
+		$alerts = $line['schedule']['realtime']['alerts'] ?? array();
+		if ( ! is_array( $alerts ) || empty( $alerts ) ) {
+			return $this->get_empty_transport_alert_meta();
+		}
+
+		return $this->build_transport_alert_meta_from_alerts( $alerts );
+	}
+
+	/**
+	 * Build alert meta for a set of transport places from related line payloads.
+	 *
+	 * @param array $places     Transport place payloads.
+	 * @param array $line_index Indexed transport line payloads.
+	 * @return array
+	 */
+	private function build_transport_alert_meta_for_places( array $places, array $line_index ) {
+		$related_line_ids = $this->merge_unique_int_lists( $places, 'relatedLineIds' );
+		$stop_ids         = $this->merge_unique_text_lists( $places, 'gtfsStopIds' );
+		$alerts           = array();
+
+		foreach ( $related_line_ids as $line_id ) {
+			$line_alerts = $line_index[ $line_id ]['schedule']['realtime']['alerts'] ?? array();
+			if ( ! is_array( $line_alerts ) || empty( $line_alerts ) ) {
+				continue;
+			}
+
+			foreach ( $line_alerts as $alert ) {
+				if ( ! is_array( $alert ) ) {
+					continue;
+				}
+
+				$alert_stop_ids = array_values( array_filter( array_map( 'sanitize_text_field', (array) ( $alert['stopIds'] ?? array() ) ) ) );
+				if ( ! empty( $alert_stop_ids ) && ! array_intersect( $alert_stop_ids, $stop_ids ) ) {
+					continue;
+				}
+
+				$alerts[] = $alert;
+			}
+		}
+
+		return $this->build_transport_alert_meta_from_alerts( $alerts );
+	}
+
+	/**
+	 * Build alert meta from raw normalized alerts.
+	 *
+	 * @param array $alerts Alert payloads.
+	 * @return array
+	 */
+	private function build_transport_alert_meta_from_alerts( array $alerts ) {
+		if ( empty( $alerts ) ) {
+			return $this->get_empty_transport_alert_meta();
+		}
+
+		$severity_rank = array(
+			'critical' => 4,
+			'warning'  => 3,
+			'info'     => 2,
+		);
+		$severity      = 'info';
+		$labels        = array();
+
+		foreach ( $alerts as $alert ) {
+			if ( ! is_array( $alert ) ) {
+				continue;
+			}
+
+			$alert_severity = ! empty( $alert['severity'] ) ? sanitize_key( (string) $alert['severity'] ) : 'info';
+			if ( ( $severity_rank[ $alert_severity ] ?? 1 ) > ( $severity_rank[ $severity ] ?? 1 ) ) {
+				$severity = $alert_severity;
+			}
+
+			$label = ! empty( $alert['effectLabel'] ) ? (string) $alert['effectLabel'] : (string) ( $alert['headerText'] ?? '' );
+			$label = sanitize_text_field( $label );
+			if ( '' !== $label ) {
+				$labels[ $label ] = $label;
+			}
+		}
+
+		return array(
+			'hasAlerts' => true,
+			'severity'  => $severity,
+			'labels'    => array_slice( array_values( $labels ), 0, 3 ),
+		);
+	}
+
+	/**
+	 * Empty alert meta payload.
+	 *
+	 * @return array
+	 */
+	private function get_empty_transport_alert_meta() {
+		return array(
+			'hasAlerts' => false,
+			'severity'  => '',
+			'labels'    => array(),
+		);
 	}
 
 	/**

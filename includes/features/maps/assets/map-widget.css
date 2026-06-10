@@ -399,6 +399,29 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 	box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
 }
 
+.tccm-map__marker-wrapper.is-selected .tccm-map__marker,
+.tccm-map__marker.is-selected {
+	box-shadow:
+		0 0 0 5px rgba(255, 255, 255, 0.9),
+		0 0 0 9px color-mix(in srgb, var(--tccm-marker-color, #1d4ed8) 38%, transparent),
+		0 12px 28px rgba(15, 23, 42, 0.28);
+	transform: scale(1.08);
+}
+
+.tccm-map__marker-wrapper.has-transport-alert .tccm-map__marker {
+	box-shadow:
+		0 0 0 4px rgba(255, 255, 255, 0.92),
+		0 0 0 8px rgba(245, 158, 11, 0.28),
+		0 10px 24px rgba(15, 23, 42, 0.28);
+}
+
+.tccm-map__marker-wrapper.has-transport-alert--critical .tccm-map__marker {
+	box-shadow:
+		0 0 0 4px rgba(255, 255, 255, 0.92),
+		0 0 0 8px rgba(220, 38, 38, 0.3),
+		0 10px 24px rgba(15, 23, 42, 0.28);
+}
+
 .tccm-map__marker--transport {
 	--tccm-marker-size: 40px;
 	--tccm-marker-border-width: 3px;
@@ -539,6 +562,15 @@ body[class*="elementor-kit-"] .tccm-map__toggle.is-active:active {
 	color: var(--tccm-map-popup-tag-text, #1d4ed8);
 	font-size: 0.78rem;
 	font-weight: 600;
+}
+
+.tccm-map__popup-section--transport-alert .tccm-map__popup-section-title {
+	color: #b45309;
+}
+
+.tccm-map__popup-tags--alerts span {
+	background: rgba(245, 158, 11, 0.12);
+	color: #92400e;
 }
 
 .tccm-map__popup-list {

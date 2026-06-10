@@ -5,6 +5,11 @@
 	const FILTER_TYPE_TRANSPORT_ROUTE = "transport_route";
 	const DEFAULT_TYPES = [FILTER_TYPE_POINT, FILTER_TYPE_ROUTE, FILTER_TYPE_TRANSPORT_ROUTE];
 
+	const normalizeText = (value) => String(value || "")
+		.toLowerCase()
+		.normalize("NFD")
+		.replace(/[\u0300-\u036f]/g, "");
+
 	const createDefaultState = () => ({
 		search: "",
 		accessibleOnly: false,
@@ -425,6 +430,7 @@
 			this.categoryStyles = this.payload.categoryStyles || {};
 			this.routeStyles = this.payload.routeStyles || {};
 			this.viewSettings = this.payload.view || { mode: "fit_bounds" };
+			this.transportAlertStylesEnabled = !!this.payload.transportAlertStylesEnabled;
 			this.map = null;
 			this.layers = null;
 			this.controls = null;
@@ -433,11 +439,15 @@
 			this.lastStateSignature = "";
 			this.loadingHideTimeout = null;
 			this.hasAppliedManualView = false;
+			this.selectedTransportDetail = null;
+			this.transportLayerIndex = null;
+			this.suppressNextFit = false;
 			this.gestureStartZoom = null;
 			this.onPinchWheel = this.handlePinchWheel.bind(this);
 			this.onGestureStart = this.handleGestureStart.bind(this);
 			this.onGestureChange = this.handleGestureChange.bind(this);
 			this.onGestureEnd = this.handleGestureEnd.bind(this);
+			this.onScheduleSelection = this.handleScheduleSelection.bind(this);
 		}
 
 		readPayload() {
@@ -498,6 +508,9 @@
 
 			this.renderEditorStylePreview();
 			this.initMap();
+			if (typeof window !== "undefined") {
+				window.addEventListener("tccm:transport-schedule-selected", this.onScheduleSelection);
+			}
 			this.render();
 		}
 
@@ -580,6 +593,10 @@
 				this.mapElement.removeEventListener("gesturestart", this.onGestureStart, { passive: false });
 				this.mapElement.removeEventListener("gesturechange", this.onGestureChange, { passive: false });
 				this.mapElement.removeEventListener("gestureend", this.onGestureEnd, { passive: false });
+			}
+
+			if (typeof window !== "undefined") {
+				window.removeEventListener("tccm:transport-schedule-selected", this.onScheduleSelection);
 			}
 
 			if (this.root && this.root.__tccmMapInstance === this) {
@@ -801,6 +818,11 @@
 
 			const items = this.filterItems();
 			this.layers.clearLayers();
+			this.transportLayerIndex = {
+				byItemId: new Map(),
+				byLineId: new Map(),
+				byStopId: new Map()
+			};
 			if (this.emptyElement) {
 				this.emptyElement.hidden = true;
 			}
@@ -834,7 +856,7 @@
 				finalizeVisibility();
 			}
 
-			if (hasLayers) {
+			if (hasLayers && !this.suppressNextFit) {
 				const bounds = this.layers.getBounds();
 				const manualView = this.getManualViewSettings();
 				if (manualView) {
@@ -849,6 +871,7 @@
 					});
 				}
 			}
+			this.suppressNextFit = false;
 		}
 
 		renderEditorDebug(filteredCount, layerCount) {
@@ -866,6 +889,243 @@
 			this.editorDebug.hidden = false;
 		}
 
+		normalizePositiveIntList(values) {
+			return (Array.isArray(values) ? values : [])
+				.map((value) => parseInt(value, 10))
+				.filter((value) => Number.isFinite(value) && value > 0);
+		}
+
+		getTransportSelectionDetail(item) {
+			if (!item || item.source !== "transport") {
+				return null;
+			}
+
+			const relatedLineIds = this.normalizePositiveIntList(item.relatedLineIds);
+			let lineId = parseInt(item.transportLineId, 10);
+			if (!Number.isFinite(lineId) || lineId <= 0) {
+				const routeMatch = String(item.id || "").match(/^transport-line-(\d+)$/);
+				lineId = routeMatch ? parseInt(routeMatch[1], 10) : 0;
+			}
+			if ((!Number.isFinite(lineId) || lineId <= 0) && relatedLineIds.length === 1) {
+				lineId = relatedLineIds[0];
+			}
+
+			const gtfsStopIds = (Array.isArray(item.gtfsStopIds) ? item.gtfsStopIds : [])
+				.map((value) => String(value || "").trim())
+				.filter(Boolean);
+
+			return {
+				groupId: this.groupId,
+				itemId: String(item.id || ""),
+				lineId: Number.isFinite(lineId) && lineId > 0 ? lineId : "",
+				relatedLineIds,
+				stopId: gtfsStopIds[0] || "",
+				gtfsStopIds,
+				transportPlaceIds: this.normalizePositiveIntList(item.transportPlaceIds),
+				providerKey: String(item.providerKey || ""),
+				source: "transport"
+			};
+		}
+
+		emitTransportSelection(item) {
+			if (typeof window === "undefined" || typeof window.CustomEvent !== "function") {
+				return;
+			}
+
+			const detail = this.getTransportSelectionDetail(item);
+			if (!detail) {
+				return;
+			}
+
+			this.selectedTransportDetail = detail;
+			this.suppressNextFit = true;
+			this.render();
+			this.openTransportSelectionPopup(detail);
+
+			window.dispatchEvent(new window.CustomEvent("tccm:map-transport-selected", {
+				detail
+			}));
+		}
+
+		handleScheduleSelection(event) {
+			if (!event || !event.detail || String(event.detail.groupId || "") !== this.groupId) {
+				return;
+			}
+
+			if (event.detail.clear) {
+				this.selectedTransportDetail = null;
+				this.suppressNextFit = true;
+				this.render();
+				return;
+			}
+
+			this.selectedTransportDetail = event.detail;
+			this.suppressNextFit = true;
+			this.render();
+
+			if (event.detail.focus) {
+				this.focusTransportSelection(event.detail);
+				this.openTransportSelectionPopup(event.detail);
+			}
+		}
+
+		getTransportLineId(item) {
+			if (!item || item.source !== "transport") {
+				return "";
+			}
+
+			const directLineId = parseInt(item.transportLineId, 10);
+			if (Number.isFinite(directLineId) && directLineId > 0) {
+				return String(directLineId);
+			}
+
+			const routeMatch = String(item.id || "").match(/^transport-line-(\d+)$/);
+			if (routeMatch) {
+				return String(routeMatch[1]);
+			}
+
+			const relatedLineIds = this.normalizePositiveIntList(item.relatedLineIds);
+			return relatedLineIds.length === 1 ? String(relatedLineIds[0]) : "";
+		}
+
+		itemMatchesTransportSelection(item, detail = this.selectedTransportDetail) {
+			if (!item || item.source !== "transport" || !detail) {
+				return false;
+			}
+
+			if (detail.itemId && String(detail.itemId) === String(item.id || "")) {
+				return true;
+			}
+
+			const selectedLineId = detail.lineId ? String(detail.lineId) : "";
+			const itemLineId = this.getTransportLineId(item);
+			const selectedStopIds = Array.isArray(detail.gtfsStopIds)
+				? detail.gtfsStopIds.map((value) => String(value || "").trim()).filter(Boolean)
+				: [];
+			const itemStopIds = Array.isArray(item.gtfsStopIds)
+				? item.gtfsStopIds.map((value) => String(value || "").trim()).filter(Boolean)
+				: [];
+
+			if (item.geometryType === "point") {
+				if (selectedStopIds.length && itemStopIds.some((stopId) => selectedStopIds.indexOf(stopId) !== -1)) {
+					return true;
+				}
+				return false;
+			}
+
+			return !!selectedLineId && !!itemLineId && selectedLineId === itemLineId;
+		}
+
+		addLayerToIndex(index, key, layer) {
+			if (!index || !key || !layer) {
+				return;
+			}
+
+			const normalizedKey = String(key);
+			const layers = index.get(normalizedKey) || [];
+			layers.push(layer);
+			index.set(normalizedKey, layers);
+		}
+
+		registerTransportLayer(item, layer) {
+			if (!item || item.source !== "transport" || !layer || !this.transportLayerIndex) {
+				return;
+			}
+
+			this.addLayerToIndex(this.transportLayerIndex.byItemId, item.id, layer);
+
+			const lineId = this.getTransportLineId(item);
+			if (lineId) {
+				this.addLayerToIndex(this.transportLayerIndex.byLineId, lineId, layer);
+			}
+
+			(Array.isArray(item.gtfsStopIds) ? item.gtfsStopIds : []).forEach((stopId) => {
+				this.addLayerToIndex(this.transportLayerIndex.byStopId, stopId, layer);
+			});
+		}
+
+		getFirstIndexedLayer(index, keys) {
+			if (!index || !Array.isArray(keys)) {
+				return null;
+			}
+
+			for (const key of keys) {
+				const layers = index.get(String(key || ""));
+				if (Array.isArray(layers) && layers.length) {
+					return layers[0];
+				}
+			}
+
+			return null;
+		}
+
+		getTransportSelectionLayer(detail) {
+			if (!detail || !this.transportLayerIndex) {
+				return null;
+			}
+
+			const stopIds = Array.isArray(detail.gtfsStopIds) ? detail.gtfsStopIds : [];
+			const stopLayer = this.getFirstIndexedLayer(this.transportLayerIndex.byStopId, stopIds);
+			if (stopLayer) {
+				return stopLayer;
+			}
+
+			const itemLayer = this.getFirstIndexedLayer(this.transportLayerIndex.byItemId, [detail.itemId]);
+			if (itemLayer) {
+				return itemLayer;
+			}
+
+			return this.getFirstIndexedLayer(this.transportLayerIndex.byLineId, [detail.lineId]);
+		}
+
+		openTransportSelectionPopup(detail) {
+			const layer = this.getTransportSelectionLayer(detail);
+			if (layer && typeof layer.openPopup === "function") {
+				layer.openPopup();
+			}
+		}
+
+		focusTransportSelection(detail) {
+			if (!this.map || !window.L) {
+				return;
+			}
+
+			const selectedStopIds = Array.isArray(detail && detail.gtfsStopIds)
+				? detail.gtfsStopIds.map((value) => String(value || "").trim()).filter(Boolean)
+				: [];
+			const targetPoint = this.items.find((item) => {
+				if (!item || item.source !== "transport" || item.geometryType !== "point") {
+					return false;
+				}
+				const itemStopIds = Array.isArray(item.gtfsStopIds) ? item.gtfsStopIds.map((value) => String(value || "").trim()).filter(Boolean) : [];
+				return selectedStopIds.length && itemStopIds.some((stopId) => selectedStopIds.indexOf(stopId) !== -1);
+			});
+
+			if (targetPoint && typeof targetPoint.latitude === "number" && typeof targetPoint.longitude === "number") {
+				this.map.flyTo([targetPoint.latitude, targetPoint.longitude], Math.max(this.map.getZoom(), 15), { duration: 0.35 });
+				return;
+			}
+
+			const targetRoute = this.items.find((item) => this.itemMatchesTransportSelection(item, detail) && item.geometryType === "route");
+			if (!targetRoute || !targetRoute.geojson) {
+				return;
+			}
+
+			const displayedGeojson = this.getDisplayedRouteGeoJson(targetRoute);
+			if (!displayedGeojson) {
+				return;
+			}
+
+			const routeLayer = window.L.geoJSON(displayedGeojson);
+			const bounds = routeLayer.getBounds();
+			if (bounds && bounds.isValid()) {
+				this.map.fitBounds(bounds, {
+					padding: [36, 36],
+					maxZoom: 15
+				});
+			}
+		}
+
 		renderPoint(item) {
 			if (typeof item.latitude !== "number" || typeof item.longitude !== "number") {
 				return;
@@ -881,7 +1141,10 @@
 				className: "tccm-map__popup"
 			});
 
+			marker.on("click", () => this.emitTransportSelection(item));
+
 			this.layers.addLayer(marker);
+			this.registerTransportLayer(item, marker);
 		}
 
 		renderRoute(item) {
@@ -902,10 +1165,12 @@
 						maxWidth: 320,
 						className: "tccm-map__popup"
 					});
+					layer.on("click", () => this.emitTransportSelection(item));
 				}
 			});
 
 			this.layers.addLayer(routeLayer);
+			this.registerTransportLayer(item, routeLayer);
 
 			const markerLatLng = this.getRouteMarkerLatLng(item, displayedGeojson, displayedGeojson !== item.geojson);
 			if (markerLatLng && !item.hideRouteMarker) {
@@ -918,8 +1183,10 @@
 					maxWidth: 320,
 					className: "tccm-map__popup"
 				});
+				routeMarker.on("click", () => this.emitTransportSelection(item));
 
 				this.layers.addLayer(routeMarker);
+				this.registerTransportLayer(item, routeMarker);
 			}
 
 			this.renderRouteAdditionalIcons(item, displayedGeojson);
@@ -929,11 +1196,13 @@
 			const color = this.getItemColor(item, "#2f855a");
 			const iconMarkup = this.getPointIconMarkup(item);
 			const isTransport = item.source === "transport";
+			const isSelected = this.itemMatchesTransportSelection(item);
+			const alertClass = this.getTransportAlertClass(item);
 			const wrapperClass = isTransport
-				? "tccm-map__marker-wrapper tccm-map__marker-wrapper--transport"
-				: "tccm-map__marker-wrapper";
+				? "tccm-map__marker-wrapper tccm-map__marker-wrapper--transport" + (isSelected ? " is-selected" : "") + alertClass
+				: "tccm-map__marker-wrapper" + alertClass;
 			const markerClass = isTransport
-				? "tccm-map__marker tccm-map__marker--transport"
+				? "tccm-map__marker tccm-map__marker--transport" + (isSelected ? " is-selected" : "")
 				: "tccm-map__marker";
 			const iconSize = isTransport ? [40, 40] : [34, 34];
 			const iconAnchor = isTransport ? [20, 20] : [17, 17];
@@ -950,10 +1219,12 @@
 		createRouteIcon(item) {
 			const color = this.getItemColor(item, "#1d4ed8");
 			const iconMarkup = this.getRouteIconMarkup(item);
+			const isSelected = this.itemMatchesTransportSelection(item);
+			const alertClass = this.getTransportAlertClass(item);
 
 			return window.L.divIcon({
-				className: "tccm-map__marker-wrapper tccm-map__marker-wrapper--route",
-				html: '<span class="tccm-map__marker tccm-map__marker--route" style="' + this.escapeAttr(this.getMarkerStyleValue(color, 38)) + '">' + iconMarkup + "</span>",
+				className: "tccm-map__marker-wrapper tccm-map__marker-wrapper--route" + (isSelected ? " is-selected" : "") + alertClass,
+				html: '<span class="tccm-map__marker tccm-map__marker--route' + (isSelected ? ' is-selected' : '') + '" style="' + this.escapeAttr(this.getMarkerStyleValue(color, 38)) + '">' + iconMarkup + "</span>",
 				iconSize: [38, 38],
 				iconAnchor: [19, 19],
 				popupAnchor: [0, -18]
@@ -965,10 +1236,12 @@
 			const color = iconDefinition && iconDefinition.color ? iconDefinition.color : this.getItemColor(item, "#1d4ed8");
 			const iconMarkup = this.getRouteAdditionalIconMarkup(item, iconDefinition);
 			const hasOutline = !!(iconDefinition && iconDefinition.withOutline);
+			const isSelected = this.itemMatchesTransportSelection(item);
+			const alertClass = this.getTransportAlertClass(item);
 
 			return window.L.divIcon({
-				className: "tccm-map__marker-wrapper tccm-map__marker-wrapper--route",
-				html: '<span class="tccm-map__marker tccm-map__marker--route' + (hasOutline ? ' tccm-map__marker--outlined' : '') + '" style="' + this.escapeAttr(this.getMarkerStyleValue(color, size, {
+				className: "tccm-map__marker-wrapper tccm-map__marker-wrapper--route" + (isSelected ? " is-selected" : "") + alertClass,
+				html: '<span class="tccm-map__marker tccm-map__marker--route' + (hasOutline ? ' tccm-map__marker--outlined' : '') + (isSelected ? ' is-selected' : '') + '" style="' + this.escapeAttr(this.getMarkerStyleValue(color, size, {
 					withOutline: hasOutline
 				})) + '">' + iconMarkup + "</span>",
 				iconSize: [size, size],
@@ -1188,14 +1461,29 @@
 			return item.accentColor || fallback;
 		}
 
+		hasTransportAlert(item) {
+			return !!(this.transportAlertStylesEnabled && item && item.source === "transport" && item.hasTransportAlerts);
+		}
+
+		getTransportAlertClass(item) {
+			if (!this.hasTransportAlert(item)) {
+				return "";
+			}
+
+			const severity = String(item.transportAlertSeverity || "info").replace(/[^a-z0-9_-]/gi, "").toLowerCase() || "info";
+			return " has-transport-alert has-transport-alert--" + severity;
+		}
+
 		getRouteStyle(item) {
 			const style = this.getItemStyle(item) || {};
+			const isSelected = this.itemMatchesTransportSelection(item);
+			const hasAlert = this.hasTransportAlert(item);
 
 			return {
 				color: this.getItemColor(item, "#1d4ed8"),
-				weight: style.routeWeight || 4,
-				opacity: 0.9,
-				dashArray: style.routeDashArray || "",
+				weight: (style.routeWeight || 4) + (isSelected ? 2 : 0) + (hasAlert ? 1 : 0),
+				opacity: isSelected || hasAlert ? 1 : 0.9,
+				dashArray: style.routeDashArray || (hasAlert ? "9 7" : ""),
 				lineCap: "round",
 				lineJoin: "round"
 			};
@@ -1243,6 +1531,11 @@
 				return null;
 			}
 
+			const directionGeoJson = this.getDirectionFilteredTransportGeoJson(item);
+			if (directionGeoJson) {
+				return directionGeoJson;
+			}
+
 			if (item.source !== "transport" || item.geojson.type !== "FeatureCollection" || !Array.isArray(item.geojson.features) || item.geojson.features.length <= 1) {
 				return item.geojson;
 			}
@@ -1287,6 +1580,42 @@
 				...item.geojson,
 				features: [bestFeature]
 			};
+		}
+
+		getDirectionFilteredTransportGeoJson(item) {
+			if (!item || item.source !== "transport" || !item.geojson || item.geometryType !== "route") {
+				return null;
+			}
+			if (!this.selectedTransportDetail || !this.selectedTransportDetail.mapDirectionBranch || !this.itemMatchesTransportSelection(item)) {
+				return null;
+			}
+			if (item.geojson.type !== "FeatureCollection" || !Array.isArray(item.geojson.features)) {
+				return null;
+			}
+
+			const directionId = String(this.selectedTransportDetail.directionId || "");
+			const headsign = normalizeText(this.selectedTransportDetail.headsign || "");
+			if (!directionId && !headsign) {
+				return null;
+			}
+
+			const features = item.geojson.features.filter((feature) => {
+				const properties = feature && feature.properties ? feature.properties : {};
+				const featureDirectionId = String(properties.directionId || "");
+				const featureHeadsign = normalizeText(properties.headsign || "");
+				if (directionId && featureDirectionId && directionId === featureDirectionId) {
+					return true;
+				}
+				if (headsign && featureHeadsign && headsign === featureHeadsign) {
+					return true;
+				}
+				return false;
+			});
+
+			return features.length ? {
+				...item.geojson,
+				features
+			} : null;
 		}
 
 		getRouteMarkerLatLng(item, geojson, isTrimmed = false) {
@@ -1388,8 +1717,10 @@
 					maxWidth: 320,
 					className: "tccm-map__popup"
 				});
+				marker.on("click", () => this.emitTransportSelection(item));
 
 				this.layers.addLayer(marker);
+				this.registerTransportLayer(item, marker);
 			});
 		}
 
@@ -1681,6 +2012,9 @@
 			const transportMeta = item.source === "transport"
 				? this.buildTransportMeta(item)
 				: "";
+			const transportAlerts = item.source === "transport"
+				? this.buildTransportAlertMeta(item)
+				: "";
 			const accessibility = item.accessibilityNotes
 				? '<p class="tccm-map__popup-accessibility">' + this.escapeHtml(item.accessibilityNotes) + "</p>"
 				: (item.isAccessible ? '<p class="tccm-map__popup-accessibility">Accessible</p>' : "");
@@ -1716,9 +2050,10 @@
 						subtitle +
 						summary +
 						address +
-						routeMeta +
-						transportMeta +
-						accessibility +
+							routeMeta +
+							transportMeta +
+							transportAlerts +
+							accessibility +
 						usefulLinks +
 						primaryLinks +
 						relatedPoints +
@@ -1727,6 +2062,21 @@
 					"</div>" +
 				"</article>"
 			);
+		}
+
+		buildTransportAlertMeta(item) {
+			if (!this.hasTransportAlert(item)) {
+				return "";
+			}
+
+			const labels = Array.isArray(item.transportAlertLabels) && item.transportAlertLabels.length
+				? item.transportAlertLabels
+				: ["Perturbation signalée"];
+			const tags = labels.slice(0, 4).map((label) => '<span>' + this.escapeHtml(label) + '</span>').join("");
+			return '<div class="tccm-map__popup-section tccm-map__popup-section--transport-alert">' +
+				'<p class="tccm-map__popup-section-title">Perturbations</p>' +
+				'<div class="tccm-map__popup-tags tccm-map__popup-tags--alerts">' + tags + '</div>' +
+			'</div>';
 		}
 
 		buildTransportMeta(item) {

@@ -166,6 +166,7 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 		if ( true !== $zip->open( $file ) ) {
 			return new WP_Error( 'bellevue_transport_gtfs_open_failed', __( 'Impossible d ouvrir l archive GTFS telechargee.', 'bellevue' ) );
 		}
+		$zip_closed = false;
 		try {
 			$routes          = array();
 			$route_ids       = array();
@@ -174,18 +175,23 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 
 			$route_id_map   = array_fill_keys( $config['routeIds'], true );
 			$short_name_map = array_fill_keys( $config['shortNames'], true );
+			$has_route_ids  = ! empty( $route_id_map );
 
 			$this->iterate_csv_rows(
 				$zip,
 				'routes.txt',
-				function ( array $row ) use ( &$routes, &$route_ids, $route_id_map, $short_name_map ) {
+				function ( array $row ) use ( &$routes, &$route_ids, $route_id_map, $short_name_map, $has_route_ids ) {
 				$route_id   = isset( $row['route_id'] ) ? sanitize_text_field( $row['route_id'] ) : '';
 				$short_name = isset( $row['route_short_name'] ) ? sanitize_text_field( $row['route_short_name'] ) : '';
 				if ( '' === $route_id ) {
 					return;
 				}
 
-				if ( ! isset( $route_id_map[ $route_id ] ) && ! isset( $short_name_map[ $short_name ] ) ) {
+				if ( $has_route_ids && ! isset( $route_id_map[ $route_id ] ) ) {
+					return;
+				}
+
+				if ( ! $has_route_ids && ! isset( $short_name_map[ $short_name ] ) ) {
 					return;
 				}
 
@@ -249,67 +255,76 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 			}
 
 			$services = array();
-			$this->iterate_csv_rows(
-				$zip,
-				'calendar.txt',
-				function ( array $row ) use ( &$services, $service_ids ) {
-				$service_id = isset( $row['service_id'] ) ? sanitize_text_field( $row['service_id'] ) : '';
-				if ( '' === $service_id || empty( $service_ids[ $service_id ] ) ) {
-					return;
-				}
+			if ( false !== $zip->locateName( 'calendar.txt' ) ) {
+				$this->iterate_csv_rows(
+					$zip,
+					'calendar.txt',
+					function ( array $row ) use ( &$services, $service_ids ) {
+					$service_id = isset( $row['service_id'] ) ? sanitize_text_field( $row['service_id'] ) : '';
+					if ( '' === $service_id || empty( $service_ids[ $service_id ] ) ) {
+						return;
+					}
 
-				$services[ $service_id ] = array(
-					'service_id'   => $service_id,
-					'monday'       => isset( $row['monday'] ) ? absint( $row['monday'] ) : 0,
-					'tuesday'      => isset( $row['tuesday'] ) ? absint( $row['tuesday'] ) : 0,
-					'wednesday'    => isset( $row['wednesday'] ) ? absint( $row['wednesday'] ) : 0,
-					'thursday'     => isset( $row['thursday'] ) ? absint( $row['thursday'] ) : 0,
-					'friday'       => isset( $row['friday'] ) ? absint( $row['friday'] ) : 0,
-					'saturday'     => isset( $row['saturday'] ) ? absint( $row['saturday'] ) : 0,
-					'sunday'       => isset( $row['sunday'] ) ? absint( $row['sunday'] ) : 0,
-					'start_date'   => isset( $row['start_date'] ) ? sanitize_text_field( $row['start_date'] ) : '',
-					'end_date'     => isset( $row['end_date'] ) ? sanitize_text_field( $row['end_date'] ) : '',
-					'added_dates'  => array(),
-					'removed_dates'=> array(),
-				);
-				}
-			);
-
-			$this->iterate_csv_rows(
-				$zip,
-				'calendar_dates.txt',
-				function ( array $row ) use ( &$services, $service_ids ) {
-				$service_id     = isset( $row['service_id'] ) ? sanitize_text_field( $row['service_id'] ) : '';
-				$exception_date = isset( $row['date'] ) ? sanitize_text_field( $row['date'] ) : '';
-				$exception_type = isset( $row['exception_type'] ) ? absint( $row['exception_type'] ) : 0;
-				if ( '' === $service_id || empty( $service_ids[ $service_id ] ) || '' === $exception_date ) {
-					return;
-				}
-
-				if ( empty( $services[ $service_id ] ) ) {
 					$services[ $service_id ] = array(
-						'service_id'    => $service_id,
-						'monday'        => 0,
-						'tuesday'       => 0,
-						'wednesday'     => 0,
-						'thursday'      => 0,
-						'friday'        => 0,
-						'saturday'      => 0,
-						'sunday'        => 0,
-						'start_date'    => '',
-						'end_date'      => '',
-						'added_dates'   => array(),
-						'removed_dates' => array(),
+						'service_id'   => $service_id,
+						'monday'       => isset( $row['monday'] ) ? absint( $row['monday'] ) : 0,
+						'tuesday'      => isset( $row['tuesday'] ) ? absint( $row['tuesday'] ) : 0,
+						'wednesday'    => isset( $row['wednesday'] ) ? absint( $row['wednesday'] ) : 0,
+						'thursday'     => isset( $row['thursday'] ) ? absint( $row['thursday'] ) : 0,
+						'friday'       => isset( $row['friday'] ) ? absint( $row['friday'] ) : 0,
+						'saturday'     => isset( $row['saturday'] ) ? absint( $row['saturday'] ) : 0,
+						'sunday'       => isset( $row['sunday'] ) ? absint( $row['sunday'] ) : 0,
+						'start_date'   => isset( $row['start_date'] ) ? sanitize_text_field( $row['start_date'] ) : '',
+						'end_date'     => isset( $row['end_date'] ) ? sanitize_text_field( $row['end_date'] ) : '',
+						'added_dates'  => array(),
+						'removed_dates'=> array(),
 					);
-				}
+					}
+				);
+			}
 
-				if ( 1 === $exception_type ) {
-					$services[ $service_id ]['added_dates'][] = $exception_date;
-				} elseif ( 2 === $exception_type ) {
-					$services[ $service_id ]['removed_dates'][] = $exception_date;
+			if ( false !== $zip->locateName( 'calendar_dates.txt' ) ) {
+				$this->iterate_csv_rows(
+					$zip,
+					'calendar_dates.txt',
+					function ( array $row ) use ( &$services, $service_ids ) {
+					$service_id     = isset( $row['service_id'] ) ? sanitize_text_field( $row['service_id'] ) : '';
+					$exception_date = isset( $row['date'] ) ? sanitize_text_field( $row['date'] ) : '';
+					$exception_type = isset( $row['exception_type'] ) ? absint( $row['exception_type'] ) : 0;
+					if ( '' === $service_id || empty( $service_ids[ $service_id ] ) || '' === $exception_date ) {
+						return;
+					}
+
+					if ( empty( $services[ $service_id ] ) ) {
+						$services[ $service_id ] = array(
+							'service_id'    => $service_id,
+							'monday'        => 0,
+							'tuesday'       => 0,
+							'wednesday'     => 0,
+							'thursday'      => 0,
+							'friday'        => 0,
+							'saturday'      => 0,
+							'sunday'        => 0,
+							'start_date'    => '',
+							'end_date'      => '',
+							'added_dates'   => array(),
+							'removed_dates' => array(),
+						);
+					}
+
+					if ( 1 === $exception_type ) {
+						$services[ $service_id ]['added_dates'][] = $exception_date;
+					} elseif ( 2 === $exception_type ) {
+						$services[ $service_id ]['removed_dates'][] = $exception_date;
+					}
+					}
+				);
+			}
+
+			if ( empty( $services ) ) {
+				$zip->close();
+				return new WP_Error( 'bellevue_transport_gtfs_no_services', __( 'Aucun service GTFS n a ete trouve dans calendar.txt ou calendar_dates.txt.', 'bellevue' ) );
 				}
-				}
-			);
 
 			$stop_times = array();
 			$trip_terminals = array();
@@ -440,6 +455,7 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 			}
 
 			$zip->close();
+			$zip_closed = true;
 
 			if ( empty( $stop_times ) ) {
 				return new WP_Error( 'bellevue_transport_gtfs_no_stop_times', __( 'Aucun horaire n a ete trouve pour les stops GTFS configures.', 'bellevue' ) );
@@ -456,7 +472,9 @@ final class TheCore_Collectivity_Transports_GTFS_Importer {
 				'stopTimes' => count( $stop_times ),
 			);
 		} catch ( RuntimeException $exception ) {
-			$zip->close();
+			if ( ! $zip_closed ) {
+				$zip->close();
+			}
 			return new WP_Error( 'bellevue_transport_gtfs_runtime', $exception->getMessage() );
 		}
 	}

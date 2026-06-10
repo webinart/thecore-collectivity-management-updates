@@ -120,7 +120,7 @@
 
 <h1>Manuel utilisateur</h1>
 <p class="subtitle">Modules <strong>MAP</strong> et <strong>Transports</strong> du plugin The Core - Collectivity Management</p>
-<p class="meta">Version du manuel: 10 avril 2026<br />Version du plugin: 1.0.1-beta.30<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
+<p class="meta">Version du manuel: 10 avril 2026<br />Version du plugin: 1.0.1-beta.32<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
 
 <div class="lead">
   <p><strong>Objectif de ce document</strong><br />Ce manuel explique comment utiliser les deux modules les plus structurants du plugin:</p>
@@ -428,7 +428,9 @@
 <ul>
   <li>un arrêt lié à une seule ligne peut reprendre automatiquement la couleur de cette ligne;</li>
   <li>les hubs transport sont regroupés pour éviter les doublons dus aux quais ou directions GTFS;</li>
-  <li>les lignes transport peuvent être rognées visuellement via les presets de parcours pour éviter d’envahir toute la commune.</li>
+  <li>les lignes transport peuvent être rognées visuellement via les presets de parcours pour éviter d’envahir toute la commune;</li>
+  <li>si un widget <strong>Horaires transport</strong> est lié à la carte, la carte peut limiter le tracé à la branche correspondant à la direction sélectionnée;</li>
+  <li>les alertes temps réel de type <strong>ServiceAlerts</strong> peuvent être signalées visuellement sur les lignes ou arrêts concernés.</li>
 </ul>
 
 <h3>2.7. Cas d’usage MAP recommandés</h3>
@@ -663,6 +665,7 @@
   <li><strong>Description</strong>;</li>
   <li><strong>Afficher les alertes transport</strong>;</li>
   <li><strong>Afficher tous les véhicules de la ligne sur la carte</strong> : si non, la carte ne montre que les véhicules dont le trip dessert au moins un arrêt suivi localement pour la ligne;</li>
+  <li><strong>Animer les déplacements temps réel</strong> : interpolation visuelle des véhicules entre deux rafraîchissements;</li>
   <li><strong>Hauteur carte</strong>;</li>
   <li>une section de style <strong>Véhicules temps réel</strong> pour régler l’animation, les couleurs, la taille du marqueur et la taille de l’icône.</li>
 </ul>
@@ -680,8 +683,20 @@
   <li>des marqueurs véhicules si le flux temps réel fournit des positions compatibles;</li>
   <li>un regroupement des arrêts proches de type bus pour éviter les doublons entre quais ou directions d’un même arrêt;</li>
   <li>dans le détail d’une ligne, un bloc <strong>Véhicules en circulation</strong> filtré par la direction sélectionnée;</li>
+  <li>si l’option est activée, un bloc <strong>Progression</strong> indiquant si le véhicule approche, est au niveau de l’arrêt ou vient de passer;</li>
+  <li>si l’option est activée, un bouton permettant de sélectionner l’arrêt le plus proche de l’utilisateur via la géolocalisation du navigateur;</li>
   <li>au clic sur un véhicule, une vignette qui affiche aussi la <strong>direction réelle du trajet</strong>.</li>
 </ul>
+
+<h4>3.7.3. Widget Elementor “Horaires transport”</h4>
+<p>Le widget <strong>Horaires transport</strong> permet d’afficher uniquement le panneau d’horaires, sans la carte complète du Transport Explorer. Il est utile quand une page contient déjà une MAP touristique et qu’on veut afficher les horaires de la ligne sélectionnée dans un bloc indépendant.</p>
+<ul>
+  <li>Renseignez le même <strong>Identifiant de groupe</strong> que le widget Carte pour synchroniser les clics carte et le panneau d’horaires.</li>
+  <li>Activez <strong>Limiter la carte à la direction sélectionnée</strong> si vous voulez que le tracé de la MAP liée n’affiche que la branche de ligne correspondant à la direction choisie.</li>
+  <li>Activez <strong>Afficher la progression</strong> pour afficher l’état lisible du véhicule quand les données temps réel fournissent les séquences d’arrêts nécessaires.</li>
+  <li>Activez <strong>Proposer l’arrêt le plus proche</strong> si vous voulez permettre à l’usager de choisir automatiquement l’arrêt le plus proche via son navigateur.</li>
+</ul>
+<p>Le widget accepte aussi des liens profonds: <code>?transport_line=123</code>, <code>?transport_stop=STOP_ID</code> et <code>?transport_direction=HEADSIGN</code> ou <code>?transport_direction=DIRECTION_ID</code>. Ces paramètres ouvrent directement la ligne, l’arrêt et la direction quand ils correspondent aux données disponibles.</p>
 
 <h3>3.8. Temps réel</h3>
 <p>Le temps réel est <strong>optionnel</strong>. Le plugin continue à fonctionner avec le seul GTFS statique.</p>

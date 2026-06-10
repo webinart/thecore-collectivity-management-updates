@@ -131,6 +131,44 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
+			'map_direction_branch',
+			array(
+				'label'        => esc_html__( 'Limiter la carte à la direction sélectionnée', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => '',
+				'description'  => esc_html__( 'Si activé, la carte intégrée affiche uniquement la branche GTFS de la ligne ouverte quand une direction est sélectionnée.', 'bellevue' ),
+			)
+		);
+
+		$this->add_control(
+			'show_progress',
+			array(
+				'label'        => esc_html__( 'Afficher la progression', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => '',
+			)
+		);
+
+		$this->add_control(
+			'show_nearest_stop_button',
+			array(
+				'label'        => esc_html__( 'Proposer l’arrêt le plus proche', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => '',
+				'description'  => esc_html__( 'Ajoute un bouton utilisant la géolocalisation du navigateur pour choisir l’arrêt suivi le plus proche.', 'bellevue' ),
+			)
+		);
+
+		$this->add_control(
 			'realtime_auto_refresh',
 			array(
 				'label'        => esc_html__( 'Actualiser le temps réel automatiquement', 'bellevue' ),
@@ -153,6 +191,34 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 				'default'     => 30,
 				'condition'   => array(
 					'realtime_auto_refresh' => 'yes',
+				),
+			)
+		);
+
+		$this->add_control(
+			'animate_realtime_vehicles',
+			array(
+				'label'        => esc_html__( 'Animer les déplacements temps réel', 'bellevue' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'bellevue' ),
+				'label_off'    => esc_html__( 'Non', 'bellevue' ),
+				'return_value' => 'yes',
+				'default'      => '',
+				'description'  => esc_html__( 'Déplace progressivement les marqueurs entre deux positions reçues au rafraîchissement suivant.', 'bellevue' ),
+			)
+		);
+
+		$this->add_control(
+			'realtime_vehicle_transition_duration',
+			array(
+				'label'     => esc_html__( 'Durée de transition véhicule (secondes)', 'bellevue' ),
+				'type'      => Controls_Manager::NUMBER,
+				'min'       => 1,
+				'max'       => 20,
+				'step'      => 1,
+				'default'   => 6,
+				'condition' => array(
+					'animate_realtime_vehicles' => 'yes',
 				),
 			)
 		);
@@ -300,22 +366,27 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 	/**
 	 * Render widget.
 	 */
-	protected function render() {
-		$settings         = $this->get_settings_for_display();
-		$title            = ! empty( $settings['title'] ) ? (string) $settings['title'] : __( 'Transports & Mobilites', 'bellevue' );
-		$description      = ! empty( $settings['description'] ) ? (string) $settings['description'] : '';
-		$show_alerts      = isset( $settings['show_alerts'] ) && 'yes' === $settings['show_alerts'];
-		$show_all_route_vehicles_on_map = isset( $settings['show_all_route_vehicles_on_map'] ) && 'yes' === $settings['show_all_route_vehicles_on_map'];
-		$realtime_auto_refresh          = isset( $settings['realtime_auto_refresh'] ) && 'yes' === $settings['realtime_auto_refresh'];
-		$realtime_refresh_interval      = isset( $settings['realtime_refresh_interval'] ) ? max( 15, intval( $settings['realtime_refresh_interval'] ) ) : 30;
-		$map_height       = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
-		$vehicle_pulse    = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
-		$widget_id        = 'bte-' . $this->get_id();
-		$transports       = TheCore_Collectivity_Management::instance()->get_transports_module();
-		$alerts_module    = TheCore_Collectivity_Management::instance()->get_alerts_module();
-		$payload          = $transports->get_normalizer()->get_widget_payload();
-		$transport_alerts = $show_alerts ? $alerts_module->get_repository()->get_active_alerts( TheCore_Collectivity_Alerts_Post_Type::TOPIC_TRANSPORT ) : array();
-		$alerts_markup    = $show_alerts ? $alerts_module->get_renderer()->render_banner_list( $transport_alerts, array( 'wrapper_class' => 'bte__alerts' ) ) : '';
+		protected function render() {
+			$settings                        = $this->get_settings_for_display();
+			$title                           = ! empty( $settings['title'] ) ? (string) $settings['title'] : __( 'Transports & Mobilites', 'bellevue' );
+			$description                     = ! empty( $settings['description'] ) ? (string) $settings['description'] : '';
+			$show_alerts                     = isset( $settings['show_alerts'] ) && 'yes' === $settings['show_alerts'];
+			$show_all_route_vehicles_on_map  = isset( $settings['show_all_route_vehicles_on_map'] ) && 'yes' === $settings['show_all_route_vehicles_on_map'];
+			$map_direction_branch            = isset( $settings['map_direction_branch'] ) && 'yes' === $settings['map_direction_branch'];
+			$show_progress                   = isset( $settings['show_progress'] ) && 'yes' === $settings['show_progress'];
+			$show_nearest_stop_button        = isset( $settings['show_nearest_stop_button'] ) && 'yes' === $settings['show_nearest_stop_button'];
+			$realtime_auto_refresh           = isset( $settings['realtime_auto_refresh'] ) && 'yes' === $settings['realtime_auto_refresh'];
+			$realtime_refresh_interval       = isset( $settings['realtime_refresh_interval'] ) ? max( 15, intval( $settings['realtime_refresh_interval'] ) ) : 30;
+			$animate_realtime_vehicles       = isset( $settings['animate_realtime_vehicles'] ) && 'yes' === $settings['animate_realtime_vehicles'];
+			$vehicle_transition_duration     = isset( $settings['realtime_vehicle_transition_duration'] ) ? max( 1, min( 20, intval( $settings['realtime_vehicle_transition_duration'] ) ) ) : 6;
+			$map_height                      = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
+			$vehicle_pulse                   = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
+			$widget_id                       = 'bte-' . $this->get_id();
+			$transports                      = TheCore_Collectivity_Management::instance()->get_transports_module();
+			$alerts_module                   = TheCore_Collectivity_Management::instance()->get_alerts_module();
+			$payload                         = $transports->get_normalizer()->get_widget_payload();
+			$transport_alerts                = $show_alerts ? $alerts_module->get_repository()->get_active_alerts( TheCore_Collectivity_Alerts_Post_Type::TOPIC_TRANSPORT ) : array();
+			$alerts_markup                   = $show_alerts ? $alerts_module->get_renderer()->render_banner_list( $transport_alerts, array( 'wrapper_class' => 'bte__alerts' ) ) : '';
 
 		$wrapper_styles = array(
 			'--bte-map-height:' . max( 280, $map_height ) . 'px',
@@ -358,11 +429,16 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 						$vehicle_pulse ? 'bte--vehicle-pulse' : '',
 					)
 				),
-				'id'    => $widget_id,
-				'data-show-all-route-vehicles-on-map' => $show_all_route_vehicles_on_map ? '1' : '0',
-				'data-realtime-refresh-enabled'       => $realtime_auto_refresh ? '1' : '0',
+					'id'    => $widget_id,
+					'data-show-all-route-vehicles-on-map' => $show_all_route_vehicles_on_map ? '1' : '0',
+					'data-map-direction-branch'           => $map_direction_branch ? '1' : '0',
+					'data-show-progress'                  => $show_progress ? '1' : '0',
+					'data-show-nearest-stop-button'       => $show_nearest_stop_button ? '1' : '0',
+					'data-realtime-refresh-enabled'       => $realtime_auto_refresh ? '1' : '0',
 				'data-realtime-refresh-interval'      => (string) $realtime_refresh_interval,
 				'data-realtime-refresh-endpoint'      => esc_url_raw( rest_url( 'thecore-collectivity/v1/transports/widget-realtime' ) ),
+				'data-animate-realtime-vehicles'      => $animate_realtime_vehicles ? '1' : '0',
+				'data-vehicle-transition-duration'    => (string) $vehicle_transition_duration,
 				'style' => implode( ';', $wrapper_styles ) . ';',
 			)
 		);

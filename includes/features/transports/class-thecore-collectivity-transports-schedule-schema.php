@@ -16,7 +16,7 @@ final class TheCore_Collectivity_Transports_Schedule_Schema {
 	/**
 	 * Current schema version.
 	 */
-	const DB_VERSION = '2.5.0';
+	const DB_VERSION = '2.6.0';
 
 	/**
 	 * Legacy single-source option.
@@ -109,7 +109,7 @@ final class TheCore_Collectivity_Transports_Schedule_Schema {
 			"CREATE TABLE {$trips_table} (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				provider_key varchar(64) NOT NULL DEFAULT '',
-				trip_id varchar(64) NOT NULL,
+				trip_id varchar(191) NOT NULL,
 				route_id varchar(64) NOT NULL,
 				service_id varchar(64) NOT NULL,
 				trip_headsign varchar(191) DEFAULT '',
@@ -139,7 +139,7 @@ final class TheCore_Collectivity_Transports_Schedule_Schema {
 			"CREATE TABLE {$stop_times} (
 				id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 				provider_key varchar(64) NOT NULL DEFAULT '',
-				trip_id varchar(64) NOT NULL,
+				trip_id varchar(191) NOT NULL,
 				stop_id varchar(64) NOT NULL,
 				stop_sequence int(10) unsigned DEFAULT 0,
 				arrival_secs int(10) unsigned DEFAULT 0,

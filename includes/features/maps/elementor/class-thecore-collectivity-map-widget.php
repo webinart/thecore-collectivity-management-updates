@@ -215,6 +215,22 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		);
 
 		$this->add_control(
+			'transport_alert_styles',
+			array(
+				'label'        => esc_html__( 'Styliser les alertes transport sur la carte', 'thecore-collectivity-management' ),
+				'type'         => Controls_Manager::SWITCHER,
+				'label_on'     => esc_html__( 'Oui', 'thecore-collectivity-management' ),
+				'label_off'    => esc_html__( 'Non', 'thecore-collectivity-management' ),
+				'return_value' => 'yes',
+				'default'      => '',
+				'description'  => esc_html__( 'Optionnel: applique un style visuel aux lignes ou arrêts de transport concernés par une alerte temps réel.', 'thecore-collectivity-management' ),
+				'condition'    => array(
+					'include_transport_places' => 'yes',
+				),
+			)
+		);
+
+		$this->add_control(
 			'show_points',
 			array(
 				'label'        => esc_html__( 'Afficher les lieux', 'thecore-collectivity-management' ),
@@ -1029,6 +1045,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$payload['categoryStyles'] = $this->get_category_styles_payload( $settings['category_styles'] ?? array() );
 		$payload['routeStyles']    = $this->get_route_styles_payload( $settings );
 		$payload['view']           = $this->get_view_payload( $settings );
+		$payload['transportAlertStylesEnabled'] = isset( $settings['transport_alert_styles'] ) && 'yes' === $settings['transport_alert_styles'];
 		if ( isset( $settings['include_transport_places'] ) && 'yes' === $settings['include_transport_places'] ) {
 			$payload = $this->merge_transport_payload(
 				$payload,

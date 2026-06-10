@@ -166,6 +166,7 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 			$explicit_route_map = array_fill_keys( $explicit_route_ids, true );
 			$explicit_stop_map  = array_fill_keys( $explicit_stop_ids, true );
 			$all_stops          = array();
+			$children_by_parent = array();
 			$stops              = array();
 			$duplicate_names    = array();
 			$seed_stop_ids      = array();
@@ -179,7 +180,7 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 			$this->iterate_csv_rows(
 				$zip,
 				'stops.txt',
-				function ( array $row ) use ( &$all_stops, &$stops, &$seed_stop_ids, $locality_keys, $explicit_stop_map ) {
+				function ( array $row ) use ( &$all_stops, &$children_by_parent ) {
 					$stop_id = isset( $row['stop_id'] ) ? sanitize_text_field( $row['stop_id'] ) : '';
 					if ( '' === $stop_id ) {
 						return;
@@ -201,18 +202,28 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 					);
 					$all_stops[ $stop_id ] = $stop;
 
-					$city_key         = '' !== $city_name ? $this->normalize_text_key( $city_name ) : '';
-					$matches_locality = '' !== $city_key && ! empty( $locality_keys ) && in_array( $city_key, $locality_keys, true );
-					$is_explicit_stop = ! empty( $explicit_stop_map[ $stop_id ] );
+					if ( '' !== $stop['parent_station'] ) {
+						if ( empty( $children_by_parent[ $stop['parent_station'] ] ) ) {
+							$children_by_parent[ $stop['parent_station'] ] = array();
+						}
 
-					if ( ! $matches_locality && ! $is_explicit_stop ) {
-						return;
+						$children_by_parent[ $stop['parent_station'] ][ $stop_id ] = true;
 					}
-
-					$stops[ $stop_id ]         = $stop;
-					$seed_stop_ids[ $stop_id ] = true;
 				}
 			);
+
+			foreach ( $all_stops as $stop_id => $stop ) {
+				$city_name        = isset( $stop['city_name'] ) ? trim( (string) $stop['city_name'] ) : '';
+				$city_key         = '' !== $city_name ? $this->normalize_text_key( $city_name ) : '';
+				$matches_locality = '' !== $city_key && ! empty( $locality_keys ) && in_array( $city_key, $locality_keys, true );
+				$is_explicit_stop = ! empty( $explicit_stop_map[ $stop_id ] );
+
+				if ( ! $matches_locality && ! $is_explicit_stop ) {
+					continue;
+				}
+
+				$this->add_discovery_stop_group( $stops, $seed_stop_ids, $all_stops, $children_by_parent, $stop_id );
+			}
 
 			if ( empty( $stops ) && empty( $explicit_route_map ) ) {
 				$zip->close();
@@ -469,7 +480,11 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 		);
 
 		foreach ( $stops as $stop_id => $stop ) {
-			$post_id = $this->find_place_post_id( $stop_id, $provider_key );
+			$gtfs_stop_ids = isset( $stop['gtfs_stop_ids'] ) && is_array( $stop['gtfs_stop_ids'] )
+				? array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $stop['gtfs_stop_ids'] ) ) ) )
+				: array( $stop_id );
+			$sync_stop_id  = ! empty( $stop['sync_stop_id'] ) ? sanitize_text_field( (string) $stop['sync_stop_id'] ) : $stop_id;
+			$post_id       = $this->find_place_post_id_for_stop_ids( $sync_stop_id, $gtfs_stop_ids, $provider_key );
 			$title   = $this->build_stop_title( $stop, ! empty( $duplicate_names[ $stop['stop_name'] ] ) && $duplicate_names[ $stop['stop_name'] ] > 1 );
 			$postarr = array(
 				'post_type'   => TheCore_Collectivity_Transports_Post_Types::POST_TYPE_PLACE,
@@ -494,9 +509,19 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 				continue;
 			}
 
-			$route_ids      = ! empty( $stop_route_ids[ $stop_id ] ) ? array_keys( $stop_route_ids[ $stop_id ] ) : array();
+			$route_ids      = array();
 			$related_lines  = array();
 			$mode_slugs     = array();
+
+			foreach ( $gtfs_stop_ids as $gtfs_stop_id ) {
+				if ( empty( $stop_route_ids[ $gtfs_stop_id ] ) ) {
+					continue;
+				}
+
+				$route_ids = array_merge( $route_ids, array_keys( $stop_route_ids[ $gtfs_stop_id ] ) );
+			}
+
+			$route_ids = array_values( array_unique( array_filter( $route_ids ) ) );
 
 			foreach ( $route_ids as $route_id ) {
 				if ( ! empty( $route_post_map[ $route_id ] ) ) {
@@ -517,14 +542,14 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_ADDRESS, $this->build_stop_address( $stop ) );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_LATITUDE, $stop['stop_lat'] );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_LONGITUDE, $stop['stop_lon'] );
-			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, $stop_id );
+			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, implode( "\n", $gtfs_stop_ids ) );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_GTFS_PROVIDER_KEY, sanitize_key( (string) $provider_key ) );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_RELATED_LINES, $related_lines );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_IS_ACCESSIBLE, '1' === (string) $stop['wheelchair_boarding'] ? '1' : '0' );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_EXTERNAL_URL, $stop['stop_url'] );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_SEARCH_KEYWORDS, implode( ' ', array_filter( array( $stop['city_name'], $stop['area_name'] ) ) ) );
 			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_SORT_ORDER, 0 );
-			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_GTFS_SYNC_STOP_KEY, $stop_id );
+			update_post_meta( $post_id, TheCore_Collectivity_Transports_Meta::META_GTFS_SYNC_STOP_KEY, $sync_stop_id );
 
 			wp_set_post_terms(
 				$post_id,
@@ -538,6 +563,60 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 			'created' => $created,
 			'updated' => $updated,
 		);
+	}
+
+	/**
+	 * Add one public stop place and its schedulable GTFS stop ids.
+	 *
+	 * GTFS railway feeds often expose one parent station (StopArea) and several child StopPoint rows
+	 * for TER, TGV or Intercites. The public map should display one station marker while schedules use
+	 * the child StopPoint ids found in stop_times.txt.
+	 *
+	 * @param array  $stops              Public stop places, keyed by display/sync stop id.
+	 * @param array  $seed_stop_ids      Exact stop ids used to find trips in stop_times.txt.
+	 * @param array  $all_stops          All GTFS stops.
+	 * @param array  $children_by_parent Child stop ids keyed by parent_station.
+	 * @param string $stop_id            Matched explicit/local stop id.
+	 */
+	private function add_discovery_stop_group( array &$stops, array &$seed_stop_ids, array $all_stops, array $children_by_parent, $stop_id ) {
+		$stop_id = sanitize_text_field( (string) $stop_id );
+		if ( '' === $stop_id || empty( $all_stops[ $stop_id ] ) ) {
+			return;
+		}
+
+		$stop              = $all_stops[ $stop_id ];
+		$parent_station    = ! empty( $stop['parent_station'] ) ? sanitize_text_field( (string) $stop['parent_station'] ) : '';
+		$is_parent_station = '1' === (string) ( $stop['location_type'] ?? '' ) || ! empty( $children_by_parent[ $stop_id ] );
+		$place_key         = $stop_id;
+		$display_stop      = $stop;
+		$gtfs_stop_ids     = array( $stop_id );
+
+		if ( $is_parent_station ) {
+			$children      = ! empty( $children_by_parent[ $stop_id ] ) ? array_keys( $children_by_parent[ $stop_id ] ) : array();
+			$gtfs_stop_ids = ! empty( $children ) ? $children : array( $stop_id );
+		} elseif ( '' !== $parent_station && ! empty( $all_stops[ $parent_station ] ) ) {
+			$place_key    = $parent_station;
+			$display_stop = $all_stops[ $parent_station ];
+		}
+
+		if ( empty( $stops[ $place_key ] ) ) {
+			$display_stop['sync_stop_id'] = $place_key;
+			$display_stop['gtfs_stop_ids'] = array();
+			$stops[ $place_key ] = $display_stop;
+		}
+
+		$stops[ $place_key ]['gtfs_stop_ids'] = array_values(
+			array_unique(
+				array_merge(
+					(array) ( $stops[ $place_key ]['gtfs_stop_ids'] ?? array() ),
+					$gtfs_stop_ids
+				)
+			)
+		);
+
+		foreach ( $gtfs_stop_ids as $gtfs_stop_id ) {
+			$seed_stop_ids[ $gtfs_stop_id ] = true;
+		}
 	}
 
 	/**
@@ -598,32 +677,37 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 	}
 
 	/**
-	 * Find an existing place post for a GTFS stop id.
+	 * Find an existing place post for a GTFS stop group.
 	 *
-	 * @param string $stop_id GTFS stop id.
+	 * @param string $sync_stop_id Stable sync key, usually the parent station id.
+	 * @param array  $stop_ids     Exact schedulable GTFS stop ids.
+	 * @param string $provider_key GTFS provider key.
 	 * @return int
 	 */
-	private function find_place_post_id( $stop_id, $provider_key ) {
-		$stop_id = sanitize_text_field( (string) $stop_id );
+	private function find_place_post_id_for_stop_ids( $sync_stop_id, array $stop_ids, $provider_key ) {
+		$sync_stop_id = sanitize_text_field( (string) $sync_stop_id );
+		$stop_ids     = array_values( array_unique( array_filter( array_map( 'sanitize_text_field', $stop_ids ) ) ) );
 		$provider_key = sanitize_key( (string) $provider_key );
-		if ( '' === $stop_id ) {
+		if ( '' === $sync_stop_id && empty( $stop_ids ) ) {
 			return 0;
 		}
 
-		$posts = get_posts(
-			array(
-				'post_type'      => TheCore_Collectivity_Transports_Post_Types::POST_TYPE_PLACE,
-				'post_status'    => array( 'publish', 'draft', 'pending', 'future', 'private' ),
-				'posts_per_page' => -1,
-				'meta_key'       => TheCore_Collectivity_Transports_Meta::META_GTFS_SYNC_STOP_KEY,
-				'meta_value'     => $stop_id,
-				'fields'         => 'ids',
-			)
-		);
+		if ( '' !== $sync_stop_id ) {
+			$posts = get_posts(
+				array(
+					'post_type'      => TheCore_Collectivity_Transports_Post_Types::POST_TYPE_PLACE,
+					'post_status'    => array( 'publish', 'draft', 'pending', 'future', 'private' ),
+					'posts_per_page' => -1,
+					'meta_key'       => TheCore_Collectivity_Transports_Meta::META_GTFS_SYNC_STOP_KEY,
+					'meta_value'     => $sync_stop_id,
+					'fields'         => 'ids',
+				)
+			);
 
-		foreach ( $posts as $post_id ) {
-			if ( $this->is_provider_match( $post_id, $provider_key ) ) {
-				return intval( $post_id );
+			foreach ( $posts as $post_id ) {
+				if ( $this->is_provider_match( $post_id, $provider_key ) ) {
+					return intval( $post_id );
+				}
 			}
 		}
 
@@ -640,8 +724,12 @@ final class TheCore_Collectivity_Transports_GTFS_Discovery {
 				continue;
 			}
 
-			$stop_ids = $this->schedule_repository->parse_meta_list( get_post_meta( $place->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, true ) );
-			if ( in_array( $stop_id, $stop_ids, true ) ) {
+			$place_stop_ids = $this->schedule_repository->parse_meta_list( get_post_meta( $place->ID, TheCore_Collectivity_Transports_Meta::META_GTFS_STOP_IDS, true ) );
+			if ( '' !== $sync_stop_id && in_array( $sync_stop_id, $place_stop_ids, true ) ) {
+				return intval( $place->ID );
+			}
+
+			if ( ! empty( array_intersect( $place_stop_ids, $stop_ids ) ) ) {
 				return intval( $place->ID );
 			}
 		}

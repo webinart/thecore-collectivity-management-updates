@@ -101,11 +101,36 @@
 		return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
 	}
 
+	function getDistanceMeters(lat1, lng1, lat2, lng2) {
+		const toRadians = (value) => value * Math.PI / 180;
+		const earthRadius = 6371000;
+		const dLat = toRadians(lat2 - lat1);
+		const dLng = toRadians(lng2 - lng1);
+		const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+			Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+			Math.sin(dLng / 2) * Math.sin(dLng / 2);
+		return 2 * earthRadius * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+	}
+
 		class BellevueTransportExplorer {
 			constructor(root) {
 				this.root = root;
 				this.root.__bteInstance = this;
+				this.isScheduleOnly = this.root.getAttribute("data-schedule-only") === "1";
+				this.defaultLineId = String(this.root.getAttribute("data-default-line-id") || "");
+				this.linkedMapGroupId = String(this.root.getAttribute("data-map-group") || "");
+				this.initialOpen = this.root.getAttribute("data-initial-open") === "1";
+				this.scheduleCanClose = this.root.getAttribute("data-schedule-can-close") === "1";
+				this.showMapFocusButton = this.root.getAttribute("data-show-map-focus-button") !== "0";
+				this.scheduleDisplayMode = ["both", "schedule", "realtime"].indexOf(this.root.getAttribute("data-schedule-display-mode")) !== -1
+					? this.root.getAttribute("data-schedule-display-mode")
+					: "both";
+				this.mapDirectionBranch = this.root.getAttribute("data-map-direction-branch") === "1";
+				this.showProgress = this.root.getAttribute("data-show-progress") === "1";
+				this.showNearestStopButton = this.root.getAttribute("data-show-nearest-stop-button") === "1";
 				this.showAllRouteVehiclesOnMap = this.root.getAttribute("data-show-all-route-vehicles-on-map") !== "0";
+				this.animateRealtimeVehicles = this.root.getAttribute("data-animate-realtime-vehicles") === "1";
+				this.vehicleTransitionDuration = Math.max(1, parseInt(this.root.getAttribute("data-vehicle-transition-duration") || "6", 10) || 6) * 1000;
 				this.realtimeRefreshEnabled = this.root.getAttribute("data-realtime-refresh-enabled") !== "0";
 				this.realtimeRefreshInterval = Math.max(15, parseInt(this.root.getAttribute("data-realtime-refresh-interval") || "30", 10) || 30);
 				this.realtimeRefreshEndpoint = String(this.root.getAttribute("data-realtime-refresh-endpoint") || "");
@@ -122,12 +147,14 @@
 					busSort: "name",
 					parkingSort: "disponibilite",
 					lineSelections: {},
-					activeBusLineId: ""
+					activeBusLineId: this.getInitialActiveBusLineId()
 				};
+			this.applyDeepLinkState();
 			this.map = null;
 			this.routesLayer = null;
 			this.markersLayer = null;
 			this.markerIndex = {};
+			this.vehiclePositionIndex = new Map();
 			this.hasFittedBounds = false;
 			this.bindEvents();
 			this.initMap();
@@ -161,6 +188,7 @@
 					train: this.root.querySelector('[data-list="train"]')
 				};
 				this.busDetailElement = this.root.querySelector('[data-line-detail="bus"]');
+				this.schedulePlaceholderElement = this.root.querySelector("[data-schedule-placeholder]");
 				this.emptyElements = {
 					bus: this.root.querySelector('[data-empty="bus"]'),
 					parking: this.root.querySelector('[data-empty="parking"]'),
@@ -202,6 +230,79 @@
 					alerts: Array.isArray(parsed.realtime.alerts) ? parsed.realtime.alerts : [],
 					vehicles: Array.isArray(parsed.realtime.vehicles) ? parsed.realtime.vehicles : []
 				} : { alerts: [], vehicles: [] }
+			};
+		}
+
+		getLineById(lineId) {
+			const id = String(lineId || "");
+			if (!id || !Array.isArray(this.data.lines)) {
+				return null;
+			}
+
+			return this.data.lines.find((line) => String(line && line.id ? line.id : "") === id) || null;
+		}
+
+		getInitialActiveBusLineId() {
+			if (!this.isScheduleOnly || !this.initialOpen) {
+				return "";
+			}
+
+			if (this.defaultLineId && this.getLineById(this.defaultLineId)) {
+				return this.defaultLineId;
+			}
+
+			const firstLine = Array.isArray(this.data.lines) && this.data.lines.length ? this.data.lines[0] : null;
+			return firstLine && firstLine.id ? String(firstLine.id) : "";
+		}
+
+		getDeepLinkParam(names) {
+			if (typeof window === "undefined") {
+				return "";
+			}
+
+			const search = new URLSearchParams(window.location.search || "");
+			for (const name of names) {
+				const value = search.get(name);
+				if (value) {
+					return value;
+				}
+			}
+
+			const hash = String(window.location.hash || "").replace(/^#/, "");
+			if (!hash) {
+				return "";
+			}
+
+			const hashCandidates = [hash];
+			if (/^transport[?&=]/.test(hash)) {
+				hashCandidates.push(hash.replace(/^transport[?&=]?/, ""));
+			}
+
+			for (const candidate of hashCandidates) {
+				const hashParams = new URLSearchParams(candidate);
+				for (const name of names) {
+					const value = hashParams.get(name);
+					if (value) {
+						return value;
+					}
+				}
+			}
+
+			return "";
+		}
+
+		applyDeepLinkState() {
+			const lineId = this.getDeepLinkParam(["transport_line", "tccm_line", "line"]);
+			if (!lineId || !this.getLineById(lineId)) {
+				return;
+			}
+
+			const stopId = this.getDeepLinkParam(["transport_stop", "tccm_stop", "stop"]);
+			const directionKey = this.getDeepLinkParam(["transport_direction", "tccm_direction", "direction"]);
+			this.state.activeBusLineId = String(lineId);
+			this.state.lineSelections[String(lineId)] = {
+				directionKey: directionKey ? decodeURIComponent(directionKey) : "",
+				stopId: stopId ? decodeURIComponent(stopId) : ""
 			};
 		}
 
@@ -484,8 +585,12 @@
 					const closeLineButton = event.target.closest("[data-close-line]");
 					if (closeLineButton && this.root.contains(closeLineButton)) {
 						event.preventDefault();
+						if (this.isScheduleOnly && !this.scheduleCanClose) {
+							return;
+						}
 						this.state.activeBusLineId = "";
 						this.render();
+						this.emitScheduleClear();
 						return;
 					}
 
@@ -503,6 +608,20 @@
 					if (focusButton && this.root.contains(focusButton)) {
 						event.preventDefault();
 						this.focusPlace(focusButton.getAttribute("data-focus-place"));
+						return;
+					}
+
+					const focusTransportButton = event.target.closest("[data-focus-transport]");
+					if (focusTransportButton && this.root.contains(focusTransportButton)) {
+						event.preventDefault();
+						this.focusLinkedMapSelection();
+						return;
+					}
+
+					const nearestStopButton = event.target.closest("[data-nearest-stop]");
+					if (nearestStopButton && this.root.contains(nearestStopButton)) {
+						event.preventDefault();
+						this.selectNearestStop(nearestStopButton.getAttribute("data-line-id") || "");
 					}
 				});
 
@@ -516,6 +635,12 @@
 						stopId: stopSelect.value || ""
 					});
 				});
+
+				if (this.linkedMapGroupId && typeof window !== "undefined") {
+					window.addEventListener("tccm:map-transport-selected", (event) => {
+						this.handleLinkedMapTransportSelection(event);
+					});
+				}
 			}
 
 			resetFilters() {
@@ -525,7 +650,7 @@
 				this.state.freeOnly = false;
 				this.state.day = "tous";
 				this.state.lineSelections = {};
-				this.state.activeBusLineId = "";
+				this.state.activeBusLineId = this.getInitialActiveBusLineId();
 				if (this.searchInput) {
 					this.searchInput.value = "";
 				}
@@ -643,6 +768,7 @@
 				if (!activeLineId) {
 					this.busDetailElement.innerHTML = "";
 					this.busDetailElement.hidden = true;
+					this.renderSchedulePlaceholder(lines);
 					return;
 				}
 
@@ -650,11 +776,50 @@
 				if (!activeLine) {
 					this.busDetailElement.innerHTML = "";
 					this.busDetailElement.hidden = true;
+					this.renderSchedulePlaceholder(lines);
 					return;
 				}
 
+				if (this.schedulePlaceholderElement) {
+					this.schedulePlaceholderElement.hidden = true;
+					this.schedulePlaceholderElement.innerHTML = "";
+				}
 				this.busDetailElement.innerHTML = this.renderBusLineDetail(activeLine);
 				this.busDetailElement.hidden = false;
+			}
+
+			renderSchedulePlaceholder(lines) {
+				if (!this.schedulePlaceholderElement) {
+					return;
+				}
+
+				if (!this.isScheduleOnly) {
+					this.schedulePlaceholderElement.innerHTML = "";
+					this.schedulePlaceholderElement.hidden = true;
+					return;
+				}
+
+				const availableLines = Array.isArray(lines) ? lines : [];
+				const defaultLine = this.getLineById(this.defaultLineId) || availableLines[0] || null;
+				const lineButtons = availableLines.slice(0, 6).map((line) => {
+					const label = ["Ligne", line.lineCode || line.title || line.id].filter(Boolean).join(" ");
+					return '<button type="button" class="bte__schedule-placeholder-button" data-open-line="' + escapeHtml(line.id) + '">' + escapeHtml(label) + '</button>';
+				}).join("");
+				const message = this.linkedMapGroupId
+					? "Sélectionnez une ligne ou un arrêt sur la carte pour afficher les horaires."
+					: "Choisissez une ligne pour afficher les horaires.";
+				const primaryButton = defaultLine
+					? '<button type="button" class="bte-card__action" data-open-line="' + escapeHtml(defaultLine.id) + '">Afficher les horaires ' + getIconMarkup("arrow") + '</button>'
+					: "";
+
+				this.schedulePlaceholderElement.innerHTML = '<article class="bte__schedule-placeholder-card">' +
+					'<p class="bte__schedule-placeholder-kicker">Horaires transport</p>' +
+					'<h4 class="bte__schedule-placeholder-title">Aucune ligne sélectionnée</h4>' +
+					'<p class="bte__schedule-placeholder-text">' + escapeHtml(message) + '</p>' +
+					(primaryButton ? '<div class="bte__schedule-placeholder-actions">' + primaryButton + '</div>' : '') +
+					(lineButtons ? '<div class="bte__schedule-placeholder-lines">' + lineButtons + '</div>' : '') +
+				'</article>';
+				this.schedulePlaceholderElement.hidden = false;
 			}
 
 			renderPanelsVisibility(filtered) {
@@ -710,13 +875,15 @@
 			}
 
 			const bounds = [];
+			const nextVehiclePositionIndex = new Map();
 			filtered.lines.forEach((line) => {
 				const lineMode = Array.isArray(line.modes) && line.modes.length ? line.modes[0] : (line.mode || "bus");
-				if (visibleTypes.indexOf(lineMode) === -1 || !line.geojson) {
+				const lineGeojson = this.getDisplayedLineGeoJson(line);
+				if (visibleTypes.indexOf(lineMode) === -1 || !lineGeojson) {
 					return;
 				}
 
-				const routeLayer = window.L.geoJSON(line.geojson, {
+				const routeLayer = window.L.geoJSON(lineGeojson, {
 					style: () => this.getLineRouteStyle(line)
 				});
 				routeLayer.bindPopup(this.getLinePopupMarkup(line));
@@ -746,19 +913,37 @@
 				bounds.push([place.latitude, place.longitude]);
 			});
 
-			(filtered.vehicles || []).forEach((vehicle) => {
+			(filtered.vehicles || []).forEach((vehicle, index) => {
 				if (typeof vehicle.latitude !== "number" || typeof vehicle.longitude !== "number") {
 					return;
 				}
 
-				const marker = window.L.marker([vehicle.latitude, vehicle.longitude], {
+				const vehicleKey = this.getVehicleKey(vehicle, index);
+				const targetLatLng = window.L.latLng(vehicle.latitude, vehicle.longitude);
+				const previousPosition = vehicleKey ? this.vehiclePositionIndex.get(vehicleKey) : null;
+				const startLatLng = previousPosition && this.animateRealtimeVehicles
+					? window.L.latLng(previousPosition.latitude, previousPosition.longitude)
+					: targetLatLng;
+				const marker = window.L.marker(startLatLng, {
 					icon: this.createVehicleMarkerIcon(vehicle),
 					zIndexOffset: 120
 				});
 				marker.bindPopup(this.getVehiclePopupMarkup(vehicle));
+				marker.on("click", () => this.selectVehicleSchedule(vehicle));
 				marker.addTo(this.markersLayer);
-				bounds.push([vehicle.latitude, vehicle.longitude]);
+				if (previousPosition && this.animateRealtimeVehicles) {
+					this.animateVehicleMarker(marker, startLatLng, targetLatLng, this.vehicleTransitionDuration);
+				}
+				if (vehicleKey) {
+					nextVehiclePositionIndex.set(vehicleKey, {
+						latitude: vehicle.latitude,
+						longitude: vehicle.longitude,
+						timestamp: vehicle.timestamp || ""
+					});
+				}
+				bounds.push(targetLatLng);
 			});
+			this.vehiclePositionIndex = nextVehiclePositionIndex;
 
 			if (this.mapEmpty) {
 				this.mapEmpty.hidden = bounds.length > 0;
@@ -770,6 +955,101 @@
 			}
 
 			this.renderLegend(visibleTypes);
+		}
+
+		getDisplayedLineGeoJson(line) {
+			if (!line || !line.geojson) {
+				return null;
+			}
+
+			const activeLineId = String(this.state.activeBusLineId || "");
+			if (!this.mapDirectionBranch || !activeLineId || String(line.id || "") !== activeLineId) {
+				return line.geojson;
+			}
+
+			const selection = this.getCurrentLineScheduleSelection(line);
+			const filteredGeoJson = this.getDirectionFilteredGeoJson(line.geojson, selection ? selection.selectedDirection : null);
+			return filteredGeoJson || line.geojson;
+		}
+
+		getDirectionFilteredGeoJson(geojson, direction) {
+			if (!geojson || !direction || geojson.type !== "FeatureCollection" || !Array.isArray(geojson.features)) {
+				return null;
+			}
+
+			const directionId = String(direction.directionId || "");
+			const headsign = normalizeText(direction.headsign || "");
+			if (!directionId && !headsign) {
+				return null;
+			}
+
+			const features = geojson.features.filter((feature) => {
+				const properties = feature && feature.properties ? feature.properties : {};
+				const featureDirectionId = String(properties.directionId || "");
+				const featureHeadsign = normalizeText(properties.headsign || "");
+				if (directionId && featureDirectionId && directionId === featureDirectionId) {
+					return true;
+				}
+				if (headsign && featureHeadsign && headsign === featureHeadsign) {
+					return true;
+				}
+				return false;
+			});
+
+			return features.length ? Object.assign({}, geojson, { features }) : null;
+		}
+
+		getVehicleKey(vehicle, index) {
+			if (!vehicle) {
+				return "";
+			}
+
+			const parts = [
+				vehicle.providerKey || "",
+				vehicle.lineId || "",
+				vehicle.tripId || "",
+				vehicle.vehicleId || vehicle.vehicleLabel || ""
+			].map((value) => String(value || "").trim()).filter(Boolean);
+
+			if (parts.length) {
+				return parts.join("|");
+			}
+
+			return "vehicle-" + String(index || 0);
+		}
+
+		animateVehicleMarker(marker, startLatLng, endLatLng, duration) {
+			if (!marker || !startLatLng || !endLatLng || typeof window.requestAnimationFrame !== "function") {
+				return;
+			}
+
+			const startTime = window.performance && typeof window.performance.now === "function"
+				? window.performance.now()
+				: Date.now();
+			const totalDuration = Math.max(300, parseInt(duration, 10) || 6000);
+			const latDelta = endLatLng.lat - startLatLng.lat;
+			const lngDelta = endLatLng.lng - startLatLng.lng;
+			if (Math.abs(latDelta) < 0.000001 && Math.abs(lngDelta) < 0.000001) {
+				return;
+			}
+
+			const tick = (now) => {
+				const elapsed = Math.max(0, now - startTime);
+				const progress = Math.min(1, elapsed / totalDuration);
+				const eased = progress < 0.5
+					? 2 * progress * progress
+					: 1 - Math.pow(-2 * progress + 2, 2) / 2;
+				marker.setLatLng([
+					startLatLng.lat + latDelta * eased,
+					startLatLng.lng + lngDelta * eased
+				]);
+
+				if (progress < 1) {
+					window.requestAnimationFrame(tick);
+				}
+			};
+
+			window.requestAnimationFrame(tick);
 		}
 
 		getLineRouteStyle(line) {
@@ -817,10 +1097,11 @@
 				}
 
 				const shouldOpen = this.state.activeBusLineId !== targetId;
-				this.state.activeBusLineId = shouldOpen ? targetId : "";
+				this.state.activeBusLineId = shouldOpen || this.isScheduleOnly ? targetId : "";
 				this.render();
 
-				if (shouldOpen) {
+				if (shouldOpen || this.isScheduleOnly) {
+					this.emitCurrentScheduleSelection(targetId, { focus: false });
 					window.requestAnimationFrame(() => {
 						if (this.busDetailElement && !this.busDetailElement.hidden) {
 							this.busDetailElement.scrollIntoView({
@@ -1285,9 +1566,309 @@
 
 			updateLineSelection(lineId, updates) {
 				const selection = this.getLineSelection(lineId);
-				this.state.lineSelections[String(lineId || "")] = Object.assign({}, selection, updates || {});
+				const key = String(lineId || "");
+				this.state.lineSelections[key] = Object.assign({}, selection, updates || {});
 				this.render();
+				this.emitCurrentScheduleSelection(key, { focus: false });
 			}
+
+			selectVehicleSchedule(vehicle) {
+				if (!vehicle || !vehicle.lineId) {
+					return;
+				}
+
+				const line = this.getLineById(vehicle.lineId);
+				if (!line) {
+					return;
+				}
+
+				const directions = this.getLineDirections(line);
+				const vehicleDirectionId = String(vehicle.directionId || "");
+				const vehicleHeadsign = normalizeText(vehicle.headsign || "");
+				const matchedDirection = directions.find((direction) => {
+					const directionId = String(direction.directionId || "");
+					const headsign = normalizeText(direction.headsign || direction.label || "");
+					if (vehicleDirectionId && directionId && vehicleDirectionId !== directionId) {
+						return false;
+					}
+					if (vehicleHeadsign && headsign) {
+						return vehicleHeadsign === headsign;
+					}
+					return !!vehicleDirectionId && !!directionId && vehicleDirectionId === directionId;
+				}) || null;
+
+				const key = String(line.id || vehicle.lineId);
+				const currentSelection = this.getLineSelection(key);
+				this.state.activeBusLineId = key;
+					this.state.lineSelections[key] = Object.assign({}, currentSelection, {
+						directionKey: matchedDirection ? matchedDirection.key : currentSelection.directionKey,
+						stopId: ""
+					});
+					this.render();
+					this.emitCurrentScheduleSelection(key, { focus: true });
+				}
+
+			getScheduleSelectionDetail(lineId, options = {}) {
+				if (!this.linkedMapGroupId) {
+					return null;
+				}
+
+				const line = this.getLineById(lineId);
+				if (!line) {
+					return null;
+				}
+
+				const selection = this.getCurrentLineScheduleSelection(line);
+				const stopId = selection && selection.stopId ? String(selection.stopId) : "";
+				const direction = selection && selection.selectedDirection ? selection.selectedDirection : null;
+
+				return {
+					groupId: this.linkedMapGroupId,
+					lineId: line.id || lineId,
+					relatedLineIds: [line.id || lineId],
+					stopId,
+					gtfsStopIds: stopId ? [stopId] : [],
+					stopLabel: selection && selection.selectedStop ? selection.selectedStop.label : "",
+					directionKey: selection && selection.directionKey ? selection.directionKey : "",
+					directionId: direction ? String(direction.directionId || "") : "",
+					headsign: direction ? String(direction.headsign || "") : "",
+					mapDirectionBranch: !!this.mapDirectionBranch,
+					focus: !!options.focus,
+					source: "schedule"
+				};
+			}
+
+			emitCurrentScheduleSelection(lineId, options = {}) {
+				if (!this.isScheduleOnly || typeof window === "undefined" || typeof window.CustomEvent !== "function") {
+					return;
+				}
+
+				const detail = this.getScheduleSelectionDetail(lineId || this.state.activeBusLineId, options);
+				if (!detail) {
+					return;
+				}
+
+				window.dispatchEvent(new window.CustomEvent("tccm:transport-schedule-selected", {
+					detail
+				}));
+			}
+
+			emitScheduleClear() {
+				if (!this.isScheduleOnly || !this.linkedMapGroupId || typeof window === "undefined" || typeof window.CustomEvent !== "function") {
+					return;
+				}
+
+				window.dispatchEvent(new window.CustomEvent("tccm:transport-schedule-selected", {
+					detail: {
+						groupId: this.linkedMapGroupId,
+						clear: true,
+						source: "schedule"
+					}
+				}));
+			}
+
+				focusLinkedMapSelection() {
+					this.emitCurrentScheduleSelection(this.state.activeBusLineId, { focus: true });
+				}
+
+				selectNearestStop(lineId) {
+					if (!this.showNearestStopButton || typeof navigator === "undefined" || !navigator.geolocation) {
+						return;
+					}
+
+					const targetLineId = String(lineId || this.state.activeBusLineId || this.defaultLineId || "");
+					const line = this.getLineById(targetLineId) || (Array.isArray(this.data.lines) ? this.data.lines[0] : null);
+					if (!line) {
+						return;
+					}
+
+					navigator.geolocation.getCurrentPosition((position) => {
+						const coordinates = position && position.coords ? position.coords : null;
+						if (!coordinates) {
+							return;
+						}
+
+						const nearest = this.getNearestStopForLine(line, coordinates.latitude, coordinates.longitude);
+						if (!nearest) {
+							return;
+						}
+
+						const key = String(line.id || targetLineId);
+						const currentSelection = this.getLineSelection(key);
+						this.state.activeBusLineId = key;
+						this.state.lineSelections[key] = Object.assign({}, currentSelection, {
+							directionKey: nearest.directionKey,
+							stopId: nearest.stopId
+						});
+						this.render();
+						this.emitCurrentScheduleSelection(key, { focus: true });
+					}, () => {}, {
+						enableHighAccuracy: false,
+						maximumAge: 60000,
+						timeout: 8000
+					});
+				}
+
+				getNearestStopForLine(line, latitude, longitude) {
+					if (!line || typeof latitude !== "number" || typeof longitude !== "number") {
+						return null;
+					}
+
+					const directionKey = this.getDefaultDirectionKey(line);
+					const stops = this.getStopsForDirection(line, directionKey);
+					const stopIds = new Set(stops.map((stop) => String(stop.stopId || "")).filter(Boolean));
+					if (!stopIds.size || !Array.isArray(this.data.places)) {
+						return null;
+					}
+
+					const lineId = String(line.id || "");
+					const candidates = [];
+					this.data.places.forEach((place) => {
+						if (typeof place.latitude !== "number" || typeof place.longitude !== "number") {
+							return;
+						}
+
+						const relatedLineIds = Array.isArray(place.relatedLineIds)
+							? place.relatedLineIds.map((value) => String(value || "")).filter(Boolean)
+							: [];
+						if (lineId && relatedLineIds.length && relatedLineIds.indexOf(lineId) === -1) {
+							return;
+						}
+
+						const placeStopIds = Array.isArray(place.gtfsStopIds)
+							? place.gtfsStopIds.map((value) => String(value || "")).filter(Boolean)
+							: [];
+						const matchedStopId = placeStopIds.find((stopId) => stopIds.has(stopId));
+						if (!matchedStopId) {
+							return;
+						}
+
+						candidates.push({
+							stopId: matchedStopId,
+							directionKey,
+							distance: getDistanceMeters(latitude, longitude, place.latitude, place.longitude)
+						});
+					});
+
+					if (!candidates.length) {
+						return null;
+					}
+
+					candidates.sort((left, right) => left.distance - right.distance);
+					return candidates[0];
+				}
+
+				getLinkedMapLineId(detail) {
+					const explicitLineId = parseInt(detail && detail.lineId ? detail.lineId : 0, 10);
+				const relatedLineIds = Array.isArray(detail && detail.relatedLineIds)
+					? detail.relatedLineIds.map((lineId) => String(lineId || "")).filter(Boolean)
+					: [];
+				const candidates = [];
+
+				if (Number.isFinite(explicitLineId) && explicitLineId > 0) {
+					candidates.push(String(explicitLineId));
+				}
+				relatedLineIds.forEach((lineId) => {
+					if (candidates.indexOf(lineId) === -1) {
+						candidates.push(lineId);
+					}
+				});
+
+				if (!candidates.length) {
+					return "";
+				}
+
+				const preferred = [this.state.activeBusLineId, this.defaultLineId].find((lineId) => {
+					return lineId && candidates.indexOf(String(lineId)) !== -1 && this.getLineById(lineId);
+				});
+				if (preferred) {
+					return String(preferred);
+				}
+
+				const existing = candidates.find((lineId) => !!this.getLineById(lineId));
+				return existing ? String(existing) : "";
+			}
+
+			getLinkedMapStopIds(detail) {
+				const values = [];
+				if (detail && detail.stopId) {
+					values.push(detail.stopId);
+				}
+				if (detail && Array.isArray(detail.gtfsStopIds)) {
+					values.push.apply(values, detail.gtfsStopIds);
+				}
+
+				return Array.from(new Set(values.map((value) => String(value || "").trim()).filter(Boolean)));
+			}
+
+			getLinkedMapScheduleSelection(line, detail) {
+				const stopIds = this.getLinkedMapStopIds(detail);
+				if (!stopIds.length || !line || !line.schedule || !Array.isArray(line.schedule.stops)) {
+					return null;
+				}
+
+				const matches = [];
+				line.schedule.stops.forEach((stop) => {
+					const stopId = String(stop && stop.stopId ? stop.stopId : "");
+					if (!stopId || stopIds.indexOf(stopId) === -1) {
+						return;
+					}
+
+					(Array.isArray(stop.directions) ? stop.directions : []).forEach((direction) => {
+						matches.push({
+							stopId,
+							directionKey: this.getDirectionKey(direction),
+							departureCount: this.getDepartureCountForDirection(direction),
+							liveCount: direction && direction.liveDepartures && Array.isArray(direction.liveDepartures.items) ? direction.liveDepartures.items.length : 0
+						});
+					});
+				});
+
+				if (!matches.length) {
+					return null;
+				}
+
+				const currentSelection = this.getLineSelection(line.id);
+				const currentMatch = matches.find((match) => match.directionKey === currentSelection.directionKey);
+				const bestMatch = currentMatch || matches.slice().sort((left, right) => {
+					return (right.liveCount || 0) - (left.liveCount || 0) || (right.departureCount || 0) - (left.departureCount || 0);
+				})[0];
+
+				return bestMatch ? {
+					directionKey: bestMatch.directionKey,
+					stopId: bestMatch.stopId
+				} : null;
+			}
+
+			handleLinkedMapTransportSelection(event) {
+				if (!event || !event.detail) {
+					return;
+				}
+
+				const detail = event.detail;
+				if (String(detail.groupId || "") !== this.linkedMapGroupId) {
+					return;
+				}
+
+				const lineId = this.getLinkedMapLineId(detail);
+				if (!lineId) {
+					return;
+				}
+
+				const line = this.getLineById(lineId);
+				if (!line) {
+					return;
+				}
+
+				this.state.activeBusLineId = String(line.id || lineId);
+				const mapSelection = this.getLinkedMapScheduleSelection(line, detail);
+					if (mapSelection) {
+						const currentSelection = this.getLineSelection(line.id);
+						this.state.lineSelections[String(line.id || lineId)] = Object.assign({}, currentSelection, mapSelection);
+					}
+					this.render();
+					this.emitCurrentScheduleSelection(line.id || lineId, { focus: false });
+				}
 
 			getDirectionKey(direction) {
 				return String(direction && direction.directionId ? direction.directionId : "") + "|" + String(direction && direction.headsign ? direction.headsign : "");
@@ -1438,16 +2019,17 @@
 				return Array.from(stopMap.values()).sort((a, b) => String(a.label || "").localeCompare(String(b.label || ""), "fr", { sensitivity: "base" }));
 			}
 
-			getDefaultDirectionKey(line) {
-				const directions = this.getLineDirections(line);
-				if (!directions.length) {
-					return "";
-				}
+				getDefaultDirectionKey(line) {
+					const directions = this.getLineDirections(line);
+					if (!directions.length) {
+						return "";
+					}
 
-				const selection = this.getLineSelection(line.id);
-				if (selection.directionKey && directions.some((direction) => direction.key === selection.directionKey)) {
-					return selection.directionKey;
-				}
+					const selection = this.getLineSelection(line.id);
+					const matchingDirectionKey = this.getMatchingDirectionKey(line, selection.directionKey);
+					if (matchingDirectionKey) {
+						return matchingDirectionKey;
+					}
 
 				const referenceStops = line && line.referenceStops ? line.referenceStops : {};
 				const referencedDirection = directions.find((direction) => {
@@ -1462,11 +2044,37 @@
 					return referencedDirection.key;
 				}
 
-				return directions[0].key;
-			}
+					return directions[0].key;
+				}
 
-			getDefaultStopId(line, directionKey) {
-				const stops = this.getStopsForDirection(line, directionKey);
+				getMatchingDirectionKey(line, requestedDirection) {
+					const requested = String(requestedDirection || "").trim();
+					if (!requested) {
+						return "";
+					}
+
+					const directions = this.getLineDirections(line);
+					if (!directions.length) {
+						return "";
+					}
+
+					const normalizedRequested = normalizeText(decodeURIComponent(requested));
+					const exact = directions.find((direction) => direction.key === requested);
+					if (exact) {
+						return exact.key;
+					}
+
+					const semantic = directions.find((direction) => {
+						return String(direction.directionId || "") === requested ||
+							normalizeText(direction.headsign || "") === normalizedRequested ||
+							normalizeText(direction.label || "") === normalizedRequested;
+					});
+
+					return semantic ? semantic.key : "";
+				}
+
+				getDefaultStopId(line, directionKey) {
+					const stops = this.getStopsForDirection(line, directionKey);
 				if (!stops.length) {
 					return "";
 				}
@@ -1536,26 +2144,31 @@
 				return '<div class="bte-card__tile-directions">' + previewItems.join("") + '</div>';
 			}
 
-			renderScheduleControls(line, selection) {
-				if (!selection) {
-					return "";
-				}
+				renderScheduleControls(line, selection) {
+					if (!selection) {
+						return "";
+					}
 
-				return '<div class="bte-card__schedule-controls">' +
-					'<div class="bte-card__schedule-control">' +
-						'<span class="bte-card__schedule-control-label">Direction</span>' +
+					const nearestStopButton = this.showNearestStopButton
+						? '<button type="button" class="bte-card__secondary bte-card__nearest-stop" data-line-id="' + escapeHtml(line.id) + '" data-nearest-stop>' + getIconMarkup("pin") + '<span>Arrêt le plus proche</span></button>'
+						: "";
+
+					return '<div class="bte-card__schedule-controls">' +
+						'<div class="bte-card__schedule-control">' +
+							'<span class="bte-card__schedule-control-label">Direction</span>' +
 						'<div class="bte-card__direction-tabs">' +
 							selection.directions.map((direction) => '<button type="button" class="bte-card__direction-tab' + (direction.key === selection.directionKey ? ' is-active' : '') + '" data-line-id="' + escapeHtml(line.id) + '" data-line-direction="' + escapeHtml(direction.key) + '">' + escapeHtml(direction.label) + '</button>').join("") +
 						'</div>' +
 					'</div>' +
 					'<label class="bte-card__schedule-control">' +
 						'<span class="bte-card__schedule-control-label">Arrêt affiché</span>' +
-						'<select class="bte-card__schedule-select" data-line-id="' + escapeHtml(line.id) + '" data-line-stop>' +
-							selection.stops.map((stop) => '<option value="' + escapeHtml(stop.stopId) + '"' + (stop.stopId === selection.stopId ? ' selected' : '') + '>' + escapeHtml(stop.label) + '</option>').join("") +
-						'</select>' +
-					'</label>' +
-				'</div>';
-			}
+							'<select class="bte-card__schedule-select" data-line-id="' + escapeHtml(line.id) + '" data-line-stop>' +
+								selection.stops.map((stop) => '<option value="' + escapeHtml(stop.stopId) + '"' + (stop.stopId === selection.stopId ? ' selected' : '') + '>' + escapeHtml(stop.label) + '</option>').join("") +
+							'</select>' +
+						'</label>' +
+						nearestStopButton +
+					'</div>';
+				}
 
 			renderScheduleDayType(day) {
 			if (!day || !Array.isArray(day.departures) || !day.departures.length) {
@@ -1748,6 +2361,110 @@
 				'</section>';
 			}
 
+			getProgressForSelection(line, selection) {
+				if (!selection || !selection.selectedDirection || !selection.selectedStop) {
+					return null;
+				}
+
+				const vehicles = this.getRealtimeVehiclesForDirection(line, selection.selectedDirection);
+				const todayTrips = Array.isArray(selection.selectedDirection.todayTrips) ? selection.selectedDirection.todayTrips : [];
+				const tripIndex = new Map();
+				todayTrips.forEach((item) => {
+					const tripId = String(item && item.tripId ? item.tripId : "");
+					if (tripId && !tripIndex.has(tripId)) {
+						tripIndex.set(tripId, item);
+					}
+				});
+
+				const candidates = vehicles.map((vehicle) => {
+					const tripId = String(vehicle && vehicle.tripId ? vehicle.tripId : "");
+					const passage = tripId ? tripIndex.get(tripId) : null;
+					if (!passage) {
+						return null;
+					}
+
+					const vehicleSequence = parseInt(vehicle && vehicle.currentStopSequence ? vehicle.currentStopSequence : 0, 10);
+					const stopSequence = parseInt(passage && passage.stopSequence ? passage.stopSequence : 0, 10);
+					if (!vehicleSequence || !stopSequence) {
+						return null;
+					}
+
+					const time = passage.displayTime || passage.realtime || passage.scheduled || "";
+					const stopsDelta = stopSequence - vehicleSequence;
+					if (stopsDelta > 0) {
+						return {
+							rank: 1,
+							title: "En approche",
+							text: "Encore " + stopsDelta + " arrêt" + (stopsDelta > 1 ? "s" : "") + " avant " + selection.selectedStop.label + ".",
+							meta: time ? "Arrivée estimée " + time : "",
+							timestamp: parseInt(passage.displayTimestamp || 0, 10) || 0
+						};
+					}
+
+					if (stopsDelta === 0) {
+						return {
+							rank: 2,
+							title: "À proximité",
+							text: "Le véhicule est au niveau de l’arrêt suivi.",
+							meta: time ? "Passage " + time : "",
+							timestamp: parseInt(passage.displayTimestamp || 0, 10) || 0
+						};
+					}
+
+					return {
+						rank: 3,
+						title: "Passage récent",
+						text: "Le véhicule a déjà dépassé l’arrêt suivi.",
+						meta: time ? "Passé vers " + time : "",
+						timestamp: parseInt(passage.displayTimestamp || 0, 10) || 0
+					};
+				}).filter(Boolean);
+
+				if (candidates.length) {
+					candidates.sort((left, right) => {
+						if (left.rank !== right.rank) {
+							return left.rank - right.rank;
+						}
+						return (left.timestamp || 0) - (right.timestamp || 0);
+					});
+					return candidates[0];
+				}
+
+				const liveItems = selection.selectedDirection.liveDepartures && Array.isArray(selection.selectedDirection.liveDepartures.items)
+					? selection.selectedDirection.liveDepartures.items
+					: [];
+				if (!liveItems.length) {
+					return null;
+				}
+
+				const next = liveItems[0];
+				const time = next.displayTime || next.realtime || next.scheduled || "";
+				return {
+					rank: 4,
+					title: next.isRealtime ? "Prochain passage temps réel" : "Prochain passage",
+					text: "Prochain passage prévu à " + selection.selectedStop.label + ".",
+					meta: time ? "Arrivée estimée " + time : ""
+				};
+			}
+
+			renderProgressForSelection(line, selection) {
+				if (!this.showProgress) {
+					return "";
+				}
+
+				const progress = this.getProgressForSelection(line, selection);
+				if (!progress) {
+					return "";
+				}
+
+				return '<section class="bte-card__progress">' +
+					'<p class="bte-card__progress-kicker">Progression</p>' +
+					'<h5 class="bte-card__progress-title">' + escapeHtml(progress.title) + '</h5>' +
+					(progress.text ? '<p class="bte-card__progress-text">' + escapeHtml(progress.text) + '</p>' : '') +
+					(progress.meta ? '<p class="bte-card__progress-meta">' + escapeHtml(progress.meta) + '</p>' : '') +
+				'</section>';
+			}
+
 			getLastPassedVehicleForSelection(line, selection) {
 				if (!line || !selection || !selection.selectedDirection || !selection.selectedStop) {
 					return null;
@@ -1897,7 +2614,7 @@
 				const trackedStops = this.getGroupedScheduleStops(line);
 				const selection = this.getCurrentLineScheduleSelection(line);
 				const transportUrl = String(line.transportUrl || line.externalUrl || "");
-				const action = transportUrl ? '<a class="bte-card__action" href="' + escapeHtml(transportUrl) + '">Source officielle ' + getIconMarkup("arrow") + '</a>' : "";
+				const sourceAction = transportUrl ? '<a class="bte-card__action" href="' + escapeHtml(transportUrl) + '">Source officielle ' + getIconMarkup("arrow") + '</a>' : "";
 				const detailTitle = line.routeLabel || line.title || line.lineCode || "";
 				const detailSubtitleParts = [];
 				if (line.routeLabel && line.title && line.title !== line.routeLabel) {
@@ -1907,8 +2624,13 @@
 					detailSubtitleParts.push(line.providerLabel);
 				}
 				const detailSubtitle = detailSubtitleParts.join(" · ");
+				const closeButton = (!this.isScheduleOnly || this.scheduleCanClose) ? '<button type="button" class="bte__line-detail-close" data-close-line>Fermer</button>' : "";
+				const mapFocusAction = this.isScheduleOnly && this.linkedMapGroupId && this.showMapFocusButton
+					? '<button type="button" class="bte-card__secondary" data-focus-transport>' + getIconMarkup("pin") + '<span>Voir sur la carte</span></button>'
+					: "";
 
 				if (!selection || !selection.selectedDirection) {
+					const actions = [mapFocusAction, sourceAction].filter(Boolean).join("");
 					return '<article class="bte__line-detail-card" style="' + escapeHtml(this.getLineThemeStyle(line)) + '">' +
 						'<div class="bte__line-detail-head">' +
 							'<div class="bte__line-detail-main">' +
@@ -1918,27 +2640,34 @@
 									(detailSubtitle ? '<p class="bte-card__subtitle">' + escapeHtml(detailSubtitle) + '</p>' : '') +
 								'</div>' +
 							'</div>' +
-							'<button type="button" class="bte__line-detail-close" data-close-line>Fermer</button>' +
+							closeButton +
 						'</div>' +
 						'<p class="bte-card__schedule-empty">Aucun horaire détaillé disponible pour cette ligne.</p>' +
-						(action ? '<div class="bte-card__actions">' + action + '</div>' : '') +
+						(actions ? '<div class="bte-card__actions">' + actions + '</div>' : '') +
 					'</article>';
 				}
 
+				const showSchedule = this.scheduleDisplayMode !== "realtime";
+				const showRealtime = this.scheduleDisplayMode !== "schedule";
 				const dayTypes = selection.selectedDirection.dayTypes || {};
 				let dayKeys = Object.keys(dayTypes);
 				if (this.state.day !== "tous") {
 					dayKeys = dayKeys.filter((dayKey) => dayKey === this.state.day);
 				}
 
-				const dayMarkup = dayKeys.map((dayKey) => this.renderScheduleDayType(dayTypes[dayKey])).join("");
-				const emptyMarkup = dayMarkup ? "" : '<p class="bte-card__schedule-empty">Aucun horaire disponible pour les filtres actuels.</p>';
-				const realtimeMarkup = this.renderLiveDepartures(line, selection.selectedDirection, line.schedule ? line.schedule.realtime : null);
-				const lastPassedMarkup = this.renderLastPassedForSelection(line, selection);
-				const alertMarkup = line && line.schedule && line.schedule.realtime && Array.isArray(line.schedule.realtime.alerts) && line.schedule.realtime.alerts.length
-					? '<section class="bte-card__line-alerts"><div class="bte-card__vehicles-head"><p class="bte-card__vehicles-title">Perturbations</p></div>' + line.schedule.realtime.alerts.slice(0, 4).map((alert) => this.renderRealtimeAlertCard(alert)).join("") + '</section>'
-					: "";
-				const vehiclesMarkup = this.renderRealtimeVehiclesForLine(line, selection.selectedDirection);
+				const dayMarkup = showSchedule ? dayKeys.map((dayKey) => this.renderScheduleDayType(dayTypes[dayKey])).join("") : "";
+				const scheduleEmptyMarkup = showSchedule && !dayMarkup ? '<p class="bte-card__schedule-empty">Aucun horaire disponible pour les filtres actuels.</p>' : "";
+					const realtimeMarkup = showRealtime ? this.renderLiveDepartures(line, selection.selectedDirection, line.schedule ? line.schedule.realtime : null) : "";
+					const lastPassedMarkup = showRealtime ? this.renderLastPassedForSelection(line, selection) : "";
+					const progressMarkup = showRealtime ? this.renderProgressForSelection(line, selection) : "";
+					const alertMarkup = showRealtime && line && line.schedule && line.schedule.realtime && Array.isArray(line.schedule.realtime.alerts) && line.schedule.realtime.alerts.length
+						? '<section class="bte-card__line-alerts"><div class="bte-card__vehicles-head"><p class="bte-card__vehicles-title">Perturbations</p></div>' + line.schedule.realtime.alerts.slice(0, 4).map((alert) => this.renderRealtimeAlertCard(alert)).join("") + '</section>'
+						: "";
+					const vehiclesMarkup = showRealtime ? this.renderRealtimeVehiclesForLine(line, selection.selectedDirection) : "";
+					const realtimeEmptyMarkup = showRealtime && !showSchedule && !realtimeMarkup && !lastPassedMarkup && !progressMarkup && !vehiclesMarkup && !alertMarkup
+						? '<p class="bte-card__schedule-empty">Aucune information temps réel disponible pour cet arrêt et cette direction.</p>'
+						: "";
+				const actions = [mapFocusAction, sourceAction].filter(Boolean).join("");
 				const metaItems = [
 					line.frequencyLabel ? '<span class="bte-card__meta">' + getIconMarkup("clock") + '<span>' + escapeHtml(line.frequencyLabel) + '</span></span>' : "",
 					trackedStops.length ? '<span class="bte-card__meta">' + getIconMarkup("pin") + '<span>' + escapeHtml(trackedStops.length) + ' arrêt(s) suivis</span></span>' : "",
@@ -1955,23 +2684,25 @@
 									(detailSubtitle ? '<p class="bte-card__subtitle">' + escapeHtml(detailSubtitle) + '</p>' : '') +
 								'</div>' +
 							'</div>' +
-							'<button type="button" class="bte__line-detail-close" data-close-line>Fermer</button>' +
+							closeButton +
 					'</div>' +
 					(metaItems ? '<div class="bte__line-detail-meta">' + metaItems + '</div>' : '') +
 					this.renderScheduleControls(line, selection) +
 					'<section class="bte__line-detail-body">' +
-						'<div class="bte__line-detail-stop">' +
-							'<h5 class="bte-card__schedule-stop-title">' + escapeHtml(selection.selectedStop.label) + '</h5>' +
-							(selection.selectedDirection.headsign ? '<p class="bte-card__schedule-headsign">' + escapeHtml(selection.selectedDirection.headsign) + '</p>' : '') +
-						'</div>' +
-						alertMarkup +
-						vehiclesMarkup +
+							'<div class="bte__line-detail-stop">' +
+								'<h5 class="bte-card__schedule-stop-title">' + escapeHtml(selection.selectedStop.label) + '</h5>' +
+								(selection.selectedDirection.headsign ? '<p class="bte-card__schedule-headsign">' + escapeHtml(selection.selectedDirection.headsign) + '</p>' : '') +
+							'</div>' +
+							progressMarkup +
+							alertMarkup +
+							vehiclesMarkup +
 						realtimeMarkup +
 						lastPassedMarkup +
 						dayMarkup +
-						emptyMarkup +
+						scheduleEmptyMarkup +
+						realtimeEmptyMarkup +
 					'</section>' +
-					(action ? '<div class="bte-card__actions">' + action + '</div>' : '') +
+					(actions ? '<div class="bte-card__actions">' + actions + '</div>' : '') +
 				'</article>';
 			}
 
@@ -2066,12 +2797,15 @@
 	function bindElementorHook(attempt) {
 		const currentAttempt = attempt || 0;
 		if (window.elementorFrontend && window.elementorFrontend.hooks) {
-			window.elementorFrontend.hooks.addAction("frontend/element_ready/bellevue-transport-explorer.default", function ($scope) {
+			const bindWidget = function ($scope) {
 				const scopeNode = $scope && $scope[0] ? $scope[0] : $scope;
 				if (scopeNode && typeof scopeNode.querySelectorAll === "function") {
 					init(scopeNode);
 				}
-			});
+			};
+
+			window.elementorFrontend.hooks.addAction("frontend/element_ready/bellevue-transport-explorer.default", bindWidget);
+			window.elementorFrontend.hooks.addAction("frontend/element_ready/tccm-transport-schedule.default", bindWidget);
 			return;
 		}
 

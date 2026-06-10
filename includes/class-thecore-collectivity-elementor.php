@@ -239,6 +239,7 @@ final class TheCore_Collectivity_Elementor {
 			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-filters-widget.php';
 			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/procedures/elementor/class-thecore-collectivity-procedure-content-widget.php';
 			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-explorer-widget.php';
+			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-schedule-widget.php';
 
 		if ( ! class_exists( 'Bellevue_Alerts_Widget', false ) ) {
 			class_alias( 'TheCore_Collectivity_Alerts_Widget', 'Bellevue_Alerts_Widget' );
@@ -246,6 +247,10 @@ final class TheCore_Collectivity_Elementor {
 
 		if ( ! class_exists( 'Bellevue_Transport_Explorer_Widget', false ) ) {
 			class_alias( 'TheCore_Collectivity_Transport_Explorer_Widget', 'Bellevue_Transport_Explorer_Widget' );
+		}
+
+		if ( ! class_exists( 'Bellevue_Transport_Schedule_Widget', false ) ) {
+			class_alias( 'TheCore_Collectivity_Transport_Schedule_Widget', 'Bellevue_Transport_Schedule_Widget' );
 		}
 
 			$widgets_manager->register( new TheCore_Collectivity_Alerts_Widget() );
@@ -258,6 +263,7 @@ final class TheCore_Collectivity_Elementor {
 			$widgets_manager->register( new TheCore_Collectivity_Map_Filters_Widget() );
 			$widgets_manager->register( new TheCore_Collectivity_Procedure_Content_Widget() );
 			$widgets_manager->register( new TheCore_Collectivity_Transport_Explorer_Widget() );
+			$widgets_manager->register( new TheCore_Collectivity_Transport_Schedule_Widget() );
 		}
 	}
 
