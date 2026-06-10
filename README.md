@@ -4,7 +4,7 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.32`
+Current version: `1.0.1-beta.33`
 Release channel: beta
 
 Current scope:
@@ -16,6 +16,7 @@ Current scope:
 - procedures
 - documents
 - transports, including GTFS-backed schedules
+- Service-public / co-marquage import and display
 - Elementor widgets and Elementor query integrations used by those modules
 
 ## Requirements
@@ -24,8 +25,8 @@ Current scope:
 - Elementor
 - Elementor Pro for `Loop Grid` and custom query IDs
 - a recent Elementor build with Atomic Widgets / V4 enabled
-- outbound HTTP access for GTFS downloads and Leaflet CDN assets
-- PHP `ZipArchive` for the transport GTFS importer
+- outbound HTTP access for GTFS downloads, Service-public/DILA downloads and Leaflet CDN assets
+- PHP `ZipArchive` for the transport GTFS importer and Service-public ZIP importer
 
 ## Important boundaries
 
@@ -51,6 +52,7 @@ Feature modules:
 - `includes/features/procedures/`
 - `includes/features/documents/`
 - `includes/features/transports/`
+- `includes/features/service-public/`
 
 ## Start here
 
@@ -59,11 +61,14 @@ Read these files in order:
 2. `docs/ELEMENTOR.md`
 3. `docs/MAPS.md`
 4. `docs/TRANSPORTS.md`
+5. `docs/SERVICE_PUBLIC.md`
 
 ## Operational notes
 
 - On plugin activation, the transport schedule tables are installed and the GTFS cron is scheduled.
+- On plugin activation, the Service-public tables are installed, the daily DILA sync cron is scheduled, and public rewrite rules are flushed.
 - Transport schedules are stored in custom tables, not post meta.
+- Service-public fiches are imported from official data.gouv/DILA ZIP resources into custom tables.
 - The transport explorer widget expects mapped transport content in the admin before GTFS import can succeed.
 - The map module stores both points and routes in the single CPT `tccm_map_item`.
 - Map route geometry is stored as GeoJSON in post meta.

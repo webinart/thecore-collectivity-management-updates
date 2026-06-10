@@ -19,11 +19,12 @@ final class TheCore_Collectivity_Elementor {
 	const HANDLE_ALERTS_STYLE     = 'thecore-collectivity-alerts-widget';
 	const HANDLE_MAP_STYLE        = 'thecore-collectivity-map-widget';
 	const HANDLE_MAP_SCRIPT       = 'thecore-collectivity-map-widget';
-	const HANDLE_PROCEDURE_STYLE  = 'thecore-collectivity-procedure-content-widget';
-	const HANDLE_TRANSPORT_STYLE  = 'thecore-collectivity-transport-explorer-widget';
-	const HANDLE_TRANSPORT_SCRIPT = 'thecore-collectivity-transport-explorer-widget';
-	const HANDLE_LEAFLET_STYLE    = 'thecore-collectivity-leaflet';
-	const HANDLE_LEAFLET_SCRIPT   = 'thecore-collectivity-leaflet';
+	const HANDLE_PROCEDURE_STYLE      = 'thecore-collectivity-procedure-content-widget';
+	const HANDLE_TRANSPORT_STYLE      = 'thecore-collectivity-transport-explorer-widget';
+	const HANDLE_TRANSPORT_SCRIPT     = 'thecore-collectivity-transport-explorer-widget';
+	const HANDLE_SERVICE_PUBLIC_STYLE = 'thecore-collectivity-service-public-widget';
+	const HANDLE_LEAFLET_STYLE        = 'thecore-collectivity-leaflet';
+	const HANDLE_LEAFLET_SCRIPT       = 'thecore-collectivity-leaflet';
 
 	/**
 	 * Register hooks.
@@ -64,81 +65,98 @@ final class TheCore_Collectivity_Elementor {
 	 * Register widget styles.
 	 */
 	public static function register_styles() {
-		if ( wp_style_is( self::HANDLE_MAP_STYLE, 'registered' ) && wp_style_is( self::HANDLE_LEAFLET_STYLE, 'registered' ) ) {
-			return;
-		}
-
 		$base_url = THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/';
 
-		wp_register_style(
-			self::HANDLE_LEAFLET_STYLE,
-			'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
-			array(),
-			'1.9.4'
-		);
+		if ( ! wp_style_is( self::HANDLE_LEAFLET_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_LEAFLET_STYLE,
+				'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
+				array(),
+				'1.9.4'
+			);
+		}
 
-		wp_register_style(
-			self::HANDLE_ALERTS_STYLE,
-			$base_url . 'alerts/assets/alerts-widget.css',
-			array(),
-			self::get_asset_version( 'includes/features/alerts/assets/alerts-widget.css' )
-		);
+		if ( ! wp_style_is( self::HANDLE_ALERTS_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_ALERTS_STYLE,
+				$base_url . 'alerts/assets/alerts-widget.css',
+				array(),
+				self::get_asset_version( 'includes/features/alerts/assets/alerts-widget.css' )
+			);
+		}
 
-		wp_register_style(
-			self::HANDLE_MAP_STYLE,
-			$base_url . 'maps/assets/map-widget.css',
-			array( self::HANDLE_LEAFLET_STYLE ),
-			self::get_asset_version( 'includes/features/maps/assets/map-widget.css' )
-		);
+		if ( ! wp_style_is( self::HANDLE_MAP_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_MAP_STYLE,
+				$base_url . 'maps/assets/map-widget.css',
+				array( self::HANDLE_LEAFLET_STYLE ),
+				self::get_asset_version( 'includes/features/maps/assets/map-widget.css' )
+			);
+		}
 
-		wp_register_style(
-			self::HANDLE_PROCEDURE_STYLE,
-			$base_url . 'procedures/assets/procedure-content-widget.css',
-			array(),
-			self::get_asset_version( 'includes/features/procedures/assets/procedure-content-widget.css' )
-		);
+		if ( ! wp_style_is( self::HANDLE_PROCEDURE_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_PROCEDURE_STYLE,
+				$base_url . 'procedures/assets/procedure-content-widget.css',
+				array(),
+				self::get_asset_version( 'includes/features/procedures/assets/procedure-content-widget.css' )
+			);
+		}
 
-		wp_register_style(
-			self::HANDLE_TRANSPORT_STYLE,
-			$base_url . 'transports/assets/transport-explorer.css',
-			array( self::HANDLE_LEAFLET_STYLE, self::HANDLE_ALERTS_STYLE ),
-			self::get_asset_version( 'includes/features/transports/assets/transport-explorer.css' )
-		);
+		if ( ! wp_style_is( self::HANDLE_TRANSPORT_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_TRANSPORT_STYLE,
+				$base_url . 'transports/assets/transport-explorer.css',
+				array( self::HANDLE_LEAFLET_STYLE, self::HANDLE_ALERTS_STYLE ),
+				self::get_asset_version( 'includes/features/transports/assets/transport-explorer.css' )
+			);
+		}
+
+		if ( ! wp_style_is( self::HANDLE_SERVICE_PUBLIC_STYLE, 'registered' ) ) {
+			wp_register_style(
+				self::HANDLE_SERVICE_PUBLIC_STYLE,
+				$base_url . 'service-public/assets/service-public.css',
+				array(),
+				self::get_asset_version( 'includes/features/service-public/assets/service-public.css' )
+			);
+		}
 	}
 
 	/**
 	 * Register widget scripts.
 	 */
 	public static function register_scripts() {
-		if ( wp_script_is( self::HANDLE_MAP_SCRIPT, 'registered' ) && wp_script_is( self::HANDLE_LEAFLET_SCRIPT, 'registered' ) ) {
-			return;
-		}
-
 		$base_url = THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/';
 
-		wp_register_script(
-			self::HANDLE_LEAFLET_SCRIPT,
-			'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
-			array(),
-			'1.9.4',
-			true
-		);
+		if ( ! wp_script_is( self::HANDLE_LEAFLET_SCRIPT, 'registered' ) ) {
+			wp_register_script(
+				self::HANDLE_LEAFLET_SCRIPT,
+				'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+				array(),
+				'1.9.4',
+				true
+			);
+		}
 
-		wp_register_script(
-			self::HANDLE_MAP_SCRIPT,
-			$base_url . 'maps/assets/map-widget.js',
-			array( self::HANDLE_LEAFLET_SCRIPT ),
-			self::get_asset_version( 'includes/features/maps/assets/map-widget.js' ),
-			true
-		);
+		if ( ! wp_script_is( self::HANDLE_MAP_SCRIPT, 'registered' ) ) {
+			wp_register_script(
+				self::HANDLE_MAP_SCRIPT,
+				$base_url . 'maps/assets/map-widget.js',
+				array( self::HANDLE_LEAFLET_SCRIPT ),
+				self::get_asset_version( 'includes/features/maps/assets/map-widget.js' ),
+				true
+			);
+		}
 
-		wp_register_script(
-			self::HANDLE_TRANSPORT_SCRIPT,
-			$base_url . 'transports/assets/transport-explorer.js',
-			array( self::HANDLE_LEAFLET_SCRIPT ),
-			self::get_asset_version( 'includes/features/transports/assets/transport-explorer.js' ),
-			true
-		);
+		if ( ! wp_script_is( self::HANDLE_TRANSPORT_SCRIPT, 'registered' ) ) {
+			wp_register_script(
+				self::HANDLE_TRANSPORT_SCRIPT,
+				$base_url . 'transports/assets/transport-explorer.js',
+				array( self::HANDLE_LEAFLET_SCRIPT ),
+				self::get_asset_version( 'includes/features/transports/assets/transport-explorer.js' ),
+				true
+			);
+		}
 	}
 
 	/**
@@ -165,6 +183,11 @@ final class TheCore_Collectivity_Elementor {
 						'src'          => $base_url . 'maps/assets/map-widget.css',
 						'version'      => self::get_asset_version( 'includes/features/maps/assets/map-widget.css' ),
 						'dependencies' => array( self::HANDLE_LEAFLET_STYLE ),
+					),
+					self::HANDLE_SERVICE_PUBLIC_STYLE => array(
+						'src'          => $base_url . 'service-public/assets/service-public.css',
+						'version'      => self::get_asset_version( 'includes/features/service-public/assets/service-public.css' ),
+						'dependencies' => array(),
 					),
 				),
 				'scripts' => array(
@@ -228,18 +251,21 @@ final class TheCore_Collectivity_Elementor {
 	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
 	 */
 	public static function register_widgets( $widgets_manager ) {
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/alerts/elementor/class-thecore-collectivity-alerts-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/event-agenda/elementor/class-thecore-collectivity-event-date-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-linked-widget-base.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-search-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-types-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-facets-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-reset-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-filters-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/procedures/elementor/class-thecore-collectivity-procedure-content-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-explorer-widget.php';
-			require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-schedule-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/alerts/elementor/class-thecore-collectivity-alerts-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/event-agenda/elementor/class-thecore-collectivity-event-date-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-linked-widget-base.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-search-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-types-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-facets-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-reset-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/maps/elementor/class-thecore-collectivity-map-filters-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/procedures/elementor/class-thecore-collectivity-procedure-content-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-explorer-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/class-thecore-collectivity-transport-schedule-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/service-public/elementor/class-thecore-collectivity-service-public-fiche-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/service-public/elementor/class-thecore-collectivity-service-public-summary-widget.php';
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/service-public/elementor/class-thecore-collectivity-service-public-search-widget.php';
 
 		if ( ! class_exists( 'Bellevue_Alerts_Widget', false ) ) {
 			class_alias( 'TheCore_Collectivity_Alerts_Widget', 'Bellevue_Alerts_Widget' );
@@ -253,19 +279,22 @@ final class TheCore_Collectivity_Elementor {
 			class_alias( 'TheCore_Collectivity_Transport_Schedule_Widget', 'Bellevue_Transport_Schedule_Widget' );
 		}
 
-			$widgets_manager->register( new TheCore_Collectivity_Alerts_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Event_Date_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Search_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Types_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Facets_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Reset_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Map_Filters_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Procedure_Content_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Transport_Explorer_Widget() );
-			$widgets_manager->register( new TheCore_Collectivity_Transport_Schedule_Widget() );
-		}
+		$widgets_manager->register( new TheCore_Collectivity_Alerts_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Event_Date_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Search_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Types_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Facets_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Reset_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Map_Filters_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Procedure_Content_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Transport_Explorer_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Transport_Schedule_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Fiche_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Summary_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Search_Widget() );
 	}
+}
 
 if ( ! class_exists( 'Bellevue_Elementor', false ) ) {
 	class_alias( 'TheCore_Collectivity_Elementor', 'Bellevue_Elementor' );

@@ -1,0 +1,73 @@
+.tccm-service-public {
+	--tccm-sp-accent: #116450;
+	--tccm-sp-border: #d9e3df;
+	--tccm-sp-muted: #61716b;
+	color: inherit;
+}
+
+.tccm-service-public__breadcrumb {
+	display: flex;
+	flex-wrap: wrap;
+	gap: .35rem;
+	margin-bottom: 1rem;
+	color: var(--tccm-sp-muted);
+	font-size: .875rem;
+}
+
+.tccm-service-public__title {
+	margin: 0 0 1rem;
+}
+
+.tccm-service-public__summary {
+	font-size: 1.08em;
+	font-weight: 600;
+}
+
+.tccm-service-public__notice {
+	border-left: 4px solid var(--tccm-sp-accent);
+	background: #f3f8f6;
+	padding: .85rem 1rem;
+	margin: 1rem 0;
+}
+
+.tccm-service-public__source,
+.tccm-service-public__official,
+.tccm-service-public__result-meta,
+.tccm-service-public__card-id {
+	color: var(--tccm-sp-muted);
+	font-size: .875rem;
+}
+
+.tccm-service-public__cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 1rem;
+}
+
+.tccm-service-public__card,
+.tccm-service-public__result {
+	border: 1px solid var(--tccm-sp-border);
+	border-radius: 16px;
+	padding: 1rem;
+	background: #fff;
+}
+
+.tccm-service-public__search-form {
+	display: flex;
+	gap: .75rem;
+	align-items: flex-end;
+	margin-bottom: 1.25rem;
+}
+
+.tccm-service-public__search-form label {
+	flex: 1;
+}
+
+.tccm-service-public__search-form span {
+	display: block;
+	margin-bottom: .35rem;
+}
+
+.tccm-service-public__search-form input {
+	width: 100%;
+}

@@ -15,6 +15,7 @@ require_once __DIR__ . '/features/alerts/class-thecore-collectivity-alerts-modul
 require_once __DIR__ . '/features/procedures/class-thecore-collectivity-procedures-module.php';
 require_once __DIR__ . '/features/documents/class-thecore-collectivity-documents-module.php';
 require_once __DIR__ . '/features/transports/class-thecore-collectivity-transports-module.php';
+require_once __DIR__ . '/features/service-public/class-thecore-collectivity-service-public-module.php';
 
 final class TheCore_Collectivity_Management {
 	/**
@@ -81,6 +82,13 @@ final class TheCore_Collectivity_Management {
 	private $transports_module;
 
 	/**
+	 * Service-public module instance.
+	 *
+	 * @var TheCore_Collectivity_Service_Public_Module
+	 */
+	private $service_public_module;
+
+	/**
 	 * Get singleton instance.
 	 *
 	 * @return TheCore_Collectivity_Management
@@ -126,6 +134,17 @@ final class TheCore_Collectivity_Management {
 				wp_schedule_event( time() + 5 * MINUTE_IN_SECONDS, 'bellevue_five_minutes', TheCore_Collectivity_Transports_Schedules::REALTIME_CRON_HOOK );
 			}
 		}
+
+		if ( $instance->service_public_module && method_exists( $instance->service_public_module, 'get_schema' ) ) {
+			$instance->service_public_module->get_schema()->install();
+			$instance->service_public_module->register_public_routes();
+			flush_rewrite_rules( false );
+			update_option( TheCore_Collectivity_Service_Public_Module::OPTION_REWRITE_VERSION, TheCore_Collectivity_Service_Public_Module::REWRITE_VERSION, false );
+
+			if ( ! wp_next_scheduled( TheCore_Collectivity_Service_Public_Module::CRON_HOOK ) ) {
+				wp_schedule_event( time() + 2 * HOUR_IN_SECONDS, 'daily', TheCore_Collectivity_Service_Public_Module::CRON_HOOK );
+			}
+		}
 	}
 
 	/**
@@ -136,6 +155,8 @@ final class TheCore_Collectivity_Management {
 	public static function deactivate() {
 		wp_clear_scheduled_hook( TheCore_Collectivity_Transports_Schedules::CRON_HOOK );
 		wp_clear_scheduled_hook( TheCore_Collectivity_Transports_Schedules::REALTIME_CRON_HOOK );
+		wp_clear_scheduled_hook( TheCore_Collectivity_Service_Public_Module::CRON_HOOK );
+		flush_rewrite_rules( false );
 	}
 
 	/**
@@ -167,6 +188,9 @@ final class TheCore_Collectivity_Management {
 
 		$this->transports_module = new TheCore_Collectivity_Transports_Module();
 		$this->transports_module->register_hooks();
+
+		$this->service_public_module = new TheCore_Collectivity_Service_Public_Module();
+		$this->service_public_module->register_hooks();
 	}
 
 	/**
@@ -230,6 +254,15 @@ final class TheCore_Collectivity_Management {
 	 */
 	public function get_transports_module() {
 		return $this->transports_module;
+	}
+
+	/**
+	 * Get Service-public module instance.
+	 *
+	 * @return TheCore_Collectivity_Service_Public_Module
+	 */
+	public function get_service_public_module() {
+		return $this->service_public_module;
 	}
 }
 
