@@ -105,6 +105,10 @@ final class TheCore_Collectivity_Procedures_Frontend {
 	 */
 	public function apply_related_procedures_query( $query ) {
 		$this->apply_base_query( $query );
+		if ( ! class_exists( 'TheCore_Collectivity_Documents_Meta', false ) ) {
+			$query->set( 'post__in', array( 0 ) );
+			return;
+		}
 
 		$document_id = $this->resolve_post_id();
 		if ( $document_id <= 0 ) {

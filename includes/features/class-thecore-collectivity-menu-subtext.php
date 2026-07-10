@@ -7,11 +7,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-final class TheCore_Collectivity_Menu_Subtext {
+final class TheCore_Collectivity_Menu_Subtext extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Meta key used to store subtext.
 	 */
 	const META_KEY = '_menu_item_subtext';
+
+	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'menu-subtext';
+	}
 
 	/**
 	 * Register hooks.

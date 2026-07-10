@@ -15,7 +15,7 @@ require_once __DIR__ . '/class-thecore-collectivity-service-public-renderer.php'
 require_once __DIR__ . '/class-thecore-collectivity-service-public-shortcodes.php';
 require_once __DIR__ . '/class-thecore-collectivity-service-public-admin.php';
 
-final class TheCore_Collectivity_Service_Public_Module {
+final class TheCore_Collectivity_Service_Public_Module extends TheCore_Collectivity_Abstract_Module {
 	const CRON_HOOK              = 'tccm_service_public_sync';
 	const REWRITE_VERSION        = '1';
 	const OPTION_REWRITE_VERSION = 'tccm_service_public_rewrite_version';
@@ -63,6 +63,15 @@ final class TheCore_Collectivity_Service_Public_Module {
 	private $admin;
 
 	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'service-public';
+	}
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -81,7 +90,6 @@ final class TheCore_Collectivity_Service_Public_Module {
 	 * @return void
 	 */
 	public function register_hooks() {
-		$this->schema->register_hooks();
 		$this->shortcodes->register_hooks();
 		$this->admin->register_hooks();
 
@@ -93,6 +101,120 @@ final class TheCore_Collectivity_Service_Public_Module {
 		add_action( 'template_redirect', array( $this, 'render_public_item' ) );
 		add_action( self::CRON_HOOK, array( $this, 'run_scheduled_import' ) );
 		add_action( 'init', array( $this, 'schedule_cron' ) );
+		add_action( 'elementor/init', array( $this, 'register_elementor_loader_assets' ) );
+		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/widgets/register', array( $this, 'register_elementor_widgets' ) );
+	}
+
+	/**
+	 * Install Service-public tables.
+	 *
+	 * @return void
+	 */
+	public function install() {
+		$this->schema->install();
+	}
+
+	/**
+	 * Upgrade Service-public tables when needed.
+	 *
+	 * @return void
+	 */
+	public function maybe_upgrade() {
+		$this->schema->maybe_upgrade();
+	}
+
+	/**
+	 * Activate public routes and synchronization.
+	 *
+	 * @return void
+	 */
+	public function activate() {
+		$this->schedule_rewrite_flush( true );
+		$this->schedule_cron();
+	}
+
+	/**
+	 * Clear runtime state without deleting imported Service-public data.
+	 *
+	 * @return void
+	 */
+	public function deactivate() {
+		wp_clear_scheduled_hook( self::CRON_HOOK );
+		$this->schedule_rewrite_flush( false );
+	}
+
+	/**
+	 * Flush rewrites after WordPress and all active modules registered their rules.
+	 *
+	 * @param bool $include_routes Whether Service-public routes should be included.
+	 * @return void
+	 */
+	private function schedule_rewrite_flush( $include_routes ) {
+		$callback = function () use ( $include_routes ) {
+			if ( $include_routes ) {
+				$this->register_public_routes();
+			}
+
+			flush_rewrite_rules( false );
+			if ( $include_routes ) {
+				update_option( self::OPTION_REWRITE_VERSION, self::REWRITE_VERSION, false );
+			}
+		};
+
+		if ( did_action( 'init' ) ) {
+			$callback();
+			return;
+		}
+
+		add_action( 'init', $callback, 99 );
+	}
+
+	/**
+	 * Register the Service-public stylesheet with Elementor.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_styles() {
+		$this->register_front_assets();
+	}
+
+	/**
+	 * Register Service-public assets with Elementor's editor loader.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_loader_assets() {
+		TheCore_Collectivity_Elementor::add_loader_assets(
+			array(
+				'styles' => array(
+					TheCore_Collectivity_Elementor::HANDLE_SERVICE_PUBLIC_STYLE => array(
+						'src'          => THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/service-public/assets/service-public.css',
+						'version'      => TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/service-public/assets/service-public.css' ),
+						'dependencies' => array(),
+					),
+				),
+				'scripts' => array(),
+			)
+		);
+	}
+
+	/**
+	 * Register Service-public widgets.
+	 *
+	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
+	 * @return void
+	 */
+	public function register_elementor_widgets( $widgets_manager ) {
+		$base = THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/service-public/elementor/';
+		require_once $base . 'class-thecore-collectivity-service-public-fiche-widget.php';
+		require_once $base . 'class-thecore-collectivity-service-public-summary-widget.php';
+		require_once $base . 'class-thecore-collectivity-service-public-search-widget.php';
+
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Fiche_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Summary_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Service_Public_Search_Widget() );
 	}
 
 	/**

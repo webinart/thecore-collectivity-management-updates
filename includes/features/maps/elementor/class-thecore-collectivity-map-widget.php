@@ -18,6 +18,14 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class TheCore_Collectivity_Map_Widget extends Widget_Base {
 	/**
+	 * Stable identifiers owned by optional modules.
+	 */
+	const SHARED_TAXONOMY_THEME     = 'tccm_theme';
+	const SHARED_TAXONOMY_AUDIENCE  = 'tccm_audience';
+	const SHARED_TAXONOMY_TERRITORY = 'tccm_territory';
+	const TRANSPORT_TAXONOMY_MODE    = 'bellevue_transport_mode';
+	const TRANSPORT_POST_TYPE_LINE   = 'blv_transport_line';
+	/**
 	 * Get widget name.
 	 *
 	 * @return string
@@ -142,7 +150,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'label_block' => true,
-				'options'     => $this->get_term_options( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_THEME, true ),
+				'options'     => $this->get_term_options( self::SHARED_TAXONOMY_THEME, true ),
 				'default'     => array( '__all__' ),
 				'description' => esc_html__( 'Choisissez "Tous" ou laissez vide pour ne pas filtrer.', 'thecore-collectivity-management' ),
 			)
@@ -155,7 +163,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'label_block' => true,
-				'options'     => $this->get_term_options( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_AUDIENCE, true ),
+				'options'     => $this->get_term_options( self::SHARED_TAXONOMY_AUDIENCE, true ),
 				'default'     => array( '__all__' ),
 				'description' => esc_html__( 'Choisissez "Tous" ou laissez vide pour ne pas filtrer.', 'thecore-collectivity-management' ),
 			)
@@ -168,7 +176,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'label_block' => true,
-				'options'     => $this->get_term_options( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_TERRITORY, true ),
+				'options'     => $this->get_term_options( self::SHARED_TAXONOMY_TERRITORY, true ),
 				'default'     => array( '__all__' ),
 				'description' => esc_html__( 'Choisissez "Tous" ou laissez vide pour ne pas filtrer.', 'thecore-collectivity-management' ),
 			)
@@ -205,7 +213,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 				'type'        => Controls_Manager::SELECT2,
 				'multiple'    => true,
 				'label_block' => true,
-				'options'     => $this->get_term_options( TheCore_Collectivity_Transports_Post_Types::TAXONOMY_MODE, true ),
+				'options'     => $this->get_term_options( self::TRANSPORT_TAXONOMY_MODE, true ),
 				'default'     => array( '__all__' ),
 				'description' => esc_html__( 'Choisissez "Tous" ou laissez vide pour ne pas filtrer les transports inclus.', 'thecore-collectivity-management' ),
 				'condition'   => array(
@@ -1033,9 +1041,9 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 		$filters = array(
 			'universes'      => $this->normalize_term_filter_values( $this->get_universe_filter_values( $settings ), TheCore_Collectivity_Maps_Post_Type::TAXONOMY_UNIVERSE ),
 			'categories'     => $this->normalize_term_filter_values( $settings['categories'] ?? array(), TheCore_Collectivity_Maps_Post_Type::TAXONOMY_CATEGORY ),
-			'themes'         => $this->normalize_term_filter_values( $settings['themes'] ?? array(), TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_THEME ),
-			'audiences'      => $this->normalize_term_filter_values( $settings['audiences'] ?? array(), TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_AUDIENCE ),
-			'territories'    => $this->normalize_term_filter_values( $settings['territories'] ?? array(), TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_TERRITORY ),
+			'themes'         => $this->normalize_term_filter_values( $settings['themes'] ?? array(), self::SHARED_TAXONOMY_THEME ),
+			'audiences'      => $this->normalize_term_filter_values( $settings['audiences'] ?? array(), self::SHARED_TAXONOMY_AUDIENCE ),
+			'territories'    => $this->normalize_term_filter_values( $settings['territories'] ?? array(), self::SHARED_TAXONOMY_TERRITORY ),
 			'accessible_only'=> isset( $settings['accessible_only'] ) && 'yes' === $settings['accessible_only'],
 			'geometry_types' => $geometry_types,
 		);
@@ -1050,7 +1058,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 			$payload = $this->merge_transport_payload(
 				$payload,
 				array(
-					'modes'          => $this->normalize_term_filter_values( $settings['transport_modes'] ?? array(), TheCore_Collectivity_Transports_Post_Types::TAXONOMY_MODE ),
+					'modes'          => $this->normalize_term_filter_values( $settings['transport_modes'] ?? array(), self::TRANSPORT_TAXONOMY_MODE ),
 					'include_points' => $show_points,
 					'include_routes' => $show_routes,
 				)
@@ -2094,7 +2102,7 @@ class TheCore_Collectivity_Map_Widget extends Widget_Base {
 
 		$transport_lines = get_posts(
 			array(
-				'post_type'      => TheCore_Collectivity_Transports_Post_Types::POST_TYPE_LINE,
+				'post_type'      => self::TRANSPORT_POST_TYPE_LINE,
 				'post_status'    => 'publish',
 				'posts_per_page' => -1,
 				'orderby'        => 'title',

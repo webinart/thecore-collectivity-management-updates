@@ -328,6 +328,10 @@ final class TheCore_Collectivity_Procedures_Meta {
 	 * @return WP_Post[]
 	 */
 	private function get_available_documents() {
+		if ( ! class_exists( 'TheCore_Collectivity_Documents_Post_Type', false ) ) {
+			return array();
+		}
+
 		return get_posts(
 			array(
 				'post_type'      => TheCore_Collectivity_Documents_Post_Type::POST_TYPE,

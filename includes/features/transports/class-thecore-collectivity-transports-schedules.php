@@ -116,12 +116,20 @@ final class TheCore_Collectivity_Transports_Schedules {
 	 * Register hooks.
 	 */
 	public function register_hooks() {
-		$this->schema->register_hooks();
 		$this->admin->register_hooks();
 		add_filter( 'cron_schedules', array( $this, 'register_cron_schedules' ) );
 		add_action( 'init', array( $this, 'schedule_cron' ) );
 		add_action( self::CRON_HOOK, array( $this, 'run_scheduled_import' ) );
 		add_action( self::REALTIME_CRON_HOOK, array( $this, 'run_scheduled_realtime_import' ) );
+	}
+
+	/**
+	 * Get schema manager.
+	 *
+	 * @return TheCore_Collectivity_Transports_Schedule_Schema
+	 */
+	public function get_schema() {
+		return $this->schema;
 	}
 
 	/**

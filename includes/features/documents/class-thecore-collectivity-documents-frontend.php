@@ -95,6 +95,10 @@ final class TheCore_Collectivity_Documents_Frontend {
 	 */
 	public function apply_related_documents_query( $query ) {
 		$this->apply_base_query( $query );
+		if ( ! class_exists( 'TheCore_Collectivity_Procedures_Meta', false ) ) {
+			$query->set( 'post__in', array( 0 ) );
+			return;
+		}
 
 		$procedure_id = $this->resolve_post_id();
 		if ( $procedure_id <= 0 ) {
@@ -256,7 +260,7 @@ final class TheCore_Collectivity_Documents_Frontend {
 
 		foreach ( $procedures as $procedure ) {
 			$permalink = get_permalink( $procedure );
-			$summary   = (string) get_post_meta( $procedure->ID, TheCore_Collectivity_Procedures_Meta::META_SUMMARY, true );
+			$summary   = class_exists( 'TheCore_Collectivity_Procedures_Meta', false ) ? (string) get_post_meta( $procedure->ID, TheCore_Collectivity_Procedures_Meta::META_SUMMARY, true ) : '';
 
 			$html .= '<div class="tccm-related-procedures__item">';
 			if ( $permalink ) {

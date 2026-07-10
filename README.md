@@ -4,7 +4,7 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.33`
+Current version: `1.0.1-beta.34`
 Release channel: beta
 
 Current scope:
@@ -42,6 +42,8 @@ Main bootstrap:
 - `includes/class-thecore-collectivity-management.php`
 - `includes/class-thecore-collectivity-elementor.php`
 - `includes/class-thecore-collectivity-legacy-aliases.php`
+- `includes/module-definitions.php`
+- `includes/modules/`
 
 Feature modules:
 - `includes/features/class-thecore-collectivity-menu-subtext.php`
@@ -54,19 +56,23 @@ Feature modules:
 - `includes/features/transports/`
 - `includes/features/service-public/`
 
+All existing modules are active by default. Module classes, hooks, cron callbacks, REST routes and Elementor assets are loaded only when their module is active. Future commercial modules such as EcoTroc are inactive by default.
+
 ## Start here
 
 Read these files in order:
 1. `docs/HANDOFF.md`
-2. `docs/ELEMENTOR.md`
-3. `docs/MAPS.md`
-4. `docs/TRANSPORTS.md`
-5. `docs/SERVICE_PUBLIC.md`
+2. `docs/MODULES.md`
+3. `docs/ELEMENTOR.md`
+4. `docs/MAPS.md`
+5. `docs/TRANSPORTS.md`
+6. `docs/SERVICE_PUBLIC.md`
 
 ## Operational notes
 
 - On plugin activation, the transport schedule tables are installed and the GTFS cron is scheduled.
 - On plugin activation, the Service-public tables are installed, the daily DILA sync cron is scheduled, and public rewrite rules are flushed.
+- Module activation overrides are stored per site in `tccm_module_states` and can be finalized through `thecore_collectivity/module_enabled`.
 - Transport schedules are stored in custom tables, not post meta.
 - Service-public fiches are imported from official data.gouv/DILA ZIP resources into custom tables.
 - The transport explorer widget expects mapped transport content in the admin before GTFS import can succeed.

@@ -104,9 +104,9 @@ final class TheCore_Collectivity_Maps_Normalizer {
 
 		$universes   = $this->repository->get_term_payload( $post->ID, TheCore_Collectivity_Maps_Post_Type::TAXONOMY_UNIVERSE );
 		$categories  = $this->repository->get_term_payload( $post->ID, TheCore_Collectivity_Maps_Post_Type::TAXONOMY_CATEGORY );
-		$themes      = taxonomy_exists( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_THEME ) ? $this->repository->get_term_payload( $post->ID, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_THEME ) : array();
-		$audiences   = taxonomy_exists( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_AUDIENCE ) ? $this->repository->get_term_payload( $post->ID, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_AUDIENCE ) : array();
-		$territories = taxonomy_exists( TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_TERRITORY ) ? $this->repository->get_term_payload( $post->ID, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_TERRITORY ) : array();
+		$themes      = taxonomy_exists( 'tccm_theme' ) ? $this->repository->get_term_payload( $post->ID, 'tccm_theme' ) : array();
+		$audiences   = taxonomy_exists( 'tccm_audience' ) ? $this->repository->get_term_payload( $post->ID, 'tccm_audience' ) : array();
+		$territories = taxonomy_exists( 'tccm_territory' ) ? $this->repository->get_term_payload( $post->ID, 'tccm_territory' ) : array();
 
 		$title       = get_the_title( $post );
 		$subtitle    = (string) get_post_meta( $post->ID, TheCore_Collectivity_Maps_Meta::META_SUBTITLE, true );

@@ -38,7 +38,11 @@ final class TheCore_Collectivity_Procedures_Repository {
 	 */
 	public function get_related_documents( $procedure_id ) {
 		$procedure_id = absint( $procedure_id );
-		if ( $procedure_id <= 0 ) {
+		if (
+			$procedure_id <= 0
+			|| ! class_exists( 'TheCore_Collectivity_Documents_Post_Type', false )
+			|| ! class_exists( 'TheCore_Collectivity_Documents_Meta', false )
+		) {
 			return array();
 		}
 

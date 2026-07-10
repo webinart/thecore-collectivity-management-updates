@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-final class TheCore_Collectivity_Shared_Taxonomies_Module {
+final class TheCore_Collectivity_Shared_Taxonomies_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Shared taxonomy slugs.
 	 */
@@ -21,6 +21,15 @@ final class TheCore_Collectivity_Shared_Taxonomies_Module {
 	const OPTION_THEME_TERMS_SEEDED     = 'tccm_theme_terms_seeded';
 	const OPTION_AUDIENCE_TERMS_SEEDED  = 'tccm_audience_terms_seeded';
 	const OPTION_TERRITORY_TERMS_SEEDED = 'tccm_territory_terms_seeded';
+
+	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'shared-taxonomies';
+	}
 
 	/**
 	 * Register hooks.

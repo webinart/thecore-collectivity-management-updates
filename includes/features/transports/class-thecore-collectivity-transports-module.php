@@ -13,7 +13,7 @@ require_once __DIR__ . '/class-thecore-collectivity-transports-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-schedules.php';
 require_once __DIR__ . '/class-thecore-collectivity-transports-normalizer.php';
 
-final class TheCore_Collectivity_Transports_Module {
+final class TheCore_Collectivity_Transports_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Post type manager.
 	 *
@@ -50,6 +50,15 @@ final class TheCore_Collectivity_Transports_Module {
 	private $normalizer;
 
 	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'transports';
+	}
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -68,6 +77,115 @@ final class TheCore_Collectivity_Transports_Module {
 		$this->meta->register_hooks();
 		$this->schedules->register_hooks();
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
+		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/frontend/after_register_scripts', array( $this, 'register_elementor_scripts' ) );
+		add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/editor/before_enqueue_scripts', array( $this, 'register_elementor_scripts' ) );
+		add_action( 'elementor/widgets/register', array( $this, 'register_elementor_widgets' ) );
+	}
+
+	/**
+	 * Install the transport schedule schema.
+	 *
+	 * @return void
+	 */
+	public function install() {
+		$this->schedules->get_schema()->install();
+	}
+
+	/**
+	 * Upgrade the transport schedule schema when its version changes.
+	 *
+	 * @return void
+	 */
+	public function maybe_upgrade() {
+		$this->schedules->get_schema()->maybe_upgrade();
+	}
+
+	/**
+	 * Ensure transport synchronization schedules exist.
+	 *
+	 * @return void
+	 */
+	public function activate() {
+		$this->schedules->schedule_cron();
+	}
+
+	/**
+	 * Clear transport schedules without deleting imported data.
+	 *
+	 * @return void
+	 */
+	public function deactivate() {
+		wp_clear_scheduled_hook( TheCore_Collectivity_Transports_Schedules::CRON_HOOK );
+		wp_clear_scheduled_hook( TheCore_Collectivity_Transports_Schedules::REALTIME_CRON_HOOK );
+	}
+
+	/**
+	 * Register transport widget styles.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_styles() {
+		TheCore_Collectivity_Elementor::register_leaflet_style();
+		if ( wp_style_is( TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_STYLE, 'registered' ) ) {
+			return;
+		}
+
+		$dependencies = array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_STYLE );
+		if ( TheCore_Collectivity_Management::instance()->is_module_active( 'alerts' ) ) {
+			$dependencies[] = TheCore_Collectivity_Elementor::HANDLE_ALERTS_STYLE;
+		}
+
+		wp_register_style(
+			TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_STYLE,
+			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/transports/assets/transport-explorer.css',
+			$dependencies,
+			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/transports/assets/transport-explorer.css' )
+		);
+	}
+
+	/**
+	 * Register transport widget scripts.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_scripts() {
+		TheCore_Collectivity_Elementor::register_leaflet_script();
+		if ( wp_script_is( TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_SCRIPT, 'registered' ) ) {
+			return;
+		}
+
+		wp_register_script(
+			TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_SCRIPT,
+			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/transports/assets/transport-explorer.js',
+			array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT ),
+			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/transports/assets/transport-explorer.js' ),
+			true
+		);
+	}
+
+	/**
+	 * Register transport widgets and historical aliases.
+	 *
+	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
+	 * @return void
+	 */
+	public function register_elementor_widgets( $widgets_manager ) {
+		$base = THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/transports/elementor/';
+		require_once $base . 'class-thecore-collectivity-transport-explorer-widget.php';
+		require_once $base . 'class-thecore-collectivity-transport-schedule-widget.php';
+
+		if ( ! class_exists( 'Bellevue_Transport_Explorer_Widget', false ) ) {
+			class_alias( 'TheCore_Collectivity_Transport_Explorer_Widget', 'Bellevue_Transport_Explorer_Widget' );
+		}
+
+		if ( ! class_exists( 'Bellevue_Transport_Schedule_Widget', false ) ) {
+			class_alias( 'TheCore_Collectivity_Transport_Schedule_Widget', 'Bellevue_Transport_Schedule_Widget' );
+		}
+
+		$widgets_manager->register( new TheCore_Collectivity_Transport_Explorer_Widget() );
+		$widgets_manager->register( new TheCore_Collectivity_Transport_Schedule_Widget() );
 	}
 
 	/**

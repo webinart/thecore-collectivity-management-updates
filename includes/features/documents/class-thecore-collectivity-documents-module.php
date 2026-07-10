@@ -12,7 +12,7 @@ require_once __DIR__ . '/class-thecore-collectivity-documents-meta.php';
 require_once __DIR__ . '/class-thecore-collectivity-documents-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-documents-frontend.php';
 
-final class TheCore_Collectivity_Documents_Module {
+final class TheCore_Collectivity_Documents_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Post type manager.
 	 *
@@ -40,6 +40,15 @@ final class TheCore_Collectivity_Documents_Module {
 	 * @var TheCore_Collectivity_Documents_Frontend
 	 */
 	private $frontend;
+
+	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'documents';
+	}
 
 	/**
 	 * Constructor.

@@ -12,7 +12,7 @@ require_once __DIR__ . '/class-thecore-collectivity-procedures-meta.php';
 require_once __DIR__ . '/class-thecore-collectivity-procedures-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-procedures-frontend.php';
 
-final class TheCore_Collectivity_Procedures_Module {
+final class TheCore_Collectivity_Procedures_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Post type manager.
 	 *
@@ -42,6 +42,15 @@ final class TheCore_Collectivity_Procedures_Module {
 	private $frontend;
 
 	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'procedures';
+	}
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -58,6 +67,38 @@ final class TheCore_Collectivity_Procedures_Module {
 		$this->post_type->register_hooks();
 		$this->meta->register_hooks();
 		$this->frontend->register_hooks();
+		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/widgets/register', array( $this, 'register_elementor_widgets' ) );
+	}
+
+	/**
+	 * Register procedure widget styles.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_styles() {
+		if ( wp_style_is( TheCore_Collectivity_Elementor::HANDLE_PROCEDURE_STYLE, 'registered' ) ) {
+			return;
+		}
+
+		wp_register_style(
+			TheCore_Collectivity_Elementor::HANDLE_PROCEDURE_STYLE,
+			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/procedures/assets/procedure-content-widget.css',
+			array(),
+			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/procedures/assets/procedure-content-widget.css' )
+		);
+	}
+
+	/**
+	 * Register the procedure content widget.
+	 *
+	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
+	 * @return void
+	 */
+	public function register_elementor_widgets( $widgets_manager ) {
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/procedures/elementor/class-thecore-collectivity-procedure-content-widget.php';
+		$widgets_manager->register( new TheCore_Collectivity_Procedure_Content_Widget() );
 	}
 
 	/**

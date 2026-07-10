@@ -25,9 +25,9 @@ final class TheCore_Collectivity_Maps_Repository {
 		$tax_query = array();
 		$this->append_tax_filter( $tax_query, TheCore_Collectivity_Maps_Post_Type::TAXONOMY_UNIVERSE, $filters, 'universes' );
 		$this->append_tax_filter( $tax_query, TheCore_Collectivity_Maps_Post_Type::TAXONOMY_CATEGORY, $filters, 'categories' );
-		$this->append_tax_filter( $tax_query, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_THEME, $filters, 'themes' );
-		$this->append_tax_filter( $tax_query, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_AUDIENCE, $filters, 'audiences' );
-		$this->append_tax_filter( $tax_query, TheCore_Collectivity_Shared_Taxonomies_Module::TAXONOMY_TERRITORY, $filters, 'territories' );
+		$this->append_tax_filter( $tax_query, 'tccm_theme', $filters, 'themes' );
+		$this->append_tax_filter( $tax_query, 'tccm_audience', $filters, 'audiences' );
+		$this->append_tax_filter( $tax_query, 'tccm_territory', $filters, 'territories' );
 
 		if ( ! empty( $filters['accessible_only'] ) ) {
 			$tax_query[] = array(

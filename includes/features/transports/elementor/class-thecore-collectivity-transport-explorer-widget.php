@@ -381,12 +381,13 @@ class TheCore_Collectivity_Transport_Explorer_Widget extends Widget_Base {
 			$vehicle_transition_duration     = isset( $settings['realtime_vehicle_transition_duration'] ) ? max( 1, min( 20, intval( $settings['realtime_vehicle_transition_duration'] ) ) ) : 6;
 			$map_height                      = isset( $settings['map_height']['size'] ) ? absint( $settings['map_height']['size'] ) : 420;
 			$vehicle_pulse                   = isset( $settings['realtime_vehicle_pulse'] ) && 'yes' === $settings['realtime_vehicle_pulse'];
-			$widget_id                       = 'bte-' . $this->get_id();
-			$transports                      = TheCore_Collectivity_Management::instance()->get_transports_module();
-			$alerts_module                   = TheCore_Collectivity_Management::instance()->get_alerts_module();
-			$payload                         = $transports->get_normalizer()->get_widget_payload();
-			$transport_alerts                = $show_alerts ? $alerts_module->get_repository()->get_active_alerts( TheCore_Collectivity_Alerts_Post_Type::TOPIC_TRANSPORT ) : array();
-			$alerts_markup                   = $show_alerts ? $alerts_module->get_renderer()->render_banner_list( $transport_alerts, array( 'wrapper_class' => 'bte__alerts' ) ) : '';
+				$widget_id                       = 'bte-' . $this->get_id();
+				$transports                      = TheCore_Collectivity_Management::instance()->get_transports_module();
+				$alerts_module                   = TheCore_Collectivity_Management::instance()->get_alerts_module();
+				$payload                         = $transports->get_normalizer()->get_widget_payload();
+				$alerts_available                = $show_alerts && $alerts_module && class_exists( 'TheCore_Collectivity_Alerts_Post_Type', false );
+				$transport_alerts                = $alerts_available ? $alerts_module->get_repository()->get_active_alerts( TheCore_Collectivity_Alerts_Post_Type::TOPIC_TRANSPORT ) : array();
+				$alerts_markup                   = $alerts_available ? $alerts_module->get_renderer()->render_banner_list( $transport_alerts, array( 'wrapper_class' => 'bte__alerts' ) ) : '';
 
 		$wrapper_styles = array(
 			'--bte-map-height:' . max( 280, $map_height ) . 'px',

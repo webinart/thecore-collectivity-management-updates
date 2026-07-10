@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-final class TheCore_Collectivity_Event_Agenda {
+final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Nonce action name.
 	 */
@@ -71,6 +71,15 @@ final class TheCore_Collectivity_Event_Agenda {
 	const SHORTCODE_EVENT_TYPES = 'bellevue_event_types';
 
 	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'event-agenda';
+	}
+
+	/**
 	 * Register hooks.
 	 */
 	public function register_hooks() {
@@ -85,6 +94,18 @@ final class TheCore_Collectivity_Event_Agenda {
 		add_shortcode( self::SHORTCODE_EVENT_TIME, array( $this, 'shortcode_event_time' ) );
 		add_shortcode( self::SHORTCODE_EVENT_TYPES, array( $this, 'shortcode_event_types' ) );
 		add_shortcode( self::SHORTCODE_EVENT_PLACES, array( $this, 'shortcode_event_places' ) );
+		add_action( 'elementor/widgets/register', array( $this, 'register_elementor_widgets' ) );
+	}
+
+	/**
+	 * Register the agenda widget only while this module is active.
+	 *
+	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
+	 * @return void
+	 */
+	public function register_elementor_widgets( $widgets_manager ) {
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/event-agenda/elementor/class-thecore-collectivity-event-date-widget.php';
+		$widgets_manager->register( new TheCore_Collectivity_Event_Date_Widget() );
 	}
 
 	/**

@@ -8,6 +8,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class TheCore_Collectivity_Maps_Transport_Adapter {
+	const MODE_BUS     = 'bus';
+	const MODE_PARKING = 'parking';
+	const MODE_BIKE    = 'velo';
+	const MODE_TRAIN   = 'train';
 	/**
 	 * Build transport place items compatible with the MAP widget.
 	 *
@@ -1004,7 +1008,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 		$mode = isset( $place['mode'] ) ? sanitize_key( (string) $place['mode'] ) : '';
 
 		switch ( $mode ) {
-			case TheCore_Collectivity_Transports_Post_Types::MODE_PARKING:
+			case self::MODE_PARKING:
 				if ( ! empty( $place['parkingType'] ) ) {
 					return sanitize_text_field( (string) $place['parkingType'] );
 				}
@@ -1018,7 +1022,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 				}
 				break;
 
-			case TheCore_Collectivity_Transports_Post_Types::MODE_BIKE:
+			case self::MODE_BIKE:
 				if ( null !== $this->normalize_integer( $place['slotsTotal'] ?? null ) ) {
 					return sprintf(
 						/* translators: %d: total bike slots */
@@ -1028,7 +1032,7 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 				}
 				break;
 
-			case TheCore_Collectivity_Transports_Post_Types::MODE_TRAIN:
+			case self::MODE_TRAIN:
 				if ( ! empty( $place['trainInformation'][0] ) ) {
 					return sanitize_text_field( (string) $place['trainInformation'][0] );
 				}
@@ -1130,13 +1134,13 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 	 */
 	private function get_mode_color( $mode_slug ) {
 		switch ( $mode_slug ) {
-			case TheCore_Collectivity_Transports_Post_Types::MODE_BUS:
+			case self::MODE_BUS:
 				return '#1d4ed8';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_PARKING:
+			case self::MODE_PARKING:
 				return '#334155';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_BIKE:
+			case self::MODE_BIKE:
 				return '#059669';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_TRAIN:
+			case self::MODE_TRAIN:
 				return '#7c3aed';
 			default:
 				return '#0f766e';
@@ -1151,13 +1155,13 @@ final class TheCore_Collectivity_Maps_Transport_Adapter {
 	 */
 	private function get_mode_icon_type( $mode_slug ) {
 		switch ( $mode_slug ) {
-			case TheCore_Collectivity_Transports_Post_Types::MODE_BUS:
+			case self::MODE_BUS:
 				return 'bus';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_PARKING:
+			case self::MODE_PARKING:
 				return 'parking';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_BIKE:
+			case self::MODE_BIKE:
 				return 'bike';
-			case TheCore_Collectivity_Transports_Post_Types::MODE_TRAIN:
+			case self::MODE_TRAIN:
 				return 'train';
 			default:
 				return 'info';

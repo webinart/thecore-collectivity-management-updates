@@ -39,6 +39,10 @@ final class TheCore_Collectivity_Documents_Post_Type {
 	 * Register post type.
 	 */
 	public function register_post_type() {
+		$show_in_menu = class_exists( 'TheCore_Collectivity_Procedures_Post_Type', false )
+			? 'edit.php?post_type=' . TheCore_Collectivity_Procedures_Post_Type::POST_TYPE
+			: true;
+
 		register_post_type(
 			self::POST_TYPE,
 			array(
@@ -60,7 +64,7 @@ final class TheCore_Collectivity_Documents_Post_Type {
 				'publicly_queryable' => false,
 				'exclude_from_search'=> true,
 				'show_ui'            => true,
-				'show_in_menu'       => 'edit.php?post_type=' . TheCore_Collectivity_Procedures_Post_Type::POST_TYPE,
+					'show_in_menu'       => $show_in_menu,
 				'show_in_rest'       => true,
 				'supports'           => array( 'title', 'editor' ),
 				'has_archive'        => false,
@@ -157,6 +161,10 @@ final class TheCore_Collectivity_Documents_Post_Type {
 	 * Remove redundant submenus.
 	 */
 	public function cleanup_admin_submenus() {
+		if ( ! class_exists( 'TheCore_Collectivity_Procedures_Post_Type', false ) ) {
+			return;
+		}
+
 		remove_submenu_page(
 			'edit.php?post_type=' . TheCore_Collectivity_Procedures_Post_Type::POST_TYPE,
 			'post-new.php?post_type=' . self::POST_TYPE

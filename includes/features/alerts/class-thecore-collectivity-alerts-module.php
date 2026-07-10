@@ -12,7 +12,7 @@ require_once __DIR__ . '/class-thecore-collectivity-alerts-meta.php';
 require_once __DIR__ . '/class-thecore-collectivity-alerts-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-alerts-renderer.php';
 
-final class TheCore_Collectivity_Alerts_Module {
+final class TheCore_Collectivity_Alerts_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Post type manager.
 	 *
@@ -42,6 +42,15 @@ final class TheCore_Collectivity_Alerts_Module {
 	private $renderer;
 
 	/**
+	 * Stable module id.
+	 *
+	 * @return string
+	 */
+	public function get_id() {
+		return 'alerts';
+	}
+
+	/**
 	 * Constructor.
 	 */
 	public function __construct() {
@@ -57,6 +66,43 @@ final class TheCore_Collectivity_Alerts_Module {
 	public function register_hooks() {
 		$this->post_type->register_hooks();
 		$this->meta->register_hooks();
+		add_action( 'elementor/frontend/after_register_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/editor/before_enqueue_styles', array( $this, 'register_elementor_styles' ) );
+		add_action( 'elementor/widgets/register', array( $this, 'register_elementor_widgets' ) );
+	}
+
+	/**
+	 * Register alert widget styles.
+	 *
+	 * @return void
+	 */
+	public function register_elementor_styles() {
+		if ( wp_style_is( TheCore_Collectivity_Elementor::HANDLE_ALERTS_STYLE, 'registered' ) ) {
+			return;
+		}
+
+		wp_register_style(
+			TheCore_Collectivity_Elementor::HANDLE_ALERTS_STYLE,
+			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/alerts/assets/alerts-widget.css',
+			array(),
+			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/alerts/assets/alerts-widget.css' )
+		);
+	}
+
+	/**
+	 * Register the alert widget.
+	 *
+	 * @param \Elementor\Widgets_Manager $widgets_manager Elementor widgets manager.
+	 * @return void
+	 */
+	public function register_elementor_widgets( $widgets_manager ) {
+		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/alerts/elementor/class-thecore-collectivity-alerts-widget.php';
+
+		if ( ! class_exists( 'Bellevue_Alerts_Widget', false ) ) {
+			class_alias( 'TheCore_Collectivity_Alerts_Widget', 'Bellevue_Alerts_Widget' );
+		}
+
+		$widgets_manager->register( new TheCore_Collectivity_Alerts_Widget() );
 	}
 
 	/**
