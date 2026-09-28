@@ -883,7 +883,7 @@
 					return;
 				}
 
-				const routeLayer = window.L.geoJSON(lineGeojson, {
+				const routeLayer = window.L.geoJSON(window.TheCoreTransportGeometry.deduplicate(lineGeojson), {
 					style: () => this.getLineRouteStyle(line)
 				});
 				routeLayer.bindPopup(this.getLinePopupMarkup(line));
@@ -977,26 +977,7 @@
 				return null;
 			}
 
-			const directionId = String(direction.directionId || "");
-			const headsign = normalizeText(direction.headsign || "");
-			if (!directionId && !headsign) {
-				return null;
-			}
-
-			const features = geojson.features.filter((feature) => {
-				const properties = feature && feature.properties ? feature.properties : {};
-				const featureDirectionId = String(properties.directionId || "");
-				const featureHeadsign = normalizeText(properties.headsign || "");
-				if (directionId && featureDirectionId && directionId === featureDirectionId) {
-					return true;
-				}
-				if (headsign && featureHeadsign && headsign === featureHeadsign) {
-					return true;
-				}
-				return false;
-			});
-
-			return features.length ? Object.assign({}, geojson, { features }) : null;
+			return window.TheCoreTransportGeometry.filterByDirection(geojson, direction);
 		}
 
 		getVehicleKey(vehicle, index) {

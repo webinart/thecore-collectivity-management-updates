@@ -1158,7 +1158,11 @@
 			}
 
 			const routeStyle = this.getRouteStyle(item);
-			const routeLayer = window.L.geoJSON(displayedGeojson, {
+			const renderedGeojson = item.source === "transport" ? window.TheCoreTransportGeometry.deduplicate(displayedGeojson) : displayedGeojson;
+			if (renderedGeojson.type === "FeatureCollection" && !renderedGeojson.features.length) {
+				return;
+			}
+			const routeLayer = window.L.geoJSON(renderedGeojson, {
 				style: () => routeStyle,
 				onEachFeature: (feature, layer) => {
 					layer.bindPopup(this.buildPopupMarkup(item), {
@@ -1522,6 +1526,9 @@
 			if (trim.startRatio <= 0 && trim.endRatio <= 0) {
 				return baseGeojson;
 			}
+			if (item.source === "transport") {
+				return window.TheCoreTransportGeometry.trim(baseGeojson, trim.startRatio, trim.endRatio, [item.markerLongitude, item.markerLatitude]);
+			}
 
 			return this.trimGeoJson(baseGeojson, trim.startRatio, trim.endRatio);
 		}
@@ -1536,50 +1543,7 @@
 				return directionGeoJson;
 			}
 
-			if (item.source !== "transport" || item.geojson.type !== "FeatureCollection" || !Array.isArray(item.geojson.features) || item.geojson.features.length <= 1) {
-				return item.geojson;
-			}
-
-			const anchor = (typeof item.markerLatitude === "number" && typeof item.markerLongitude === "number")
-				? [item.markerLongitude, item.markerLatitude]
-				: null;
-
-			if (!anchor) {
-				return item.geojson;
-			}
-
-			let bestFeature = null;
-			let bestDistance = Number.POSITIVE_INFINITY;
-			let bestLength = -1;
-
-			for (const feature of item.geojson.features) {
-				if (!feature || !feature.geometry) {
-					continue;
-				}
-
-				const coordinates = this.extractCoordinatesFromGeometry(feature.geometry);
-				if (coordinates.length < 2) {
-					continue;
-				}
-
-				const minDistance = this.getMinimumCoordinateDistance(anchor, coordinates);
-				const lineLength = this.getCoordinateSequenceLength(coordinates);
-
-				if (minDistance < bestDistance || (Math.abs(minDistance - bestDistance) < 0.5 && lineLength > bestLength)) {
-					bestFeature = feature;
-					bestDistance = minDistance;
-					bestLength = lineLength;
-				}
-			}
-
-			if (!bestFeature) {
-				return item.geojson;
-			}
-
-			return {
-				...item.geojson,
-				features: [bestFeature]
-			};
+			return item.geojson;
 		}
 
 		getDirectionFilteredTransportGeoJson(item) {
@@ -1593,29 +1557,7 @@
 				return null;
 			}
 
-			const directionId = String(this.selectedTransportDetail.directionId || "");
-			const headsign = normalizeText(this.selectedTransportDetail.headsign || "");
-			if (!directionId && !headsign) {
-				return null;
-			}
-
-			const features = item.geojson.features.filter((feature) => {
-				const properties = feature && feature.properties ? feature.properties : {};
-				const featureDirectionId = String(properties.directionId || "");
-				const featureHeadsign = normalizeText(properties.headsign || "");
-				if (directionId && featureDirectionId && directionId === featureDirectionId) {
-					return true;
-				}
-				if (headsign && featureHeadsign && headsign === featureHeadsign) {
-					return true;
-				}
-				return false;
-			});
-
-			return features.length ? {
-				...item.geojson,
-				features
-			} : null;
+			return window.TheCoreTransportGeometry.filterByDirection(item.geojson, this.selectedTransportDetail);
 		}
 
 		getRouteMarkerLatLng(item, geojson, isTrimmed = false) {
@@ -1623,7 +1565,8 @@
 				return window.L.latLng(item.markerLatitude, item.markerLongitude);
 			}
 
-			const coordinates = this.extractRouteLatLngs(geojson || item.geojson);
+			const markerGeojson = item.source === "transport" ? window.TheCoreTransportGeometry.referenceGeoJson(geojson || item.geojson) : (geojson || item.geojson);
+			const coordinates = this.extractRouteLatLngs(markerGeojson);
 			if (!coordinates.length) {
 				return null;
 			}
@@ -1700,10 +1643,11 @@
 			if (!icons.length || !displayedGeojson) {
 				return;
 			}
+			const markerGeojson = item.source === "transport" ? window.TheCoreTransportGeometry.referenceGeoJson(displayedGeojson) : displayedGeojson;
 
 			icons.forEach((iconDefinition, index) => {
 				const ratio = Math.max(0, Math.min(1, ((iconDefinition && typeof iconDefinition.position === "number") ? iconDefinition.position : 50) / 100));
-				const markerLatLng = this.getLatLngAlongRouteGeojson(displayedGeojson, ratio);
+				const markerLatLng = this.getLatLngAlongRouteGeojson(markerGeojson, ratio);
 				if (!markerLatLng) {
 					return;
 				}
@@ -1788,55 +1732,6 @@
 			}
 
 			return geometry;
-		}
-
-		extractCoordinatesFromGeometry(geometry) {
-			const coordinates = [];
-			const append = (value) => {
-				if (!Array.isArray(value) || !value.length) {
-					return;
-				}
-
-				if (typeof value[0] === "number" && typeof value[1] === "number") {
-					coordinates.push([Number(value[0]), Number(value[1])]);
-					return;
-				}
-
-				value.forEach((entry) => append(entry));
-			};
-
-			append(geometry && geometry.coordinates ? geometry.coordinates : []);
-
-			return coordinates;
-		}
-
-		getMinimumCoordinateDistance(anchor, coordinates) {
-			if (!Array.isArray(anchor) || anchor.length < 2 || !Array.isArray(coordinates) || !coordinates.length) {
-				return Number.POSITIVE_INFINITY;
-			}
-
-			let bestDistance = Number.POSITIVE_INFINITY;
-			for (const coordinate of coordinates) {
-				const distance = this.measureCoordinateDistance(anchor, coordinate);
-				if (distance < bestDistance) {
-					bestDistance = distance;
-				}
-			}
-
-			return bestDistance;
-		}
-
-		getCoordinateSequenceLength(coordinates) {
-			if (!Array.isArray(coordinates) || coordinates.length < 2) {
-				return 0;
-			}
-
-			let total = 0;
-			for (let index = 1; index < coordinates.length; index += 1) {
-				total += this.measureCoordinateDistance(coordinates[index - 1], coordinates[index]);
-			}
-
-			return total;
 		}
 
 		trimLineCoordinates(coordinates, startRatio, endRatio) {

@@ -25,6 +25,7 @@ final class TheCore_Collectivity_Elementor {
 	const HANDLE_SERVICE_PUBLIC_STYLE = 'thecore-collectivity-service-public-widget';
 	const HANDLE_LEAFLET_STYLE        = 'thecore-collectivity-leaflet';
 	const HANDLE_LEAFLET_SCRIPT       = 'thecore-collectivity-leaflet';
+	const HANDLE_ROUTE_GEOMETRY       = 'thecore-collectivity-route-geometry';
 
 	/**
 	 * Register only the integration shared by every active module.
@@ -89,6 +90,22 @@ final class TheCore_Collectivity_Elementor {
 			'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
 			array(),
 			'1.9.4',
+			true
+		);
+	}
+
+	/**
+	 * Register geometry utilities on demand for MAP and Transport widgets.
+	 */
+	public static function register_route_geometry_script() {
+		if ( wp_script_is( self::HANDLE_ROUTE_GEOMETRY, 'registered' ) ) {
+			return;
+		}
+		wp_register_script(
+			self::HANDLE_ROUTE_GEOMETRY,
+			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/assets/transport-route-geometry.js',
+			array(),
+			self::get_asset_version( 'includes/assets/transport-route-geometry.js' ),
 			true
 		);
 	}

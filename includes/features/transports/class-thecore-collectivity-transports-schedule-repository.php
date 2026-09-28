@@ -1064,7 +1064,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 	}
 
 	/**
-	 * Build one representative GeoJSON payload for a transport line from GTFS shapes.
+	 * Keep every mapped route variant serving the reference stops.
 	 *
 	 * @param string $provider_key       Provider key.
 	 * @param array  $trip_rows          Imported GTFS trip rows.
@@ -1075,97 +1075,89 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		$trip_rows_for_shapes = $trip_rows;
 		if ( ! empty( $preferred_stop_ids ) ) {
 			$preferred_trip_ids = $this->get_trip_ids_serving_stops( $provider_key, $trip_rows, $preferred_stop_ids );
-			if ( ! empty( $preferred_trip_ids ) ) {
-				$trip_rows_for_shapes = array_values(
-					array_filter(
-						$trip_rows,
-						static function ( $trip_row ) use ( $preferred_trip_ids ) {
-							$trip_id = ! empty( $trip_row['trip_id'] ) ? (string) $trip_row['trip_id'] : '';
-
-							return '' !== $trip_id && isset( $preferred_trip_ids[ $trip_id ] );
-						}
-					)
-				);
+			if ( empty( $preferred_trip_ids ) ) {
+				return null;
 			}
+			$trip_rows_for_shapes = array_values(
+				array_filter(
+					$trip_rows,
+					static function ( $trip_row ) use ( $preferred_trip_ids ) {
+						$trip_id = isset( $trip_row['trip_id'] ) ? (string) $trip_row['trip_id'] : '';
+						return '' !== $trip_id && isset( $preferred_trip_ids[ $trip_id ] );
+					}
+				)
+			);
 		}
 
-		$shape_usage = array();
-		$headsigns   = array();
+		$variants_by_shape = array();
 
 		foreach ( $trip_rows_for_shapes as $trip_row ) {
-			$shape_id = ! empty( $trip_row['shape_id'] ) ? sanitize_text_field( (string) $trip_row['shape_id'] ) : '';
+			$shape_id = isset( $trip_row['shape_id'] ) ? sanitize_text_field( (string) $trip_row['shape_id'] ) : '';
 			if ( '' === $shape_id ) {
 				continue;
 			}
 
-			$direction_id = isset( $trip_row['direction_id'] ) ? sanitize_text_field( (string) $trip_row['direction_id'] ) : '';
-			if ( empty( $shape_usage[ $direction_id ] ) ) {
-				$shape_usage[ $direction_id ] = array();
-			}
-
-			if ( empty( $shape_usage[ $direction_id ][ $shape_id ] ) ) {
-				$shape_usage[ $direction_id ][ $shape_id ] = 0;
-			}
-
-			++$shape_usage[ $direction_id ][ $shape_id ];
-
-			if ( ! empty( $trip_row['trip_headsign'] ) && empty( $headsigns[ $direction_id ] ) ) {
-				$headsigns[ $direction_id ] = sanitize_text_field( (string) $trip_row['trip_headsign'] );
-			}
+			$variant = array(
+				'routeId'          => sanitize_text_field( (string) ( $trip_row['route_id'] ?? '' ) ),
+				'directionId'      => sanitize_text_field( (string) ( $trip_row['direction_id'] ?? '' ) ),
+				'headsign'         => sanitize_text_field( (string) ( $trip_row['trip_headsign'] ?? '' ) ),
+				'terminalStopId'   => sanitize_text_field( (string) ( $trip_row['terminal_stop_id'] ?? '' ) ),
+				'terminalStopName' => sanitize_text_field( (string) ( $trip_row['terminal_stop_name'] ?? '' ) ),
+			);
+			$variants_by_shape[ $shape_id ][ wp_json_encode( $variant ) ] = $variant;
 		}
 
-		if ( empty( $shape_usage ) ) {
+		if ( empty( $variants_by_shape ) ) {
 			return null;
 		}
 
-		$selected_shape_ids = array();
-		foreach ( $shape_usage as $direction_id => $shapes ) {
-			arsort( $shapes );
-			$shape_id = (string) key( $shapes );
-			if ( '' === $shape_id ) {
-				continue;
-			}
-
-			$selected_shape_ids[ $direction_id ] = $shape_id;
-		}
-
-		if ( empty( $selected_shape_ids ) ) {
-			return null;
-		}
-
-		$shape_points = $this->get_shape_points( $provider_key, array_values( array_unique( $selected_shape_ids ) ) );
+		ksort( $variants_by_shape, SORT_STRING );
+		$shape_points = $this->get_shape_points( $provider_key, array_keys( $variants_by_shape ) );
 		if ( empty( $shape_points ) ) {
 			return null;
 		}
 
 		$features = array();
-		foreach ( $selected_shape_ids as $direction_id => $shape_id ) {
+		foreach ( $variants_by_shape as $shape_id => $variants ) {
 			if ( empty( $shape_points[ $shape_id ] ) ) {
 				continue;
 			}
 
 			$coordinates = array();
 			foreach ( $shape_points[ $shape_id ] as $point ) {
-				if ( ! isset( $point['shape_pt_lon'], $point['shape_pt_lat'] ) ) {
-					continue;
+				if ( ! isset( $point['shape_pt_lon'], $point['shape_pt_lat'] ) || ! is_numeric( $point['shape_pt_lon'] ) || ! is_numeric( $point['shape_pt_lat'] ) ) {
+					// Reject broken geometry rather than connecting across missing points.
+					continue 2;
 				}
 
-				$coordinates[] = array(
-					(float) $point['shape_pt_lon'],
-					(float) $point['shape_pt_lat'],
-				);
+				$lon = (float) $point['shape_pt_lon'];
+				$lat = (float) $point['shape_pt_lat'];
+				if ( ! is_finite( $lon ) || ! is_finite( $lat ) || abs( $lon ) > 180 || abs( $lat ) > 90 ) {
+					continue 2;
+				}
+				$coordinate = array( $lon, $lat );
+				if ( empty( $coordinates ) || end( $coordinates ) !== $coordinate ) {
+					$coordinates[] = $coordinate;
+				}
 			}
 
 			if ( count( $coordinates ) < 2 ) {
 				continue;
 			}
 
-			$features[] = array(
+			$geometry_key = hash( 'sha256', wp_json_encode( $coordinates ) );
+			if ( isset( $features[ $geometry_key ] ) ) {
+				$features[ $geometry_key ]['properties']['shapeIds'][] = (string) $shape_id;
+				$features[ $geometry_key ]['properties']['variants'] += $variants;
+				continue;
+			}
+			$features[ $geometry_key ] = array(
 				'type'       => 'Feature',
 				'properties' => array(
-					'directionId' => (string) $direction_id,
 					'shapeId'     => (string) $shape_id,
-					'headsign'    => ! empty( $headsigns[ $direction_id ] ) ? (string) $headsigns[ $direction_id ] : '',
+					'shapeIds'    => array( (string) $shape_id ),
+					'providerKey' => sanitize_key( (string) $provider_key ),
+					'variants'    => $variants,
 				),
 				'geometry'   => array(
 					'type'        => 'LineString',
@@ -1177,10 +1169,22 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 		if ( empty( $features ) ) {
 			return null;
 		}
+		foreach ( $features as &$feature ) {
+			$properties = &$feature['properties'];
+			ksort( $properties['variants'], SORT_STRING );
+			$properties['variants'] = array_values( $properties['variants'] );
+			// Keep scalar metadata only when it describes every associated trip variant.
+			foreach ( array( 'directionId', 'headsign' ) as $field ) {
+				$values = array_values( array_unique( array_column( $properties['variants'], $field ) ) );
+				$properties[ $field ] = 1 === count( $values ) ? $values[0] : '';
+			}
+			unset( $properties );
+		}
+		unset( $feature );
 
 		return array(
 			'type'     => 'FeatureCollection',
-			'features' => $features,
+			'features' => array_values( $features ),
 		);
 	}
 
@@ -1201,10 +1205,11 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 			array_filter(
 				array_map(
 					static function ( $trip_row ) {
-						return ! empty( $trip_row['trip_id'] ) ? sanitize_text_field( (string) $trip_row['trip_id'] ) : '';
+						return isset( $trip_row['trip_id'] ) ? sanitize_text_field( (string) $trip_row['trip_id'] ) : '';
 					},
 					$trip_rows
-				)
+				),
+				static function ( $id ) { return '' !== $id; }
 			)
 		);
 
@@ -1219,7 +1224,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 
 		$matched_trip_ids = array();
 		foreach ( $stop_times as $stop_time ) {
-			if ( empty( $stop_time['trip_id'] ) ) {
+			if ( ! isset( $stop_time['trip_id'] ) || '' === (string) $stop_time['trip_id'] ) {
 				continue;
 			}
 
@@ -1285,7 +1290,7 @@ final class TheCore_Collectivity_Transports_Schedule_Repository {
 
 		$indexed = array();
 		foreach ( $rows as $row ) {
-			$shape_id = ! empty( $row['shape_id'] ) ? (string) $row['shape_id'] : '';
+			$shape_id = isset( $row['shape_id'] ) ? (string) $row['shape_id'] : '';
 			if ( '' === $shape_id ) {
 				continue;
 			}

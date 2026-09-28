@@ -93,6 +93,14 @@ function sanitize_key( $value ) {
 	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
 }
 
+function wp_script_is( $handle, $status ) {
+	return isset( $GLOBALS['tccm_smoke_scripts'][ $handle ] );
+}
+
+function wp_register_script( $handle, $src, $deps = array(), $version = false, $footer = false ) {
+	$GLOBALS['tccm_smoke_scripts'][ $handle ] = array( 'src' => $src, 'deps' => $deps );
+}
+
 function get_file_data( $file, $headers, $context = '' ) {
 	return array(
 		'PluginName' => 'The Core - Collectivity Management',
@@ -210,6 +218,17 @@ if ( 'enable' === $lifecycle_mode ) {
 	tccm_smoke_assert( 'deactivate' === end( $GLOBALS['tccm_lifecycle_log'] ), 'Plugin deactivation should delegate cleanup to active modules.' );
 } elseif ( 'disable' === $lifecycle_mode ) {
 	tccm_smoke_assert( array( 'deactivate' ) === $GLOBALS['tccm_lifecycle_log'], 'A newly disabled module should run its cleanup once without registering hooks.' );
+}
+
+do_action( 'elementor/frontend/after_register_scripts' );
+do_action( 'elementor/editor/before_enqueue_scripts' );
+$geometry_handle = TheCore_Collectivity_Elementor::HANDLE_ROUTE_GEOMETRY;
+$geometry_needed = $management->is_module_active( 'maps' ) || $management->is_module_active( 'transports' );
+tccm_smoke_assert( $geometry_needed === wp_script_is( $geometry_handle, 'registered' ), 'Geometry assets load only when a consuming module is active.' );
+foreach ( array( 'maps' => TheCore_Collectivity_Elementor::HANDLE_MAP_SCRIPT, 'transports' => TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_SCRIPT ) as $id => $handle ) {
+	if ( $management->is_module_active( $id ) ) {
+		tccm_smoke_assert( in_array( $geometry_handle, $GLOBALS['tccm_smoke_scripts'][ $handle ]['deps'], true ), 'Geometry utilities must precede widget initialization.' );
+	}
 }
 
 $summary = $effective_disabled ? 'disabled=' . implode( ',', $effective_disabled ) : 'all defaults active';

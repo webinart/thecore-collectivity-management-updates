@@ -105,6 +105,7 @@ final class TheCore_Collectivity_Maps_Module extends TheCore_Collectivity_Abstra
 	 */
 	public function register_elementor_scripts() {
 		TheCore_Collectivity_Elementor::register_leaflet_script();
+		TheCore_Collectivity_Elementor::register_route_geometry_script();
 		if ( wp_script_is( TheCore_Collectivity_Elementor::HANDLE_MAP_SCRIPT, 'registered' ) ) {
 			return;
 		}
@@ -112,7 +113,7 @@ final class TheCore_Collectivity_Maps_Module extends TheCore_Collectivity_Abstra
 		wp_register_script(
 			TheCore_Collectivity_Elementor::HANDLE_MAP_SCRIPT,
 			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/maps/assets/map-widget.js',
-			array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT ),
+			array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT, TheCore_Collectivity_Elementor::HANDLE_ROUTE_GEOMETRY ),
 			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/maps/assets/map-widget.js' ),
 			true
 		);
@@ -140,6 +141,11 @@ final class TheCore_Collectivity_Maps_Module extends TheCore_Collectivity_Abstra
 					),
 				),
 				'scripts' => array(
+					TheCore_Collectivity_Elementor::HANDLE_ROUTE_GEOMETRY => array(
+						'src'          => THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/assets/transport-route-geometry.js',
+						'version'      => TheCore_Collectivity_Elementor::get_asset_version( 'includes/assets/transport-route-geometry.js' ),
+						'dependencies' => array(),
+					),
 					TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT => array(
 						'src'          => 'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
 						'version'      => '1.9.4',
@@ -148,7 +154,7 @@ final class TheCore_Collectivity_Maps_Module extends TheCore_Collectivity_Abstra
 					TheCore_Collectivity_Elementor::HANDLE_MAP_SCRIPT => array(
 						'src'          => $base_url . 'map-widget.js',
 						'version'      => TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/maps/assets/map-widget.js' ),
-						'dependencies' => array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT ),
+						'dependencies' => array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT, TheCore_Collectivity_Elementor::HANDLE_ROUTE_GEOMETRY ),
 					),
 				),
 			)

@@ -120,7 +120,7 @@
 
 <h1>Manuel utilisateur</h1>
 <p class="subtitle">Modules <strong>MAP</strong> et <strong>Transports</strong> du plugin The Core - Collectivity Management</p>
-<p class="meta">Version du manuel: 10 avril 2026<br />Version du plugin: 1.0.1-beta.34<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
+<p class="meta">Version du manuel: 10 avril 2026<br />Version du plugin: 1.0.1-beta.35<br />Public visé: équipes éditoriales, chefs de projet, intégrateurs Elementor, administrateurs WordPress</p>
 
 <div class="lead">
   <p><strong>Objectif de ce document</strong><br />Ce manuel explique comment utiliser les deux modules les plus structurants du plugin:</p>
@@ -382,6 +382,7 @@
 
 <div class="note">
   <p><strong>Comment lire les décalages de début et fin</strong><br />Les pourcentages sont relatifs à la moitié du parcours. En pratique, <code>0</code> signifie aucun rognage et <code>100</code> signifie un rognage jusqu’au milieu du tracé.</p>
+  <p>Pour une ligne de transport à plusieurs variantes, la branche la plus longue sert de référence à la découpe. La même fenêtre de distance est appliquée aux autres variantes autour de l’arrêt de rattachement, avec une orientation commune pour l’aller et le retour. Les icônes supplémentaires restent sur une branche continue. Pour afficher la ligne complète, laisser les deux décalages à <code>0</code>.</p>
 </div>
 
 <h3>2.5. Widgets de filtres séparés</h3>
@@ -688,6 +689,10 @@
   <li>au clic sur un véhicule, une vignette qui affiche aussi la <strong>direction réelle du trajet</strong>.</li>
 </ul>
 
+<div class="note">
+  <p><strong>Une ligne peut avoir plusieurs parcours</strong><br />La carte conserve les variantes qui desservent les arrêts de référence configurés : services courts, prolongements et branches. Par exemple, une même ligne peut terminer à La Tranche-sur-Mer pour certaines courses et continuer jusqu’à Luçon pour d’autres. Le nombre de courses ne détermine plus quelle branche est visible. Les segments strictement identiques ne sont dessinés qu’une fois ; les différences réelles entre les parcours restent visibles.</p>
+  <p>Avec <strong>Limiter la carte à la direction sélectionnée</strong>, le choix tient compte du sens et de la destination. Une direction vers La Tranche ne doit donc pas afficher le prolongement vers Luçon. Si le flux ne fournit pas de géométrie exploitable pour cette sélection, aucun tracé de remplacement n’est inventé. Les positions temps réel restent indépendantes du tracé théorique et peuvent s’en écarter, notamment en cas de déviation.</p>
+</div>
 <h4>3.7.3. Widget Elementor “Horaires transport”</h4>
 <p>Le widget <strong>Horaires transport</strong> permet d’afficher uniquement le panneau d’horaires, sans la carte complète du Transport Explorer. Il est utile quand une page contient déjà une MAP touristique et qu’on veut afficher les horaires de la ligne sélectionnée dans un bloc indépendant.</p>
 <ul>

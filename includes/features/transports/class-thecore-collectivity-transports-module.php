@@ -152,6 +152,7 @@ final class TheCore_Collectivity_Transports_Module extends TheCore_Collectivity_
 	 */
 	public function register_elementor_scripts() {
 		TheCore_Collectivity_Elementor::register_leaflet_script();
+		TheCore_Collectivity_Elementor::register_route_geometry_script();
 		if ( wp_script_is( TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_SCRIPT, 'registered' ) ) {
 			return;
 		}
@@ -159,7 +160,7 @@ final class TheCore_Collectivity_Transports_Module extends TheCore_Collectivity_
 		wp_register_script(
 			TheCore_Collectivity_Elementor::HANDLE_TRANSPORT_SCRIPT,
 			THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/transports/assets/transport-explorer.js',
-			array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT ),
+			array( TheCore_Collectivity_Elementor::HANDLE_LEAFLET_SCRIPT, TheCore_Collectivity_Elementor::HANDLE_ROUTE_GEOMETRY ),
 			TheCore_Collectivity_Elementor::get_asset_version( 'includes/features/transports/assets/transport-explorer.js' ),
 			true
 		);
