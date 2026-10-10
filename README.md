@@ -4,8 +4,14 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.35`
+Current version: `1.0.1-beta.36`
 Release channel: beta
+
+### Changes in 1.0.1-beta.36
+
+- Agenda queries and ongoing-event ordering now compare Unix timestamps without adding the site's timezone offset.
+- Local event dates are parsed with seconds reset to zero; invalid dates and nonexistent DST times are rejected instead of silently normalized.
+- Regression checks: `php tests/event-agenda-datetime-test.php` (standalone, no database required).
 
 Current scope:
 - menu item subtext

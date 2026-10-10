@@ -408,7 +408,8 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 	 * @return array
 	 */
 	public static function get_upcoming_events_query_args( $overrides = array() ) {
-		$now = (int) current_time( 'timestamp' );
+		// Stored event timestamps are Unix time, without the site's timezone offset.
+		$now = time();
 
 		$defaults = array(
 			'post_type'           => 'post',
@@ -445,7 +446,7 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 			return;
 		}
 
-		$now = (int) current_time( 'timestamp' );
+		$now = time();
 
 		$query->set( 'post_type', 'post' );
 		$query->set( 'post_status', 'publish' );
@@ -482,7 +483,7 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 
 		global $wpdb;
 
-		$now = (int) current_time( 'timestamp' );
+		$now = time();
 
 		$start_subquery = sprintf(
 			"(SELECT CAST(pm_start.meta_value AS UNSIGNED) FROM %s pm_start WHERE pm_start.post_id = %s.ID AND pm_start.meta_key = '%s' LIMIT 1)",
@@ -894,7 +895,7 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 	/**
 	 * Build meta_query for upcoming events.
 	 *
-	 * @param int $now Current local timestamp.
+	 * @param int $now Current Unix timestamp.
 	 * @return array
 	 */
 	private static function build_upcoming_meta_query( $now ) {
@@ -963,9 +964,9 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 		}
 
 		$value = str_replace( 'T', ' ', $value );
-		$dt    = \DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $value, wp_timezone() );
+		$dt    = \DateTimeImmutable::createFromFormat( '!Y-m-d H:i', $value, wp_timezone() );
 
-		if ( ! $dt ) {
+		if ( ! $dt || $dt->format( 'Y-m-d H:i' ) !== $value ) {
 			return '';
 		}
 
@@ -984,8 +985,8 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 			return 0;
 		}
 
-		$dt = \DateTimeImmutable::createFromFormat( 'Y-m-d H:i', $value, wp_timezone() );
-		if ( ! $dt ) {
+		$dt = \DateTimeImmutable::createFromFormat( '!Y-m-d H:i', $value, wp_timezone() );
+		if ( ! $dt || $dt->format( 'Y-m-d H:i' ) !== $value ) {
 			return 0;
 		}
 
