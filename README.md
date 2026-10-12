@@ -4,8 +4,14 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.36`
+Current version: `1.0.1-beta.37`
 Release channel: beta
+
+### Changes in 1.0.1-beta.37
+
+- Add the disabled-by-default EcoTroc candidate PHP connector, pinned to the public `1.0.0-draft.5` package.
+- Validate receipts, current acceptance state and qualified security refusals through the WordPress HTTP API, without automatic mutation retries or persistent private-response storage.
+- Exercise all 54 public cases and four traces through the client; production BFF/authentication and plugin compatibility qualification remain open. See `docs/ECOTROC_CONNECTOR.md` for commands, results and limits.
 
 ### Changes in 1.0.1-beta.36
 
@@ -24,6 +30,7 @@ Current scope:
 - transports, including GTFS-backed schedules
 - Service-public / co-marquage import and display
 - Elementor widgets and Elementor query integrations used by those modules
+- EcoTroc candidate PHP connector (disabled by default; see `docs/ECOTROC_CONNECTOR.md`)
 
 ## Requirements
 
@@ -62,7 +69,7 @@ Feature modules:
 - `includes/features/transports/`
 - `includes/features/service-public/`
 
-All existing modules are active by default. Module classes, hooks, cron callbacks, REST routes and Elementor assets are loaded only when their module is active. Future commercial modules such as EcoTroc are inactive by default.
+Historical modules are active by default. Module classes, hooks, cron callbacks, REST routes and Elementor assets are loaded only when their module is active. The EcoTroc candidate connector remains inactive by default; no plugin release is qualified against its pinned draft contract.
 
 ## Start here
 

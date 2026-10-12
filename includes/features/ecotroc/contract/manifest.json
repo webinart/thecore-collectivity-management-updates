@@ -1,0 +1,91 @@
+{
+  "formatVersion": 1,
+  "kind": "ecoloop.wordpress-contract",
+  "status": "candidate",
+  "productionReady": false,
+  "contractVersion": "1.0.0-draft.5",
+  "source": {
+    "repository": "webinart/ecoloop",
+    "commit": "e37ae1920bfc1c0c6202bc844583c1b56a7a36ca",
+    "workingTreeDirty": false,
+    "inputs": [
+      {
+        "path": ".node-version",
+        "sha256": "73fb1b615e2043a933be1c0895cde4358036acc28d785692509b822aa53c761f"
+      },
+      {
+        "path": "api/compatibility/wordpress.yaml",
+        "sha256": "86d03e907169edb557c1135e490f01c7027c246e11ced9baa78f54f7835202d0"
+      },
+      {
+        "path": "api/openapi/openapi.yaml",
+        "sha256": "f533901f02ae7bb2fd6b7639e8e69bd80ace7331f2cab05c3963e39cc65d5839"
+      },
+      {
+        "path": "api/openapi/tests/command-security-unavailable.cases.json",
+        "sha256": "8c4b423a2eb0e5c0d1d09514b834a31f1a5e401969b05fbfa85346986a6c0ea4"
+      },
+      {
+        "path": "api/openapi/tests/exchange-acceptance-api.cases.json",
+        "sha256": "686ca227669d07481e63ccacd48e18b81b7d87a18340db653cfa27586963fdea"
+      },
+      {
+        "path": "contracts/protocols/sensitive-workflows/v1/schema.json",
+        "sha256": "7f8e6373fc5e7a16603e53c16013ec3f5ab0c27ce56633eb0d23b5d45666d93d"
+      },
+      {
+        "path": "package.json",
+        "sha256": "4df7efd4817ed3e621cab7b78ef131a379aedf7e95197cd6ab3cae9f4539f7c7"
+      },
+      {
+        "path": "pnpm-lock.yaml",
+        "sha256": "8a75c3700974ee99c1428b7396be383ddcd4977aa613e6da390fd8a22d3e5ab2"
+      },
+      {
+        "path": "redocly.yaml",
+        "sha256": "6ef0143482732583925d36152342af7f976a5c48664d77f65c0f59a836bbf8e3"
+      },
+      {
+        "path": "tools/ci/contract-artifacts.mjs",
+        "sha256": "7adf88c80470ff2111868fc6f681fbbc7614309df78cb712f365bb28621be57e"
+      },
+      {
+        "path": "tools/ci/oasdiff.lock.json",
+        "sha256": "18e7fe5b7b2e79b677549c7d626e7b33b34c183925eaf4cf3d8c58c8bf7cf632"
+      },
+      {
+        "path": "tools/ci/oasdiff.mjs",
+        "sha256": "75f245e044ac88a380a0317152391c884ee235e1a72dddf38e209ecfd773e852"
+      },
+      {
+        "path": "tools/ci/toolchain.mjs",
+        "sha256": "98e9f1b5d4d140a63ee04ffe077581a660926ba81b7f727d57d1f8d76b9083fe"
+      },
+      {
+        "path": "tools/ci/transport-formats.mjs",
+        "sha256": "9bf1c0470fd6ffe2c1f10673eebc2f00657b6b9f92b4db572c0ed904947f61f0"
+      },
+      {
+        "path": "tools/ci/wordpress-contract.mjs",
+        "sha256": "65283f29fcee7dd5780ff5c55c2ad01d123b61af4454ef10363abb488a71cc1b"
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "fixtures.json",
+      "bytes": 33275,
+      "sha256": "6233c0a53de0144a3980463d54622527df297979e23a4d856aca537c0fe7fc3f"
+    },
+    {
+      "path": "openapi.json",
+      "bytes": 355402,
+      "sha256": "8fee8a6017bde59058820cd8b975f752da1fe0ca4e48f2b0606dfa75cff58bc7"
+    },
+    {
+      "path": "wordpress.json",
+      "bytes": 395,
+      "sha256": "19f1f5c6547c54cb7c8e5b07210e8c13ed3b052f31664798954dc82b1cca6c2a"
+    }
+  ]
+}

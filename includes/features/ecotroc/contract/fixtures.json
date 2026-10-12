@@ -1,0 +1,991 @@
+{
+  "formatVersion": 1,
+  "cases": [
+    {
+      "id": "acceptance/admission",
+      "schema": "#/components/schemas/ExchangeAcceptanceAdmission",
+      "valid": true,
+      "value": {
+        "attemptId": "eat_flow",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "href": "/v1/exchange-acceptance-attempts/eat_flow"
+      }
+    },
+    {
+      "id": "acceptance/admission/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAdmission",
+      "valid": false,
+      "value": {
+        "attemptId": "eat_flow",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "href": "/v1/exchange-acceptance-attempts/eat_flow",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/cancellation",
+      "schema": "#/components/schemas/ExchangeAcceptanceCancellationReceipt",
+      "valid": true,
+      "value": {
+        "attemptId": "eat_flow",
+        "requestedAt": "2026-10-02T12:00:10Z",
+        "href": "/v1/exchange-acceptance-attempts/eat_flow"
+      }
+    },
+    {
+      "id": "acceptance/cancellation/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceCancellationReceipt",
+      "valid": false,
+      "value": {
+        "attemptId": "eat_flow",
+        "requestedAt": "2026-10-02T12:00:10Z",
+        "href": "/v1/exchange-acceptance-attempts/eat_flow",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/confirming",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 1,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "confirming",
+        "resolution": "pending",
+        "cancellationRequested": false
+      }
+    },
+    {
+      "id": "acceptance/view/confirming/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 1,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "confirming",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/cancellation_requested",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 2,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "confirming",
+        "resolution": "pending",
+        "cancellationRequested": true
+      }
+    },
+    {
+      "id": "acceptance/view/cancellation_requested/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 2,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "confirming",
+        "resolution": "pending",
+        "cancellationRequested": true,
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_after_request",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "pending",
+        "cancellationRequested": true,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_after_request/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "pending",
+        "cancellationRequested": true,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:02:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/accepted_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "accepted",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "exchangeId": "exc_flow",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:02:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/citizen_cancellation_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": true,
+        "stopReason": "citizen_cancellation",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/citizen_cancellation_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": true,
+        "stopReason": "citizen_cancellation",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/citizen_cancellation_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": true,
+        "stopReason": "citizen_cancellation",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/citizen_cancellation_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": true,
+        "stopReason": "citizen_cancellation",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/confirmation_budget_exhausted_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "confirmation_budget_exhausted",
+        "decidedAt": "2026-10-02T12:01:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/confirmation_budget_exhausted_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "confirmation_budget_exhausted",
+        "decidedAt": "2026-10-02T12:01:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/confirmation_budget_exhausted_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "confirmation_budget_exhausted",
+        "decidedAt": "2026-10-02T12:01:00Z",
+        "resolvedAt": "2026-10-02T12:03:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/confirmation_budget_exhausted_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "confirmation_budget_exhausted",
+        "decidedAt": "2026-10-02T12:01:00Z",
+        "resolvedAt": "2026-10-02T12:03:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/resource_conflict_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "resource_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/resource_conflict_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "resource_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/resource_conflict_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "resource_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/resource_conflict_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "resource_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/funding_refused_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "funding_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/funding_refused_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "funding_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/funding_refused_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "funding_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/funding_refused_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "funding_unavailable",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/conditions_changed_pending",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "conditions_changed",
+        "decidedAt": "2026-10-02T12:00:20Z"
+      }
+    },
+    {
+      "id": "acceptance/view/conditions_changed_pending/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 3,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopping",
+        "resolution": "pending",
+        "cancellationRequested": false,
+        "stopReason": "conditions_changed",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "acceptance/view/conditions_changed_complete",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": true,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "conditions_changed",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z"
+      }
+    },
+    {
+      "id": "acceptance/view/conditions_changed_complete/unknown-field",
+      "schema": "#/components/schemas/ExchangeAcceptanceAttempt",
+      "valid": false,
+      "value": {
+        "id": "eat_flow",
+        "tenantId": "ten_a",
+        "proposalId": "exp_flow-child",
+        "rootProposalId": "exp_flow-root",
+        "proposalVersion": 3,
+        "version": 4,
+        "admittedAt": "2026-10-02T12:00:00Z",
+        "confirmationDeadline": "2026-10-02T12:01:00Z",
+        "status": "stopped",
+        "resolution": "complete",
+        "cancellationRequested": false,
+        "stopReason": "conditions_changed",
+        "decidedAt": "2026-10-02T12:00:20Z",
+        "resolvedAt": "2026-10-02T12:03:00Z",
+        "unexpected": true
+      }
+    },
+    {
+      "id": "security/qualified-public",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": true,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/generic-unavailable",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": true,
+      "value": {
+        "code": "SERVICE_UNAVAILABLE",
+        "message": "Resultat non confirme.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+      }
+    },
+    {
+      "id": "security/ordinary-policy-error",
+      "schema": "#/components/schemas/Error",
+      "valid": true,
+      "value": {
+        "code": "POLICY_DENIED",
+        "message": "Action interdite.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+      }
+    },
+    {
+      "id": "security/reserved-code-not-generic",
+      "schema": "#/components/schemas/Error",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/missing-details",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736"
+      }
+    },
+    {
+      "id": "security/empty-details",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": []
+      }
+    },
+    {
+      "id": "security/duplicate-details",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          },
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/object-instead-of-array",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": {
+          "executionOutcome": "not_accepted",
+          "recoveryAction": "user_resubmit"
+        }
+      }
+    },
+    {
+      "id": "security/missing-outcome",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/unknown-outcome",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "unknown",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/accepted-outcome",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/automatic-retry",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "automatic_retry"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/missing-recovery",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/extra-detail-field",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit",
+            "accountId": "usr_private"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/extra-envelope-field",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ],
+        "retryable": true
+      }
+    },
+    {
+      "id": "security/missing-trace",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/wrong-message-type",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "COMMAND_REJECTED_SECURITY_UNAVAILABLE",
+        "message": {},
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/unknown-code-in-503",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/content/application~1json/schema",
+      "valid": false,
+      "value": {
+        "code": "SOME_OTHER_ERROR",
+        "message": "La commande n'a pas ete acceptee. Reessayez ulterieurement.",
+        "traceId": "4bf92f3577b34da6a3ce929d0e0e4736",
+        "details": [
+          {
+            "executionOutcome": "not_accepted",
+            "recoveryAction": "user_resubmit"
+          }
+        ]
+      }
+    },
+    {
+      "id": "security/required-cache-policy",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/headers/Cache-Control/schema",
+      "valid": true,
+      "value": "no-store"
+    },
+    {
+      "id": "security/public-cache-forbidden",
+      "schema": "#/components/responses/CommandSecurityUnavailableResponse/headers/Cache-Control/schema",
+      "valid": false,
+      "value": "public, max-age=60"
+    }
+  ],
+  "traces": [
+    {
+      "name": "accepted_after_lost_admission_response",
+      "views": [
+        "acceptance/view/confirming",
+        "acceptance/view/accepted_pending",
+        "acceptance/view/accepted_complete"
+      ],
+      "replayedAdmission": "acceptance/admission"
+    },
+    {
+      "name": "cancel_then_stop",
+      "views": [
+        "acceptance/view/confirming",
+        "acceptance/view/cancellation_requested",
+        "acceptance/view/citizen_cancellation_pending",
+        "acceptance/view/citizen_cancellation_complete"
+      ],
+      "replayedAdmission": "acceptance/admission",
+      "replayedCancellation": "acceptance/cancellation"
+    },
+    {
+      "name": "acceptance_wins_after_cancellation_request",
+      "views": [
+        "acceptance/view/confirming",
+        "acceptance/view/cancellation_requested",
+        "acceptance/view/accepted_after_request"
+      ],
+      "replayedAdmission": "acceptance/admission",
+      "replayedCancellation": "acceptance/cancellation"
+    },
+    {
+      "name": "timeout_resolution_exceeds_budget",
+      "views": [
+        "acceptance/view/confirming",
+        "acceptance/view/confirmation_budget_exhausted_pending",
+        "acceptance/view/confirmation_budget_exhausted_complete"
+      ],
+      "replayedAdmission": "acceptance/admission"
+    }
+  ]
+}
