@@ -78,13 +78,13 @@ final class TheCore_Collectivity_Documents_Frontend {
 
 		$meta_query   = $query->get( 'meta_query' );
 		$meta_query   = is_array( $meta_query ) ? $meta_query : array();
-		$meta_query[] = array(
+		$featured = array(
 			'key'     => TheCore_Collectivity_Documents_Meta::META_FEATURED,
 			'value'   => '1',
 			'compare' => '=',
 		);
 
-		$query->set( 'meta_query', $meta_query );
+		$query->set( 'meta_query', array( 'relation' => 'AND', $meta_query, $featured ) );
 	}
 
 	/**
@@ -179,7 +179,7 @@ final class TheCore_Collectivity_Documents_Frontend {
 			return (string) $atts['empty'];
 		}
 
-		if ( in_array( $field, array( 'url', 'download_url' ), true ) ) {
+		if ( in_array( $field, array( 'url', 'download_url', 'reader_url' ), true ) ) {
 			return esc_url( $value );
 		}
 
@@ -208,7 +208,8 @@ final class TheCore_Collectivity_Documents_Frontend {
 			return '';
 		}
 
-		$url = $this->repository->get_document_url( $post_id );
+		$data = $this->repository->get_public_document_data( $post_id );
+		$url = isset( $data['url'] ) ? $data['url'] : '';
 		if ( '' === $url ) {
 			return '';
 		}
@@ -290,12 +291,16 @@ final class TheCore_Collectivity_Documents_Frontend {
 	private function apply_base_query( $query ) {
 		$query->set( 'post_type', TheCore_Collectivity_Documents_Post_Type::POST_TYPE );
 		$query->set( 'post_status', 'publish' );
+		$query->set( 'has_password', false );
 		$query->set( 'ignore_sticky_posts', true );
-		$query->set( 'meta_key', TheCore_Collectivity_Documents_Meta::META_SORT_ORDER );
+		$meta_query = $query->get( 'meta_query' );
+		$sort_query = TheCore_Collectivity_Documents_Repository::get_sort_meta_query();
+		$query->set( 'meta_key', '' );
+		$query->set( 'meta_query', empty( $meta_query ) ? $sort_query : array( 'relation' => 'AND', $sort_query, $meta_query ) );
 		$query->set(
 			'orderby',
 			array(
-				'meta_value_num' => 'ASC',
+				'tccm_document_order' => 'ASC',
 				'title'          => 'ASC',
 			)
 		);
@@ -316,13 +321,13 @@ final class TheCore_Collectivity_Documents_Frontend {
 	private function apply_theme_filter( $query, $theme_slug ) {
 		$tax_query   = $query->get( 'tax_query' );
 		$tax_query   = is_array( $tax_query ) ? $tax_query : array();
-		$tax_query[] = array(
+		$theme_filter = array(
 			'taxonomy' => TheCore_Collectivity_Documents_Post_Type::TAXONOMY_THEME,
 			'field'    => 'slug',
 			'terms'    => array( sanitize_title( $theme_slug ) ),
 		);
 
-		$query->set( 'tax_query', $tax_query );
+		$query->set( 'tax_query', empty( $tax_query ) ? array( $theme_filter ) : array( 'relation' => 'AND', $tax_query, $theme_filter ) );
 	}
 
 	/**
@@ -335,6 +340,10 @@ final class TheCore_Collectivity_Documents_Frontend {
 	 * @return string
 	 */
 	private function get_meta_value( $post_id, $field, $separator, $date_format ) {
+		$data = $this->repository->get_public_document_data( $post_id );
+		if ( empty( $data ) ) {
+			return '';
+		}
 		switch ( $field ) {
 			case 'summary':
 				return (string) get_post_meta( $post_id, TheCore_Collectivity_Documents_Meta::META_SUMMARY, true );
@@ -351,6 +360,15 @@ final class TheCore_Collectivity_Documents_Frontend {
 
 			case 'type':
 				return $this->get_joined_term_names( $post_id, TheCore_Collectivity_Documents_Post_Type::TAXONOMY_TYPE, $separator );
+
+			case 'collection':
+				return $this->get_joined_term_names( $post_id, TheCore_Collectivity_Documents_Post_Type::TAXONOMY_COLLECTION, $separator );
+
+			case 'reader_url':
+				return $data['reader_url'];
+
+			case 'reader_label':
+				return $data['reader_label'];
 
 			case 'effective_date':
 				return $this->format_date( (string) get_post_meta( $post_id, TheCore_Collectivity_Documents_Meta::META_EFFECTIVE_DATE, true ), $date_format );

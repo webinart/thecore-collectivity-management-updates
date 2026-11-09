@@ -20,6 +20,10 @@ final class TheCore_Collectivity_Documents_Meta {
 	const META_SUMMARY               = '_tccm_doc_summary';
 	const META_ATTACHMENT_ID         = '_tccm_doc_attachment_id';
 	const META_EXTERNAL_URL          = '_tccm_doc_external_url';
+	const META_DOWNLOAD_LABEL        = '_tccm_doc_download_label';
+	const META_READER_URL            = '_tccm_doc_reader_url';
+	const META_READER_LABEL          = '_tccm_doc_reader_label';
+	const META_PAGE_COUNT            = '_tccm_doc_page_count';
 	const META_REFERENCE             = '_tccm_doc_reference';
 	const META_VERSION_LABEL         = '_tccm_doc_version_label';
 	const META_EFFECTIVE_DATE        = '_tccm_doc_effective_date';
@@ -36,11 +40,103 @@ final class TheCore_Collectivity_Documents_Meta {
 	private static $media_script_rendered = false;
 
 	/**
+	 * Prevent document save hooks from re-entering the native order update.
+	 *
+	 * @var bool
+	 */
+	private $syncing_sort_order = false;
+
+	/**
 	 * Register hooks.
 	 */
 	public function register_hooks() {
+		add_action( 'init', array( $this, 'register_meta' ), 20 );
 		add_action( 'add_meta_boxes', array( $this, 'register_metabox' ) );
 		add_action( 'save_post_' . TheCore_Collectivity_Documents_Post_Type::POST_TYPE, array( $this, 'save_metabox' ), 10, 2 );
+		add_action( 'added_post_meta', array( $this, 'sync_native_sort_order' ), 10, 4 );
+		add_action( 'updated_post_meta', array( $this, 'sync_native_sort_order' ), 10, 4 );
+	}
+
+	/**
+	 * Register the document fields without publishing protected download URLs in REST.
+	 */
+	public function register_meta() {
+		$fields = array(
+			self::META_SUMMARY        => array( 'string', 'sanitize_summary_input', '' ),
+			self::META_ATTACHMENT_ID  => array( 'integer', 'sanitize_attachment_input', 0 ),
+			self::META_EXTERNAL_URL   => array( 'string', 'sanitize_url_input', '' ),
+			self::META_DOWNLOAD_LABEL => array( 'string', 'sanitize_text_input', '' ),
+			self::META_READER_URL     => array( 'string', 'sanitize_url_input', '' ),
+			self::META_READER_LABEL   => array( 'string', 'sanitize_text_input', '' ),
+			self::META_PAGE_COUNT     => array( 'integer', 'sanitize_order_input', 0 ),
+			self::META_REFERENCE      => array( 'string', 'sanitize_text_input', '' ),
+			self::META_VERSION_LABEL  => array( 'string', 'sanitize_text_input', '' ),
+			self::META_EFFECTIVE_DATE => array( 'string', 'sanitize_date_input', '' ),
+			self::META_UPDATED_AT     => array( 'string', 'sanitize_date_input', '' ),
+			self::META_SORT_ORDER     => array( 'integer', 'sanitize_order_input', 0 ),
+			self::META_FEATURED       => array( 'string', 'sanitize_featured_input', '0' ),
+		);
+
+		foreach ( $fields as $key => $definition ) {
+			register_post_meta(
+				TheCore_Collectivity_Documents_Post_Type::POST_TYPE,
+				$key,
+				array(
+					'type'              => $definition[0],
+					'single'            => true,
+					'default'           => $definition[2],
+					'sanitize_callback' => array( $this, $definition[1] ),
+					'auth_callback'     => array( $this, 'authorize_meta_update' ),
+					'show_in_rest'      => array(
+						'schema' => array( 'context' => array( 'edit' ) ),
+					),
+				)
+			);
+		}
+	}
+
+	/**
+	 * Restrict registered field writes to users allowed to edit this document.
+	 *
+	 * @param bool   $allowed Existing permission.
+	 * @param string $key     Meta key.
+	 * @param int    $post_id Document id.
+	 * @return bool
+	 */
+	public function authorize_meta_update( $allowed, $key, $post_id ) {
+		return TheCore_Collectivity_Documents_Post_Type::POST_TYPE === get_post_type( $post_id )
+			&& current_user_can( 'edit_post', $post_id );
+	}
+
+	/**
+	 * Keep the native WordPress order usable by Elementor's standard loop query.
+	 *
+	 * @param int    $meta_id Meta id.
+	 * @param int    $post_id Document id.
+	 * @param string $key     Meta key.
+	 * @param mixed  $value   Updated value.
+	 */
+	public function sync_native_sort_order( $meta_id, $post_id, $key, $value ) {
+		if ( self::META_SORT_ORDER !== $key || $this->syncing_sort_order ) {
+			return;
+		}
+
+		$post = get_post( $post_id );
+		if ( ! ( $post instanceof WP_Post ) || TheCore_Collectivity_Documents_Post_Type::POST_TYPE !== $post->post_type ) {
+			return;
+		}
+
+		$order = $this->sanitize_order_input( $value );
+		if ( $order === (int) $post->menu_order ) {
+			return;
+		}
+
+		$this->syncing_sort_order = true;
+		try {
+			wp_update_post( array( 'ID' => (int) $post_id, 'menu_order' => $order ) );
+		} finally {
+			$this->syncing_sort_order = false;
+		}
 	}
 
 	/**
@@ -69,6 +165,10 @@ final class TheCore_Collectivity_Documents_Meta {
 		$summary               = (string) get_post_meta( $post->ID, self::META_SUMMARY, true );
 		$attachment_id         = (int) get_post_meta( $post->ID, self::META_ATTACHMENT_ID, true );
 		$external_url          = (string) get_post_meta( $post->ID, self::META_EXTERNAL_URL, true );
+		$download_label        = (string) get_post_meta( $post->ID, self::META_DOWNLOAD_LABEL, true );
+		$reader_url            = (string) get_post_meta( $post->ID, self::META_READER_URL, true );
+		$reader_label          = (string) get_post_meta( $post->ID, self::META_READER_LABEL, true );
+		$page_count            = (int) get_post_meta( $post->ID, self::META_PAGE_COUNT, true );
 		$reference             = (string) get_post_meta( $post->ID, self::META_REFERENCE, true );
 		$version_label         = (string) get_post_meta( $post->ID, self::META_VERSION_LABEL, true );
 		$effective_date        = (string) get_post_meta( $post->ID, self::META_EFFECTIVE_DATE, true );
@@ -108,6 +208,22 @@ final class TheCore_Collectivity_Documents_Meta {
 			<label for="tccm-doc-external-url"><?php esc_html_e( 'Ou URL externe', 'thecore-collectivity-management' ); ?></label><br />
 			<input type="url" id="tccm-doc-external-url" name="tccm_doc_external_url" class="widefat" value="<?php echo esc_attr( $external_url ); ?>" />
 		</p>
+		<p>
+			<label for="tccm-doc-download-label"><?php esc_html_e( 'Libelle du lien principal', 'thecore-collectivity-management' ); ?></label><br />
+			<input type="text" id="tccm-doc-download-label" name="tccm_doc_download_label" class="widefat" value="<?php echo esc_attr( $download_label ); ?>" />
+		</p>
+		<p>
+			<label for="tccm-doc-reader-url"><?php esc_html_e( 'URL de consultation secondaire', 'thecore-collectivity-management' ); ?></label><br />
+			<input type="url" id="tccm-doc-reader-url" name="tccm_doc_reader_url" class="widefat" value="<?php echo esc_attr( $reader_url ); ?>" />
+		</p>
+		<p>
+			<label for="tccm-doc-reader-label"><?php esc_html_e( 'Libelle du lien secondaire', 'thecore-collectivity-management' ); ?></label><br />
+			<input type="text" id="tccm-doc-reader-label" name="tccm_doc_reader_label" class="widefat" value="<?php echo esc_attr( $reader_label ); ?>" />
+		</p>
+		<p>
+			<label for="tccm-doc-page-count"><?php esc_html_e( 'Nombre de pages (facultatif)', 'thecore-collectivity-management' ); ?></label><br />
+			<input type="number" id="tccm-doc-page-count" name="tccm_doc_page_count" class="small-text" value="<?php echo esc_attr( $page_count > 0 ? $page_count : '' ); ?>" min="0" step="1" />
+		</p>
 		<hr />
 		<p>
 			<label for="tccm-doc-reference"><strong><?php esc_html_e( 'Reference', 'thecore-collectivity-management' ); ?></strong></label><br />
@@ -126,11 +242,13 @@ final class TheCore_Collectivity_Documents_Meta {
 			<input type="date" id="tccm-doc-updated-at" name="tccm_doc_updated_at" value="<?php echo esc_attr( $updated_at ); ?>" />
 		</p>
 		<p>
+			<input type="hidden" name="tccm_doc_featured" value="0" />
 			<label><input type="checkbox" name="tccm_doc_featured" value="1" <?php checked( '1', $featured ); ?> /> <?php esc_html_e( 'Mettre en avant', 'thecore-collectivity-management' ); ?></label>
 		</p>
 		<p>
-			<label for="tccm-doc-sort-order"><?php esc_html_e( 'Ordre d affichage', 'thecore-collectivity-management' ); ?></label><br />
+			<label for="tccm-doc-sort-order"><?php esc_html_e( 'Ordre d affichage global', 'thecore-collectivity-management' ); ?></label><br />
 			<input type="number" id="tccm-doc-sort-order" name="tccm_doc_sort_order" class="small-text" value="<?php echo esc_attr( $sort_order ); ?>" min="0" step="1" />
+			<span class="description"><?php esc_html_e( 'Cet ordre s applique dans toutes les collections.', 'thecore-collectivity-management' ); ?></span>
 		</p>
 		<hr />
 		<p>
@@ -152,11 +270,19 @@ final class TheCore_Collectivity_Documents_Meta {
 	 * @param WP_Post $post    Post object.
 	 */
 	public function save_metabox( $post_id, $post ) {
-		if ( ! isset( $_POST[ self::NONCE_NAME ] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ self::NONCE_NAME ] ) ), self::NONCE_ACTION ) ) {
+		if ( $this->syncing_sort_order ) {
 			return;
 		}
 
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+		if (
+			! isset( $_POST[ self::NONCE_NAME ] )
+			|| ! is_string( $_POST[ self::NONCE_NAME ] )
+			|| ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ self::NONCE_NAME ] ) ), self::NONCE_ACTION )
+		) {
+			return;
+		}
+
+		if ( ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) || wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
 			return;
 		}
 
@@ -164,27 +290,43 @@ final class TheCore_Collectivity_Documents_Meta {
 			return;
 		}
 
-		if ( TheCore_Collectivity_Documents_Post_Type::POST_TYPE !== $post->post_type ) {
+		if ( ! ( $post instanceof WP_Post ) || TheCore_Collectivity_Documents_Post_Type::POST_TYPE !== $post->post_type ) {
 			return;
 		}
 
-		$this->update_or_delete_meta( $post_id, self::META_SUMMARY, isset( $_POST['tccm_doc_summary'] ) ? sanitize_textarea_field( wp_unslash( $_POST['tccm_doc_summary'] ) ) : '' );
-		$this->update_or_delete_meta( $post_id, self::META_EXTERNAL_URL, isset( $_POST['tccm_doc_external_url'] ) ? esc_url_raw( wp_unslash( $_POST['tccm_doc_external_url'] ) ) : '' );
-		$this->update_or_delete_meta( $post_id, self::META_REFERENCE, isset( $_POST['tccm_doc_reference'] ) ? sanitize_text_field( wp_unslash( $_POST['tccm_doc_reference'] ) ) : '' );
-		$this->update_or_delete_meta( $post_id, self::META_VERSION_LABEL, isset( $_POST['tccm_doc_version_label'] ) ? sanitize_text_field( wp_unslash( $_POST['tccm_doc_version_label'] ) ) : '' );
-		$this->update_or_delete_meta( $post_id, self::META_EFFECTIVE_DATE, $this->sanitize_date_input( isset( $_POST['tccm_doc_effective_date'] ) ? wp_unslash( $_POST['tccm_doc_effective_date'] ) : '' ) );
-		$this->update_or_delete_meta( $post_id, self::META_UPDATED_AT, $this->sanitize_date_input( isset( $_POST['tccm_doc_updated_at'] ) ? wp_unslash( $_POST['tccm_doc_updated_at'] ) : '' ) );
-		update_post_meta( $post_id, self::META_SORT_ORDER, isset( $_POST['tccm_doc_sort_order'] ) ? intval( wp_unslash( $_POST['tccm_doc_sort_order'] ) ) : 0 );
-		update_post_meta( $post_id, self::META_FEATURED, isset( $_POST['tccm_doc_featured'] ) ? '1' : '0' );
+		$fields = array(
+			'tccm_doc_summary'        => array( self::META_SUMMARY, 'sanitize_summary_input' ),
+			'tccm_doc_external_url'   => array( self::META_EXTERNAL_URL, 'sanitize_url_input' ),
+			'tccm_doc_download_label' => array( self::META_DOWNLOAD_LABEL, 'sanitize_text_input' ),
+			'tccm_doc_reader_url'     => array( self::META_READER_URL, 'sanitize_url_input' ),
+			'tccm_doc_reader_label'   => array( self::META_READER_LABEL, 'sanitize_text_input' ),
+			'tccm_doc_page_count'     => array( self::META_PAGE_COUNT, 'sanitize_order_input' ),
+			'tccm_doc_reference'      => array( self::META_REFERENCE, 'sanitize_text_input' ),
+			'tccm_doc_version_label'  => array( self::META_VERSION_LABEL, 'sanitize_text_input' ),
+			'tccm_doc_effective_date' => array( self::META_EFFECTIVE_DATE, 'sanitize_date_input' ),
+			'tccm_doc_updated_at'     => array( self::META_UPDATED_AT, 'sanitize_date_input' ),
+			'tccm_doc_sort_order'     => array( self::META_SORT_ORDER, 'sanitize_order_input' ),
+			'tccm_doc_featured'       => array( self::META_FEATURED, 'sanitize_featured_input' ),
+		);
 
-		$attachment_id = isset( $_POST['tccm_doc_attachment_id'] ) ? intval( wp_unslash( $_POST['tccm_doc_attachment_id'] ) ) : 0;
-		if ( $attachment_id > 0 ) {
-			update_post_meta( $post_id, self::META_ATTACHMENT_ID, $attachment_id );
-		} else {
-			delete_post_meta( $post_id, self::META_ATTACHMENT_ID );
+		foreach ( $fields as $input => $definition ) {
+			if ( array_key_exists( $input, $_POST ) ) {
+				$value = $this->{$definition[1]}( wp_unslash( $_POST[ $input ] ) );
+				$this->update_or_delete_meta( $post_id, $definition[0], $value );
+			}
 		}
 
-		$related_procedures = isset( $_POST['tccm_doc_related_procedure_ids'] ) ? array_map( 'intval', (array) wp_unslash( $_POST['tccm_doc_related_procedure_ids'] ) ) : array();
+		if ( array_key_exists( 'tccm_doc_attachment_id', $_POST ) ) {
+			$attachment_id = $this->sanitize_attachment_input( wp_unslash( $_POST['tccm_doc_attachment_id'] ) );
+			if ( $attachment_id > 0 ) {
+				update_post_meta( $post_id, self::META_ATTACHMENT_ID, $attachment_id );
+			} else {
+				delete_post_meta( $post_id, self::META_ATTACHMENT_ID );
+			}
+		}
+
+		$related_procedures = isset( $_POST['tccm_doc_related_procedure_ids'] ) ? (array) wp_unslash( $_POST['tccm_doc_related_procedure_ids'] ) : array();
+		$related_procedures = array_map( 'intval', array_filter( $related_procedures, 'is_scalar' ) );
 		$related_procedures = array_values( array_filter( array_unique( $related_procedures ) ) );
 		if ( empty( $related_procedures ) ) {
 			delete_post_meta( $post_id, self::META_RELATED_PROCEDURE_IDS );
@@ -276,7 +418,7 @@ final class TheCore_Collectivity_Documents_Meta {
 	 *
 	 * @param int    $post_id  Post id.
 	 * @param string $meta_key Meta key.
-	 * @param string $value    Value.
+	 * @param string|int $value Value.
 	 */
 	private function update_or_delete_meta( $post_id, $meta_key, $value ) {
 		if ( '' === $value ) {
@@ -290,19 +432,101 @@ final class TheCore_Collectivity_Documents_Meta {
 	/**
 	 * Sanitize date input.
 	 *
-	 * @param string $value Raw value.
+	 * @param mixed $value Raw value.
 	 * @return string
 	 */
-	private function sanitize_date_input( $value ) {
-		$value = trim( sanitize_text_field( $value ) );
+	public function sanitize_date_input( $value ) {
+		$value = $this->sanitize_text_input( $value );
 		if ( '' === $value ) {
 			return '';
 		}
 
-		if ( ! preg_match( '/^\d{4}-\d{2}-\d{2}$/', $value ) ) {
+		if ( ! preg_match( '/^(\d{4})-(\d{2})-(\d{2})$/D', $value, $parts ) || ! checkdate( (int) $parts[2], (int) $parts[3], (int) $parts[1] ) ) {
 			return '';
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Sanitize a scalar text field.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_text_input( $value ) {
+		return is_scalar( $value ) ? trim( sanitize_text_field( (string) $value ) ) : '';
+	}
+
+	/**
+	 * Sanitize the multiline summary.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_summary_input( $value ) {
+		return is_scalar( $value ) ? trim( sanitize_textarea_field( (string) $value ) ) : '';
+	}
+
+	/**
+	 * Only store absolute public web links, never executable or local file URLs.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_url_input( $value ) {
+		if ( ! is_scalar( $value ) ) {
+			return '';
+		}
+
+		$value = trim( (string) $value );
+		$parts = wp_parse_url( $value );
+		if (
+			! is_array( $parts )
+			|| empty( $parts['host'] )
+			|| empty( $parts['scheme'] )
+			|| ! in_array( strtolower( $parts['scheme'] ), array( 'http', 'https' ), true )
+			|| isset( $parts['user'] )
+			|| isset( $parts['pass'] )
+		) {
+			return '';
+		}
+
+		return esc_url_raw( $value, array( 'http', 'https' ) );
+	}
+
+	/**
+	 * Accept only an actual attachment with a usable web URL.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return int
+	 */
+	public function sanitize_attachment_input( $value ) {
+		$id = is_scalar( $value ) ? max( 0, intval( $value ) ) : 0;
+		if ( $id <= 0 || 'attachment' !== get_post_type( $id ) || '' === $this->sanitize_url_input( wp_get_attachment_url( $id ) ) ) {
+			return 0;
+		}
+
+		return $id;
+	}
+
+	/**
+	 * Preserve a non-negative global display order.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return int
+	 */
+	public function sanitize_order_input( $value ) {
+		return is_scalar( $value ) ? max( 0, intval( $value ) ) : 0;
+	}
+
+	/**
+	 * Preserve the existing string representation of the featured flag.
+	 *
+	 * @param mixed $value Raw value.
+	 * @return string
+	 */
+	public function sanitize_featured_input( $value ) {
+		return in_array( $value, array( '1', 1, true ), true ) ? '1' : '0';
 	}
 }

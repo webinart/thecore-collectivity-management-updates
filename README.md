@@ -4,8 +4,16 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.37`
+Current version: `1.0.1-beta.38`
 Release channel: beta
+
+### Changes in 1.0.1-beta.38
+
+- Extend the existing document library with native WordPress collections, list filtering and optional featured images.
+- Add secondary consultation links, configurable labels and optional page counts without a site-specific data layer.
+- Expose allowlisted document fields to native Elementor V4 loops through standard dynamic tags; rendering remains handled by Elementor.
+- Preserve global order in `menu_order`, keep documents without an order in legacy queries, and validate metadata and public URLs.
+- See [Document collections](docs/DOCUMENT_COLLECTIONS.md) for setup, permissions, native loop configuration and tests.
 
 ### Changes in 1.0.1-beta.37
 

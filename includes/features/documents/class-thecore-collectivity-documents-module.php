@@ -11,6 +11,7 @@ require_once __DIR__ . '/class-thecore-collectivity-documents-post-type.php';
 require_once __DIR__ . '/class-thecore-collectivity-documents-meta.php';
 require_once __DIR__ . '/class-thecore-collectivity-documents-repository.php';
 require_once __DIR__ . '/class-thecore-collectivity-documents-frontend.php';
+require_once __DIR__ . '/class-thecore-collectivity-documents-elementor.php';
 
 final class TheCore_Collectivity_Documents_Module extends TheCore_Collectivity_Abstract_Module {
 	/**
@@ -67,6 +68,8 @@ final class TheCore_Collectivity_Documents_Module extends TheCore_Collectivity_A
 		$this->post_type->register_hooks();
 		$this->meta->register_hooks();
 		$this->frontend->register_hooks();
+		$elementor = new TheCore_Collectivity_Documents_Elementor();
+		$elementor->register_hooks();
 	}
 
 	/**
