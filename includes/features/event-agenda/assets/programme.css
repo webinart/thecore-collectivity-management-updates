@@ -1,0 +1,98 @@
+.tccm-event-programme {
+    width: 100%;
+    min-width: 0;
+    line-height: 1.5;
+}
+.tccm-event-programme .tccm-event-programme__heading {
+    margin: 0 0 20px;
+    font-family: inherit;
+    font-size: 1.65em;
+    line-height: 1.2;
+    font-weight: 600;
+    color: inherit;
+    text-wrap: balance;
+}
+.tccm-event-programme .tccm-event-programme__date {
+    margin: 0 0 8px;
+    font-family: inherit;
+    font-size: 1.15em;
+    font-weight: 600;
+    line-height: 1.4;
+    color: inherit;
+}
+.tccm-event-programme__day + .tccm-event-programme__day,
+.tccm-event-programme__information {
+    margin-top: 24px;
+}
+.tccm-event-programme .tccm-event-programme__items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.tccm-event-programme .tccm-event-programme__item {
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
+    gap: 24px;
+    margin: 0;
+    padding: 8px 0;
+    border-top: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+.tccm-event-programme__time {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    align-items: baseline;
+    gap: 0 6px;
+    font-variant-numeric: tabular-nums;
+}
+.tccm-event-programme .tccm-event-programme__item--untimed {
+    grid-template-columns: minmax(0, 1fr);
+}
+.tccm-event-programme__time:empty {
+    display: none;
+}
+.tccm-event-programme__time > time {
+    white-space: nowrap;
+    font-weight: 600;
+}
+.tccm-event-programme__duration {
+    flex-basis: 100%;
+    font-size: 0.875em;
+}
+.tccm-event-programme .tccm-event-programme__title {
+    margin: 0;
+    font-weight: 600;
+    font-size: inherit;
+    line-height: inherit;
+}
+.tccm-event-programme .tccm-event-programme__description,
+.tccm-event-programme .tccm-event-programme__location {
+    margin: 2px 0 0;
+    font-size: inherit;
+    line-height: inherit;
+}
+.tccm-event-programme__details {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.tccm-event-programme__information > * {
+    margin-block: 0 12px;
+}
+.tccm-event-programme__information > :last-child {
+    margin-bottom: 0;
+}
+.tccm-event-programme__information :is(ul, ol) {
+    padding-left: 1.3em;
+}
+.tccm-event-programme__information li + li {
+    margin-top: 2px;
+}
+@media (max-width: 600px) {
+    .tccm-event-programme .tccm-event-programme__item {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 2px;
+    }
+    .tccm-event-programme__duration {
+        flex-basis: auto;
+    }
+}

@@ -200,7 +200,7 @@ if ( getenv( 'TCCM_TEST_ELEMENTOR' ) ) {
 	do_action( 'elementor/widgets/register', $widgets_manager );
 
 	$expected_widget_count = 0;
-	$expected_widget_count += in_array( 'event-agenda', $effective_disabled, true ) ? 0 : 1;
+	$expected_widget_count += in_array( 'event-agenda', $effective_disabled, true ) ? 0 : 2;
 	$expected_widget_count += in_array( 'alerts', $effective_disabled, true ) ? 0 : 1;
 	$expected_widget_count += in_array( 'maps', $effective_disabled, true ) ? 0 : 6;
 	$expected_widget_count += in_array( 'procedures', $effective_disabled, true ) ? 0 : 1;

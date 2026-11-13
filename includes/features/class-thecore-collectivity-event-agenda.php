@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once __DIR__ . '/event-agenda/programme/class-thecore-collectivity-event-programme.php';
+
 final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstract_Module {
 	/**
 	 * Nonce action name.
@@ -83,6 +85,7 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 	 * Register hooks.
 	 */
 	public function register_hooks() {
+		TheCore_Collectivity_Event_Programme::register_hooks();
 		add_action( 'init', array( $this, 'register_taxonomies' ) );
 		add_action( 'admin_init', array( $this, 'maybe_seed_default_event_type_terms' ) );
 		add_action( 'add_meta_boxes', array( $this, 'register_metabox' ) );
@@ -106,6 +109,7 @@ final class TheCore_Collectivity_Event_Agenda extends TheCore_Collectivity_Abstr
 	public function register_elementor_widgets( $widgets_manager ) {
 		require_once THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/event-agenda/elementor/class-thecore-collectivity-event-date-widget.php';
 		$widgets_manager->register( new TheCore_Collectivity_Event_Date_Widget() );
+		TheCore_Collectivity_Event_Programme::register_widget( $widgets_manager );
 	}
 
 	/**

@@ -4,8 +4,16 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.38`
+Current version: `1.0.1-beta.39`
 Release channel: beta
+
+### Changes in 1.0.1-beta.39
+
+- Add optional event programmes to the existing agenda module: structured days and activities, optional times or durations, locations and shared information.
+- Include the WordPress editing interface, validation, persistence and accessible Atomic Elementor widget in Collectivity itself, without a new post type or site-specific MU-plugin.
+- Keep overlapping activities, chronological ordering and native draft/save permissions; programmes without content render nothing.
+- Use compact activity spacing on desktop and mobile while keeping days visually distinct.
+- See [Event programmes](docs/EVENT_PROGRAMMES.md) for storage, widget setup, security and tests.
 
 ### Changes in 1.0.1-beta.38
 
