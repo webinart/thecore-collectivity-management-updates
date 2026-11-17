@@ -12,6 +12,8 @@ final class TheCore_Collectivity_School_Menus_Downloads {
 		add_action( 'admin_post_nopriv_tccm_school_menu_calendar', array( __CLASS__, 'download' ) );
 		add_action( 'admin_post_tccm_school_menu_print', array( __CLASS__, 'print_menu' ) );
 		add_action( 'admin_post_nopriv_tccm_school_menu_print', array( __CLASS__, 'print_menu' ) );
+		add_action( 'admin_post_tccm_school_menu_view', array( __CLASS__, 'view_menu' ) );
+		add_action( 'admin_post_nopriv_tccm_school_menu_view', array( __CLASS__, 'view_menu' ) );
 		add_action( 'admin_post_tccm_school_menu_pdf', array( __CLASS__, 'download_pdf' ) );
 		add_action( 'admin_post_nopriv_tccm_school_menu_pdf', array( __CLASS__, 'download_pdf' ) );
 		TheCore_Collectivity_School_Menus_PDF::register_hooks();
@@ -27,6 +29,35 @@ final class TheCore_Collectivity_School_Menus_Downloads {
 
 	public static function pdf_url( $post_id ) {
 		return add_query_arg( array( 'action' => 'tccm_school_menu_pdf', 'menu' => (int) $post_id ), admin_url( 'admin-post.php' ) );
+	}
+
+	public static function view_url( $post_id ) {
+		return add_query_arg( array( 'action' => 'tccm_school_menu_view', 'menu' => (int) $post_id ), admin_url( 'admin-post.php' ) );
+	}
+
+	public static function view_document( $post_id ) {
+		$published = self::published_week( $post_id );
+		return is_wp_error( $published ) ? $published : TheCore_Collectivity_School_Menus_Illustrated_Print::document( $published, true );
+	}
+
+	public static function view_menu() {
+		nocache_headers();
+		header( 'X-Robots-Tag: noindex, nofollow', true );
+		header( 'X-Content-Type-Options: nosniff', true );
+		header( 'X-Frame-Options: SAMEORIGIN', true );
+		if ( ! in_array( $_SERVER['REQUEST_METHOD'] ?? '', array( 'GET', 'HEAD' ), true ) ) {
+			header( 'Allow: GET, HEAD' );
+			wp_die( esc_html__( 'Utilisez le lien du menu.', 'thecore-collectivity-management' ), '', array( 'response' => 405 ) );
+		}
+		$document = self::view_document( $_GET['menu'] ?? null );
+		if ( is_wp_error( $document ) ) {
+			wp_die( esc_html( $document->get_error_message() ), '', array( 'response' => 404 ) );
+		}
+		header( 'Content-Type: text/html; charset=utf-8' );
+		if ( 'HEAD' !== $_SERVER['REQUEST_METHOD'] ) {
+			echo $document;
+		}
+		exit;
 	}
 
 	public static function pdf_file( $post_id, $generate = true ) {

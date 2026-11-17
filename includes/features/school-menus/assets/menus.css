@@ -1,5 +1,14 @@
 @font-face { font-family: "TCCM Menu Hand"; src: url("patrick-hand-latin.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
 @font-face { font-family: "TCCM Menu Brush"; src: url("caveat-brush-latin.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+.tccms-calendar [hidden] { display: none !important; }
+.tccms-calendar .tccms-archives { margin-top: 32px; border-top: 1px solid #d6e2de; color: #075b61; }
+.tccms-calendar .tccms-archives > summary { padding: 18px 0; font-size: 16px; font-weight: 600; cursor: pointer; }
+.tccms-calendar .tccms-archives > summary:focus-visible { outline: 2px solid #075b61; outline-offset: 4px; }
+.tccms-calendar .tccms-archives > .tccm-school-menus { margin-top: 16px; }
+.tccms-illustrated-stage { position: relative; width: 100%; overflow: hidden; }
+.tccms-illustrated-frame { position: absolute; top: 0; left: 0; border: 0; max-width: none; transform-origin: top left; visibility: hidden; }
+.tccms-illustrated-stage.is-ready > .tccms-illustrated-frame { visibility: visible; }
+.tccm-school-menus [data-illustrated-url] > .tccms-week-footer { flex-direction: row; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
 .tccm-school-menus { --menu-ink: #152e65; --menu-teal: #075b61; --menu-index-width: 22%; --menu-days-height: 107px; color: #223e43; }
 .tccm-school-menus *, .tccm-school-menus *::before, .tccm-school-menus *::after { box-sizing: border-box; }
 .tccm-school-menus [hidden] { display: none !important; }

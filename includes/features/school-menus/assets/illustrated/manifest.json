@@ -3,8 +3,8 @@
   "source": "proposition-menu-automne",
   "includesMenuSnapshots": false,
   "files": {
-    "proposition-menu-automne/canvas.html": "6276ab52c62f9e4ed8de591fb0aaf9612b7c417a2f48383668541cac80f33b1c",
-    "proposition-menu-automne/canvas.js": "001005fa9dc0b4c838247f6fa82d879a49f3805dbbaaae0df8f616b02c270a47",
+    "proposition-menu-automne/canvas.html": "377c0911a3cd6fd34d2dd11cb50889306f8ae847647b6e8272b34c637b221fa1",
+    "proposition-menu-automne/canvas.js": "e716f4e68ba5411e6699032e53a4d4cc84705d427dbede652ecbd9cdf72c6070",
     "proposition-menu-automne/paint-mask.js": "f1cec508c8e8bd81770df6d8f36bf8da5cef85b8b5dfac11dc0a90edb567d100",
     "proposition-menu-automne/leaf-occlusion.js": "05fae807245c3a1a1b19e5c0c6e2e4667028233494bd00d75a03735cc087270c",
     "proposition-menu-automne/menu-effects.css": "42c0aa3df69ffefe399794c512dfc8571461e0ff047aa34fb18fe4a5e2c6a3f4",

@@ -16,7 +16,18 @@ final class TheCore_Collectivity_School_Menus_Admin {
 		add_action( 'edited_' . TheCore_Collectivity_School_Menus_Data::TAXONOMY, array( __CLASS__, 'save_marker' ) );
 		add_filter( 'postbox_classes_' . TheCore_Collectivity_School_Menus_Data::POST_TYPE . '_tccm-school-menu', static function ( $classes ) { return array_values( array_diff( $classes, array( 'closed' ) ) ); } );
 		add_filter( 'manage_' . TheCore_Collectivity_School_Menus_Data::POST_TYPE . '_posts_columns', static function ( $columns ) { unset( $columns['taxonomy-tccm_food_marker'] ); $columns['school_week'] = __( 'Semaine', 'thecore-collectivity-management' ); return $columns; } );
-		add_action( 'manage_' . TheCore_Collectivity_School_Menus_Data::POST_TYPE . '_posts_custom_column', static function ( $column, $post_id ) { if ( 'school_week' === $column ) { echo esc_html( get_post_meta( $post_id, TheCore_Collectivity_School_Menus_Data::START, true ) ); } }, 10, 2 );
+		add_action( 'manage_' . TheCore_Collectivity_School_Menus_Data::POST_TYPE . '_posts_custom_column', array( __CLASS__, 'week_column' ), 10, 2 );
+	}
+
+	public static function week_column( $column, $post_id ) {
+		if ( 'school_week' !== $column ) {
+			return;
+		}
+		echo esc_html( get_post_meta( $post_id, TheCore_Collectivity_School_Menus_Data::START, true ) );
+		$week = TheCore_Collectivity_School_Menus_Data::get( $post_id );
+		if ( 'publish' === get_post_status( $post_id ) && $week && TheCore_Collectivity_School_Menus_Data::is_past( $week ) ) {
+			echo '<br><span class="description">' . esc_html__( 'Semaine terminée', 'thecore-collectivity-management' ) . '</span>';
+		}
 	}
 
 	public static function box( $post ) {

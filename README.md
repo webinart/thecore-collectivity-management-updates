@@ -4,8 +4,16 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.40`
+Current version: `1.0.1-beta.41`
 Release channel: beta
+
+### Changes in 1.0.1-beta.41
+
+- Separate current/upcoming school menus from a collapsed previous-weeks section, using the site's timezone and a Monday rollover without changing publication statuses.
+- Reclassify cached front-end markup in the browser and show an honest empty state when no upcoming menu is published.
+- Add an opt-in illustrated Autumn display to the Atomic widget and shortcode, reusing the approved composition with accessible HTML fallback and same-origin, published-only views.
+- Show a computed finished-week label in the native menu list; keep explicit archived-week links, PDF and calendar exports available.
+- Add regression checks for week boundaries, public visibility and illustrated views. Site-specific page assignments, cache integration and role policies remain outside this shared plugin.
 
 ### Changes in 1.0.1-beta.40
 

@@ -34,6 +34,12 @@ final class TheCore_Collectivity_School_Menus_Data {
 		return $value;
 	}
 
+	public static function is_past( array $week, $today = null ) {
+		$date = self::date( null === $today ? current_time( 'Y-m-d' ) : $today );
+		$start = self::date( $week['start'] ?? null );
+		return $date && $start && $start < $date->modify( 'monday this week' );
+	}
+
 	public static function error( $message ) {
 		return new WP_Error( 'tccm_school_menu_invalid', $message );
 	}

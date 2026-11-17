@@ -63,6 +63,7 @@ final class TheCore_Collectivity_School_Menus_Module extends TheCore_Collectivit
 		$base = 'includes/features/school-menus/assets/';
 		wp_register_style( 'tccm-school-menus', THECORE_COLLECTIVITY_MANAGEMENT_URL . $base . 'menus.css', array(), TheCore_Collectivity_Elementor::get_asset_version( $base . 'menus.css' ) );
 		wp_register_script( 'tccm-school-menus', THECORE_COLLECTIVITY_MANAGEMENT_URL . $base . 'menus.js', array(), TheCore_Collectivity_Elementor::get_asset_version( $base . 'menus.js' ), true );
+		wp_register_script( 'tccm-school-menus-illustrated', THECORE_COLLECTIVITY_MANAGEMENT_URL . $base . 'illustrated.js', array( 'tccm-school-menus' ), TheCore_Collectivity_Elementor::get_asset_version( $base . 'illustrated.js' ), true );
 		$post = get_queried_object();
 		if ( $post instanceof WP_Post && has_shortcode( $post->post_content, 'thecore_school_menus' ) ) {
 			wp_enqueue_style( 'tccm-school-menus' );

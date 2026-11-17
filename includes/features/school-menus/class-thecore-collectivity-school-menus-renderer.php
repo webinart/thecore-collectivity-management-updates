@@ -121,7 +121,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 		return $entries ? '<aside class="tccms-origin-rail" aria-label="' . esc_attr__( 'Repères d’origine présents sur l’affiche', 'thecore-collectivity-management' ) . '"><ul>' . implode( '', $entries ) . '</ul><img class="tccms-edge-leaves" src="' . esc_url( $asset_url . 'autumn-leaves.png' ) . '" alt="" width="1024" height="1536" loading="lazy" aria-hidden="true"></aside>' : '';
 	}
 
-	public static function render( $post_id = 0, $limit = 8 ) {
+	public static function render( $post_id = 0, $limit = 8, $illustrated = false ) {
 		$args = array( 'post_type' => TheCore_Collectivity_School_Menus_Data::POST_TYPE, 'post_status' => 'publish', 'has_password' => false, 'posts_per_page' => max( 1, min( 52, (int) $limit ) ), 'no_found_rows' => true, 'ignore_sticky_posts' => true, 'meta_key' => TheCore_Collectivity_School_Menus_Data::START, 'orderby' => array( 'meta_value' => 'DESC', 'ID' => 'DESC' ) );
 		if ( $post_id ) {
 			$args['p'] = absint( $post_id );
@@ -139,17 +139,29 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 		}
 		wp_enqueue_style( 'tccm-school-menus' );
 		wp_enqueue_script( 'tccm-school-menus' );
-		$prefix = wp_unique_id( 'tccm-menus-' );
-		$today = current_time( 'Y-m-d' );
-		$active = array_key_last( $weeks );
+		if ( $illustrated ) {
+			wp_enqueue_script( 'tccm-school-menus-illustrated' );
+		}
+		if ( $post_id ) {
+			return self::group( $weeks, $illustrated );
+		}
+		$current = array();
+		$previous = array();
 		foreach ( $weeks as $menu_id => $week ) {
-			if ( $today <= $week['days'][4]['date'] ) {
-				$active = $menu_id;
-				break;
+			if ( TheCore_Collectivity_School_Menus_Data::is_past( $week ) ) {
+				$previous[ $menu_id ] = $week;
+			} else {
+				$current[ $menu_id ] = $week;
 			}
 		}
+		return '<div class="tccms-calendar" data-menu-calendar data-timezone="' . esc_attr( wp_timezone_string() ) . '">' . self::group( $current, $illustrated, 'current' ) . '<details class="tccms-archives" data-menu-archives' . ( $previous ? '' : ' hidden' ) . '><summary>' . esc_html__( 'Menus précédents', 'thecore-collectivity-management' ) . '</summary>' . self::group( array_reverse( $previous, true ), $illustrated, 'archive' ) . '</details></div>';
+	}
+
+	private static function group( array $weeks, $illustrated, $kind = '' ) {
+		$prefix = wp_unique_id( 'tccm-menus-' );
+		$active = array_key_first( $weeks );
 		$asset_url = THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/school-menus/assets/';
-		$html = '<div class="tccm-school-menus" data-school-menus data-default-menu="' . esc_attr( $prefix . '-' . $active ) . '"><nav class="tccms-periods" aria-label="' . esc_attr__( 'Choisir la semaine des menus', 'thecore-collectivity-management' ) . '">';
+		$html = '<div class="tccm-school-menus" data-school-menus data-menu-group="' . esc_attr( $kind ) . '" data-default-menu="' . esc_attr( $active ? $prefix . '-' . $active : '' ) . '"><p class="tccm-school-menus-empty" data-menu-empty' . ( $weeks ? ' hidden' : '' ) . '>' . esc_html__( 'Les prochains menus seront publiés ici.', 'thecore-collectivity-management' ) . '</p><nav class="tccms-periods" aria-label="' . esc_attr__( 'Choisir la semaine des menus', 'thecore-collectivity-management' ) . '">';
 		foreach ( $weeks as $menu_id => $week ) {
 			$target = $prefix . '-' . $menu_id;
 			$period = self::period( $week, true );
@@ -174,7 +186,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 			$period = self::period( $week );
 			$title = sprintf( __( 'Semaine du %1$s au %2$s', 'thecore-collectivity-management' ), $period[0], $period[1] );
 			$rail = self::source_badges( $week['source_badges'] ?? array(), $prefix, $asset_url );
-			$html .= '<section class="tccms-week' . ( $rail ? ' tccms-week--with-rail' : '' ) . '" id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1"><div class="tccms-week-heading"><img class="tccms-season tccms-season--desktop" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><img class="tccms-season tccms-season--mobile" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><h2 id="' . esc_attr( $week_id . '-title' ) . '"><span class="tccms-week-leaf tccms-week-leaf--left" aria-hidden="true"></span>' . esc_html( $title ) . '<span class="tccms-week-leaf tccms-week-leaf--right" aria-hidden="true"></span></h2></div>';
+			$html .= '<section class="tccms-week' . ( $rail ? ' tccms-week--with-rail' : '' ) . '" data-menu-week data-week-start="' . esc_attr( $week['start'] ) . '"' . ( $illustrated ? ' data-illustrated-url="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::view_url( $menu_id ) ) . '"' : '' ) . ' id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1"><div class="tccms-week-heading"><img class="tccms-season tccms-season--desktop" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><img class="tccms-season tccms-season--mobile" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><h2 id="' . esc_attr( $week_id . '-title' ) . '"><span class="tccms-week-leaf tccms-week-leaf--left" aria-hidden="true"></span>' . esc_html( $title ) . '<span class="tccms-week-leaf tccms-week-leaf--right" aria-hidden="true"></span></h2></div>';
 			$html .= '<div class="tccms-table-view"><table class="tccms-table"><caption class="tccms-sr-only">' . esc_html( $title ) . '</caption><thead><tr><th scope="col" class="tccms-corner"><span class="tccms-sr-only">' . esc_html__( 'Repas', 'thecore-collectivity-management' ) . '</span></th>';
 			foreach ( $week['days'] as $index => $day ) {
 				$html .= '<th scope="col" id="' . esc_attr( $week_id . '-day-' . $index ) . '" class="tccms-day-head tccms-color-' . $index . '"><span class="tccms-day-name">' . esc_html( self::day_name( $day['date'] ) ) . '</span><time datetime="' . esc_attr( $day['date'] ) . '">' . esc_html( self::day_name( $day['date'], 'j F' ) ) . '</time>' . ( $day['vegetarian'] ? '<span class="tccms-vegetarian">' . self::icon( 'leaf' ) . '<span>' . esc_html__( 'Menu végétarien', 'thecore-collectivity-management' ) . '</span></span>' : '' ) . '</th>';

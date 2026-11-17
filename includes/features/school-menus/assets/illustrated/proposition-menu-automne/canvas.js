@@ -10,7 +10,7 @@
     let latest;
     let revision = 0;
     const send = value => { if (!standalone) parent.postMessage(value, location.origin); };
-    const widthFor = mode => mode === 'mobile' ? 390 : mode === 'print' ? 1123 : 1280;
+    const widthFor = mode => mode === 'mobile' ? embedded?.screen ? Math.max(280, innerWidth) : 390 : mode === 'print' ? 1123 : 1280;
     const box = node => {
         const bounds = node.getBoundingClientRect();
         const origin = paper.getBoundingClientRect();
@@ -91,6 +91,10 @@
         delete document.body.dataset.printReady;
         document.body.className = `mode-${update.mode}${update.mode === 'print' ? ' tccms-print-document' : ''}`;
         document.documentElement.style.width = `${widthFor(update.mode)}px`;
+        if (embedded?.screen) {
+            paper.style.width = `${widthFor(update.mode)}px`;
+            paper.style.minHeight = '0';
+        }
         if (changedWeek) {
             root.innerHTML = update.week.menuHtml;
             if (embedded) {
@@ -149,7 +153,7 @@
     ]).then(async ([model]) => {
         theme = window.SVJMenuTheme.parse(model);
         if (embedded) {
-            await render({ week: embedded.week, mode: 'print' });
+            await render({ week: embedded.week, mode: embedded.screen ? embedded.mobile ? 'mobile' : 'screen' : 'print' });
             if (embedded.autoPrint) window.print();
             return;
         }
@@ -164,4 +168,12 @@
         root.innerHTML = '<p class="loading-message" role="alert">Le menu ne peut pas être chargé. Rechargez la page pour réessayer.</p>';
         send({ type: 'SVJ_AUTUMN_ERROR' });
     });
+    if (embedded?.screen && embedded.mobile) {
+        let previousWidth = innerWidth;
+        window.addEventListener('resize', () => {
+            if (innerWidth === previousWidth || !latest) return;
+            previousWidth = innerWidth;
+            render(latest).catch(() => send({ type: 'SVJ_AUTUMN_ERROR' }));
+        });
+    }
 })();

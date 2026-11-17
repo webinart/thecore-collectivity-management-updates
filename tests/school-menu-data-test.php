@@ -29,6 +29,7 @@ $GLOBALS['wpdb'] = new School_Menu_Test_DB();
 function __( $value, $domain = '' ) { return $value; }
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
 function wp_timezone() { return new DateTimeZone( 'Europe/Paris' ); }
+function current_time( $format ) { return $GLOBALS['school_test_today'] ?? '2026-11-17'; }
 function wp_parse_url( $value, $component = -1 ) { return parse_url( $value, $component ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( preg_replace( '/\s+/u', ' ', $value ) ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
@@ -73,6 +74,12 @@ school_check( false === TheCore_Collectivity_School_Menus_Data::date( '2026-02-3
 school_check( false === TheCore_Collectivity_School_Menus_Data::date( '2026-11-16 10:00' ), 'Dates cannot contain a time.' );
 $week = TheCore_Collectivity_School_Menus_Data::empty_week( '2026-11-16' );
 school_check( '2026-11-20' === $week['days'][4]['date'], 'One week contains Monday through Friday.' );
+school_check( ! TheCore_Collectivity_School_Menus_Data::is_past( $week, '2026-11-22' ), 'The current week remains current through Sunday.' );
+school_check( TheCore_Collectivity_School_Menus_Data::is_past( $week, '2026-11-23' ), 'The previous week expires on the next Monday.' );
+school_check( ! TheCore_Collectivity_School_Menus_Data::is_past( $week, '2026-11-15' ), 'An upcoming week is not expired.' );
+school_check( ! TheCore_Collectivity_School_Menus_Data::is_past( array( 'start' => '2026-12-28' ), '2027-01-03' ) && TheCore_Collectivity_School_Menus_Data::is_past( array( 'start' => '2026-12-28' ), '2027-01-04' ), 'Rollover works across year boundaries.' );
+school_check( ! TheCore_Collectivity_School_Menus_Data::is_past( array( 'start' => '2026-10-19' ), '2026-10-25' ) && TheCore_Collectivity_School_Menus_Data::is_past( array( 'start' => '2026-10-19' ), '2026-10-26' ), 'Rollover follows local dates across daylight-saving changes.' );
+school_check( ! TheCore_Collectivity_School_Menus_Data::is_past( $week, 'not-a-date' ), 'Invalid comparison dates do not expire a menu.' );
 school_check( $week === TheCore_Collectivity_School_Menus_Data::normalize( $week ), 'A valid unspecified week round-trips.' );
 $week['days'][0]['status'] = 'menu';
 $week['days'][0]['courses']['main'] = array( array( 'parts' => array( array( 'text' => "Œuf à la sauce de l'école", 'markers' => array( 1 ) ), array( 'text' => 'Épinards', 'markers' => array( 2 ) ) ) ) );

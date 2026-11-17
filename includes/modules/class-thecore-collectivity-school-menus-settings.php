@@ -52,7 +52,7 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		if ( ! TheCore_Collectivity_Management::instance()->is_module_active( 'school-menus' ) ) {
 			return '';
 		}
-		$attributes = shortcode_atts( array( 'limit' => 8, 'menu' => 0 ), $attributes, 'thecore_school_menus' );
-		return TheCore_Collectivity_School_Menus_Renderer::render( absint( $attributes['menu'] ), max( 1, min( 52, (int) $attributes['limit'] ) ) );
+		$attributes = shortcode_atts( array( 'limit' => 8, 'menu' => 0, 'illustrated' => '0' ), $attributes, 'thecore_school_menus' );
+		return TheCore_Collectivity_School_Menus_Renderer::render( absint( $attributes['menu'] ), max( 1, min( 52, (int) $attributes['limit'] ) ), '1' === $attributes['illustrated'] );
 	}
 }
