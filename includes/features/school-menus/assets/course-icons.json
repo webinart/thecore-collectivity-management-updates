@@ -1,0 +1,10 @@
+{
+  "source": "https://www.saintvincentsurjard.fr/wp-content/uploads/sites/33/2026/11/Menus-semaines-47-48-1.png",
+  "image_width": 1448,
+  "image_height": 1086,
+  "crops": {
+    "starter": { "x": 47, "y": 180, "width": 78, "height": 70, "ink_channel": "blue" },
+    "main": { "x": 40, "y": 292, "width": 96, "height": 77, "ink_channel": "blue" },
+    "dessert": { "x": 48, "y": 407, "width": 79, "height": 82, "ink_channel": "green" }
+  }
+}

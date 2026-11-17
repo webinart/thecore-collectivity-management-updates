@@ -1,0 +1,63 @@
+@page { size: A4 landscape; margin: 0; }
+body.tccms-print-document { margin: 0; background: #edf2ef; color: #223e43; font: 14px/1.4 Arial, sans-serif; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.tccms-print-document .tccms-print-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 20px; padding: 16px; background: #fff; }
+.tccms-print-document .tccms-print-toolbar p { max-width: 70ch; margin: 0; font-size: 13px; }
+.tccms-print-document .tccms-print-toolbar button { padding: 10px 16px; border: 0; border-radius: 8px; background: #075b61; color: #fff; font: inherit; cursor: pointer; }
+.tccms-print-document .tccms-print-toolbar button:hover { background: #06484d; }
+.tccms-print-document .tccms-print-toolbar button:focus-visible { outline: 2px solid #075b61; outline-offset: 3px; }
+.tccms-print-document .tccms-print-toolbar button:disabled { opacity: .6; cursor: wait; }
+.tccms-print-document [hidden] { display: none !important; }
+.tccms-print-document .tccms-print-viewport { overflow-x: auto; padding: 20px 12px; }
+.tccms-print-document .tccms-print-sheet { position: relative; width: 277mm; margin: 0 auto; padding: 0; background: #fff; }
+.tccms-print-document .tccms-print-heading { display: flex; align-items: center; gap: 16px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid #d6e2de; break-inside: avoid; break-after: avoid; }
+.tccms-print-document .tccms-print-logo { flex: none; width: 60px; height: 60px; object-fit: contain; }
+.tccms-print-document .tccms-print-identity { max-width: 180px; color: #075b61; font-size: 14px; font-weight: 700; }
+.tccms-print-document .tccms-print-heading h1 { margin: 0; color: #075b61; font: 400 36px/1.1 "TCCM Menu Brush", cursive; }
+.tccms-print-document .tccm-school-menus { --menu-days-height: 82px; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.tccms-print-document .tccms-periods, .tccms-print-document .tccms-day-view, .tccms-print-document .tccms-season--mobile, .tccms-print-document .tccms-week-footer { display: none; }
+.tccms-print-document .tccms-table-view { display: block; }
+.tccms-print-document .tccms-week { margin: 0; }
+.tccms-print-document .tccms-week--with-rail { display: grid; grid-template-columns: minmax(0, 1fr) 58px; gap: 0 10px; }
+.tccms-print-document .tccms-week-heading { display: block; margin: 0 0 0 var(--menu-index-width); padding: 0 52px 4px; }
+.tccms-print-document .tccms-week-heading h2 { margin: 0; padding: 10px; font-size: 24px; }
+.tccms-print-document .tccms-season--desktop { display: block; position: absolute; top: 0; right: 100%; height: calc(100% + var(--menu-days-height)); }
+.tccms-print-document .tccms-week-leaf { width: 40px; height: 50px; }
+.tccms-print-document .tccms-week-leaf--left { left: -52px; }
+.tccms-print-document .tccms-week-leaf--right { right: -52px; }
+.tccms-print-document .tccms-day-head { padding: 12px 4px 29px; }
+.tccms-print-document .tccms-day-name { font-size: 22px; }
+.tccms-print-document .tccms-day-head time { font-size: 14px; }
+.tccms-print-document .tccms-vegetarian { font-size: 12px; }
+.tccms-print-document .tccms-day-head .tccms-vegetarian { bottom: 8px; }
+.tccms-print-document .tccms-cell { padding: 8px; background-image: url("paper-texture.webp"), url("paper-texture.webp"); }
+.tccms-print-document .tccms-course { padding: 8px 10px 8px 22px; font-size: 25px; }
+.tccms-print-document .tccms-course-label { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; width: min(100%, 140px); min-height: 42px; }
+.tccms-print-document .tccms-course-icon { width: 34px; height: 34px; }
+.tccms-print-document .tccms-dish-name { font-size: 19px; }
+.tccms-print-document .tccms-dishes > li + li { margin-top: 4px; padding-top: 4px; }
+.tccms-print-document .tccms-marker-group--interactive > .tccms-marker-name { display: none !important; }
+.tccms-print-document .tccms-marker { cursor: default; }
+.tccms-print-document .tccms-week-details { gap: 6px; margin-top: 8px; break-inside: avoid; }
+.tccms-print-document .tccms-legend { grid-template-columns: minmax(0, .85fr) minmax(0, 1.4fr); gap: 6px; }
+.tccms-print-document .tccms-legend h3 { font-size: 14px; }
+.tccms-print-document .tccms-legend-badge, .tccms-print-document .tccms-legend-badge svg { width: 22px; height: 22px; }
+.tccms-print-document .tccms-legend-family { padding: 8px; }
+.tccms-print-document .tccms-legend h4 { margin-bottom: 6px; font-size: 12px; }
+.tccms-print-document .tccms-legend ul { gap: 4px; }
+.tccms-print-document .tccms-legend .tccms-marker-group { gap: 4px; padding: 3px 5px; }
+.tccms-print-document .tccms-marker-name { font-size: 11px; }
+.tccms-print-document .tccms-week-notes { display: block; padding-top: 6px; }
+.tccms-print-document .tccms-notice { font-size: 11px; }
+.tccms-print-document .tccms-origin-rail { display: flex; flex-direction: column; flex-wrap: nowrap; align-items: center; justify-content: flex-start; gap: 8px; margin: 0; }
+.tccms-print-document .tccms-origin-rail ul { flex-direction: column; flex-wrap: nowrap; gap: 7px; }
+.tccms-print-document .tccms-origin-rail .tccms-marker { width: 58px; height: 58px; }
+.tccms-print-document .tccms-edge-leaves { display: block; width: 44px; height: 66px; }
+.tccms-print-document .tccms-table thead { display: table-header-group; }
+.tccms-print-document .tccms-table tr { break-inside: avoid; }
+@media print {
+    body.tccms-print-document { background: #fff; }
+    .tccms-print-document .tccm-school-menus .tccms-day-head.tccms-color-2::before { background: #ffe52b; }
+    .tccms-print-document .tccms-print-toolbar { display: none; }
+    .tccms-print-document .tccms-print-viewport { overflow: visible; padding: 10mm; }
+    .tccms-print-document .tccms-print-sheet { width: auto; margin: 0; }
+}

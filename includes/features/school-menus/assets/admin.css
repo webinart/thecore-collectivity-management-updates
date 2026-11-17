@@ -1,0 +1,21 @@
+.tccm-menu-editor { max-width: 1400px; }
+.tccm-menu-toolbar, .tccm-menu-courses { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.tccm-menu-toolbar { grid-template-columns: minmax(180px, 1fr) minmax(240px, 2fr); margin: 20px 0; }
+.tccm-menu-field { display: grid; gap: 6px; font-weight: 600; }
+.tccm-menu-field input, .tccm-menu-field textarea { width: 100%; font-weight: 400; }
+.tccm-menu-field textarea { min-height: 90px; }
+.tccm-menu-day { padding: 20px 0 28px; border-top: 1px solid #c3c4c7; }
+.tccm-menu-day h3 { margin: 0 0 14px; text-transform: capitalize; }
+.tccm-menu-day-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+.tccm-menu-course h4 { margin: 18px 0 12px; }
+.tccm-menu-item { padding: 12px; margin-bottom: 12px; border: 1px solid #c3c4c7; border-radius: 4px; background: #f6f7f7; }
+.tccm-menu-part + .tccm-menu-part { margin-top: 16px; padding-top: 12px; border-top: 1px solid #c3c4c7; }
+.tccm-menu-markers { margin: 8px 0; }
+.tccm-menu-markers summary { cursor: pointer; color: #135e96; line-height: 1.6; }
+.tccm-menu-markers fieldset { margin-top: 12px; }
+.tccm-menu-markers legend { font-weight: 600; }
+.tccm-menu-markers fieldset label { display: block; padding: 5px 0; }
+.tccm-menu-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tccm-menu-editor :is(button, input, summary, select, textarea):focus-visible { outline: 2px solid #2271b1; outline-offset: 2px; }
+@media (max-width: 1100px) { .tccm-menu-courses { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .tccm-menu-toolbar { grid-template-columns: 1fr; } .tccm-menu-day-controls { align-items: start; flex-direction: column; } }

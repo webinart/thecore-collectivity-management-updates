@@ -1,0 +1,67 @@
+{
+  "autumn-hedgehog.png": {
+    "origin": "Generated with built-in image_gen; original school poster used only as a style reference",
+    "prompt_file": "autumn-prompt.txt",
+    "alpha": "native transparency preserved",
+    "purpose": "Seasonal decoration; not ingredient information"
+  },
+  "paint-mask.png": {
+    "origin": "Generated with built-in image_gen",
+    "prompt_file": "brush-prompt.txt",
+    "alpha": "native transparency preserved",
+    "purpose": "Shared CSS alpha mask for paint backgrounds; no rasterized text"
+  },
+  "green-sprig.png": {
+    "origin": "Generated with built-in image_gen",
+    "prompt_file": "green-sprig-prompt.txt",
+    "alpha": "native transparency preserved",
+    "purpose": "Decorative leaves beside the week ribbon; no certification claims"
+  },
+  "autumn-leaves.png": {
+    "origin": "Generated with built-in image_gen for the illustrated school menu preview on 2026-11-13; restored unchanged",
+    "prompt_file": "autumn-leaves-prompt.txt",
+    "alpha": "native transparency preserved",
+    "purpose": "Decorative autumn leaves at the table edge; not ingredient information"
+  },
+  "paper-texture.webp": {
+    "origin": "Generated with built-in image_gen on 2026-11-14",
+    "prompt_file": "paper-texture-prompt.txt",
+    "source_png": "exec-08e33bb5-6b4b-46cd-b97a-644c7b475af5.png",
+    "conversion": "WebP encoding of the unmodified generated image; no crop, resize, retouch or drawn noise",
+    "purpose": "Subtle decorative paper background for text-based menu cells; no food or certification information"
+  },
+  "organic_ab_mark": {
+    "source": "https://www.saintvincentsurjard.fr/wp-content/uploads/sites/33/2026/11/Menus-semaines-47-48-1.png",
+    "crop": { "x": 1387, "y": 803, "width": 42, "height": 50 },
+    "method": "Existing SVG marker viewport with explicit clipping, source PNG unchanged",
+    "purpose": "Authentic AB mark for the existing Bio marker only, with all ingredient assignments preserved; vegetarian badge keeps its separate leaf"
+  },
+  "source_badges": {
+    "source": "https://www.saintvincentsurjard.fr/wp-content/uploads/sites/33/2026/11/Menus-semaines-47-48-1.png",
+    "method": "Existing marker logo viewports with explicit SVG clipPath on the unmodified source poster",
+    "purpose": "Authentic source-level national origin badges, distinct from ingredient assignments and the supplier legend"
+  },
+  "patrick-hand-latin.woff2": {
+    "source": "https://fonts.gstatic.com/s/patrickhand/v25/LDI1apSQOAYtSuYWp8ZhfYe8XsLL.woff2",
+    "family": "Patrick Hand",
+    "license_file": "PatrickHand-OFL.txt"
+  },
+  "caveat-brush-latin.woff2": {
+    "source": "https://fonts.gstatic.com/s/caveatbrush/v12/EYq0maZfwr9S9-ETZc3fKXt8XLOS.woff2",
+    "family": "Caveat Brush",
+    "license_file": "CaveatBrush-OFL.txt"
+  },
+  "icons": {
+    "source": "https://github.com/phosphor-icons/core/tree/main/assets/fill",
+    "files": ["markers/leaf-fill.svg", "markers/house-fill.svg", "markers/chef-hat-fill.svg", "markers/map-pin-fill.svg", "markers/grains-fill.svg", "markers/barn-fill.svg"],
+    "license_file": "Phosphor-LICENSE.txt",
+    "purpose": "Filled quality/preparation pictograms and representative grain/farm symbols. The latter are not official supplier logos; uploaded media logos take precedence."
+  },
+  "course_icons": {
+    "source": "https://www.saintvincentsurjard.fr/wp-content/uploads/sites/33/2026/11/Menus-semaines-47-48-1.png",
+    "files": ["course-icons.json"],
+    "method": "Native inline SVG source-image viewports, explicit clipping and white-ink alpha isolation, then currentColor; source PNG unchanged",
+    "purpose": "Exact original salad bowl, plate with fork/knife and cupcake artwork; not substitute Lucide icons",
+    "legacy_assets": "salad.svg, utensils.svg, cake-slice.svg and Lucide-LICENSE.txt retained for compatibility, no longer used for course labels"
+  }
+}

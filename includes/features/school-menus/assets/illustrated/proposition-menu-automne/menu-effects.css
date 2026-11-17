@@ -1,0 +1,61 @@
+html, body { background: #fffefd; }
+::selection { color: #fff; background: #286b26; }
+#paper { overflow: hidden; }
+#menu-root { padding-right: 72px; }
+#paper .tccms-week-heading { padding-inline: 62px; }
+#paper .tccms-week-heading h2 { margin-inline: 0; padding-inline: 32px; text-shadow: 0 2px 2px #165b1730; }
+#paper :is(.tccms-cell,.tccms-mobile-day) { background-image: linear-gradient(135deg, #ffffff85, #ffffff00 85%), url("../modeles-menus/assets/paper-texture.webp"); background-size: 100% 100%, 300px 300px; background-repeat: no-repeat, repeat; background-blend-mode: normal, multiply; }
+#paper :is(.tccms-day-head,.tccms-mobile-heading,.tccms-week-heading h2)::before { background-image: url("../modeles-menus/assets/paper-texture.webp"), var(--menu-gradient); background-size: 260px 260px, 100% 100%; background-blend-mode: multiply, normal; }
+#paper .tccms-week-heading h2::before { background-image: linear-gradient(180deg, #b9ec484d, #ffffff00 38%, #104f1026 76%, #96d5273d), url("../modeles-menus/assets/paper-texture.webp"), var(--menu-gradient); background-size: 100% 100%, 260px 260px, 100% 100%; background-blend-mode: normal, multiply, normal; }
+#paper :is(.tccms-course,.tccms-mobile-course dt)::before { background-image: url("../modeles-menus/assets/paper-texture.webp"), var(--course-background); background-size: 260px 260px, 100% 100%; background-blend-mode: multiply, normal; }
+#paper .tccms-mobile-course dt { position: relative; isolation: isolate; background: none; border-radius: 0; }
+#paper .tccms-mobile-course dt::before { content: ""; position: absolute; z-index: -1; inset: 0; pointer-events: none; }
+#paper :is(.tccms-week-heading h2,.tccms-day-head,.tccms-mobile-heading,.tccms-course,.tccms-mobile-course dt)::before { inset: -7px -2px; border-radius: 18px 23px 19px 24px; -webkit-mask-box-image: none; mask-image: var(--autumn-painted-mask, url("../modeles-menus/assets/paint-mask.png")); mask-mode: alpha; mask-size: 100% 100%; mask-repeat: no-repeat; }
+#paper .tccms-table-view { margin-bottom: 62px; }
+#paper .tccms-edge-leaves { display: none !important; }
+#paper .tccms-dish-name { line-height: 1.2; }
+#paper .tccms-marker-group--interactive { pointer-events: auto; }
+#paper .tccms-marker-group--interactive > .tccms-marker-name { position: absolute; z-index: 9; inset: auto auto calc(100% + 8px) 50%; width: max-content; max-width: min(220px, 80vw); transform: translateX(-50%); margin: 0; padding: 8px 10px; border: 1px solid #c5d9bc; border-radius: 8px; color: #25452d; background: #fffef6; box-shadow: 0 4px 12px #25452d18; font: 12px/1.35 "DM Sans", sans-serif; text-align: center; pointer-events: none; }
+#paper .tccms-marker-group.is-open > .tccms-marker-name { display: block !important; }
+#paper [data-menu-marker]:focus-visible { outline: 2px solid #286b26; outline-offset: 3px; }
+#autumn-art, #autumn-art * { position: absolute; pointer-events: none; user-select: none; }
+#autumn-art { inset: 0; z-index: 2; opacity: 0; }
+#paper[data-ready="true"] #autumn-art { opacity: 1; }
+#autumn-art img { object-fit: contain; }
+.autumn-sprig.is-left { transform: scaleX(-1) rotate(6deg); }
+.autumn-sprig.is-right { transform: rotate(6deg); }
+.autumn-leaf-trail, .autumn-leaf-ground { visibility: hidden; }
+.autumn-leaf-trail[data-composed="true"], .autumn-leaf-ground[data-composed="true"] { visibility: visible; }
+#paper .tccms-legend { --autumn-badge-size: 76px; grid-template-columns: minmax(0,.9fr) minmax(0,1.5fr) 168px; gap: 12px; align-items: stretch; }
+#paper .tccms-legend-family--preparation { grid-column: 1; grid-row: 2; }
+#paper .tccms-legend-family--origin { grid-column: 2; grid-row: 2; }
+#paper .tccms-legend > .tccms-origin-rail { display: block; grid-column: 3; grid-row: 2; align-self: center; min-width: 0; margin: 0; }
+#paper .tccms-legend .tccms-origin-rail ul { display: grid; grid-template-columns: repeat(2,var(--autumn-badge-size)); justify-content: center; align-items: center; gap: 8px 12px; margin: 0; }
+#paper .tccms-legend .tccms-origin-rail .tccms-marker-group { padding: 0; background: transparent; border-radius: 0; }
+#paper .tccms-legend .tccms-origin-rail .tccms-marker { width: var(--autumn-badge-size); height: var(--autumn-badge-size); filter: none; }
+body.mode-mobile #paper .tccms-week-heading { grid-template-columns: 88px minmax(0,1fr); gap: 10px; padding: 0; }
+body.mode-mobile #menu-root { padding-right: 24px; }
+body.mode-mobile #paper .tccms-week-heading h2 { min-width: 0; margin-inline: 14px; padding-inline: 12px; }
+body.mode-mobile #paper .tccms-season--mobile { visibility: visible !important; }
+body.mode-mobile #paper .tccms-week-leaf { visibility: hidden !important; }
+body.mode-mobile #paper .tccms-edge-leaves { display: none; }
+body.mode-mobile .autumn-mascot { display: none; }
+body.mode-mobile #paper .tccms-day-view { margin-bottom: 52px; }
+body.mode-mobile #paper .tccms-legend { --autumn-badge-size: 56px; grid-template-columns: minmax(0,1fr); }
+body.mode-mobile #paper .tccms-legend-family--origin { grid-column: 1; grid-row: 3; }
+body.mode-mobile #paper .tccms-legend > .tccms-origin-rail { grid-column: 1; grid-row: 4; justify-self: center; }
+body.mode-print #paper .tccms-legend { --autumn-badge-size: 58px; grid-template-columns: minmax(0,.9fr) minmax(0,1.5fr) 136px; }
+body.mode-print #menu-root { padding-right: 0; }
+body.mode-print #paper .tccms-week-heading { padding-inline: 52px; }
+body.mode-print #paper .tccms-table-view { margin-bottom: 16px; }
+body.mode-print #paper .canvas-heading { margin-bottom: 10px; padding-bottom: 8px; }
+body.mode-print #paper .canvas-heading .tccms-print-logo { width: 48px; height: 48px; }
+body.mode-print #paper .tccms-week-heading h2 { text-shadow: none; }
+body.mode-print #paper .tccms-week-heading h2[data-print-ribbon="true"]::before { background-color: transparent; background-image: var(--autumn-print-ribbon); background-size: 100% 100%; background-repeat: no-repeat; background-blend-mode: normal; mask-image: none; }
+@page { size: A4 landscape; margin: 0; }
+@media print {
+    html, body { width: 297mm; background: #fff; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    #paper { width: 297mm !important; min-height: 0; break-inside: avoid; }
+    .tccms-marker-name[role="tooltip"] { display: none !important; }
+}

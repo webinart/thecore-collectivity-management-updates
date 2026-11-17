@@ -4,8 +4,17 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.39`
+Current version: `1.0.1-beta.40`
 Release channel: beta
+
+### Changes in 1.0.1-beta.40
+
+- Version the existing optional school-menu module: one private weekly post, ingredient-level food markers, an editing interface, an accessible table, an Atomic widget and calendar exports.
+- Preserve the approved illustrated Autumn print composition and server-side PDF corrections, including continuous paint masks and foreground leaves; no change to existing menu data or site roles.
+- Include the reusable PDF client, private configuration checks, bounded cache and scheduled preparation. The external Playwright service and its secrets are not shipped.
+- Version the theme-authoring guide, v2 schema, five complete examples and their artwork. This does not add a WordPress theme designer or a per-week theme selector.
+- Add standalone regression and bundle-integrity checks for the module and its theme-authoring kit.
+- Start with [School menus](docs/SCHOOL_MENUS.md) and the [theme-authoring guide](docs/school-menus/THEME-GUIDE.md).
 
 ### Changes in 1.0.1-beta.39
 
@@ -43,6 +52,7 @@ Current scope:
 - site alerts
 - procedures
 - documents
+- school menus (disabled by default; see `docs/SCHOOL_MENUS.md`)
 - transports, including GTFS-backed schedules
 - Service-public / co-marquage import and display
 - Elementor widgets and Elementor query integrations used by those modules
@@ -82,10 +92,11 @@ Feature modules:
 - `includes/features/alerts/`
 - `includes/features/procedures/`
 - `includes/features/documents/`
+- `includes/features/school-menus/`
 - `includes/features/transports/`
 - `includes/features/service-public/`
 
-Historical modules are active by default. Module classes, hooks, cron callbacks, REST routes and Elementor assets are loaded only when their module is active. The EcoTroc candidate connector remains inactive by default; no plugin release is qualified against its pinned draft contract.
+Historical modules are active by default. Module classes, hooks, cron callbacks, REST routes and Elementor assets are loaded only when their module is active. School menus are inactive by default, with a settings entry available to administrators. The EcoTroc candidate connector remains inactive by default; no plugin release is qualified against its pinned draft contract.
 
 ## Start here
 
