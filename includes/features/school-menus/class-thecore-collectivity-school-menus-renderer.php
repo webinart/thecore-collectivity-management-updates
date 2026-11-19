@@ -162,6 +162,9 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 		$active = array_key_first( $weeks );
 		$asset_url = THECORE_COLLECTIVITY_MANAGEMENT_URL . 'includes/features/school-menus/assets/';
 		$html = '<div class="tccm-school-menus" data-school-menus data-menu-group="' . esc_attr( $kind ) . '" data-default-menu="' . esc_attr( $active ? $prefix . '-' . $active : '' ) . '"><p class="tccm-school-menus-empty" data-menu-empty' . ( $weeks ? ' hidden' : '' ) . '>' . esc_html__( 'Les prochains menus seront publiés ici.', 'thecore-collectivity-management' ) . '</p><nav class="tccms-periods" aria-label="' . esc_attr__( 'Choisir la semaine des menus', 'thecore-collectivity-management' ) . '">';
+		if ( $illustrated && $weeks ) {
+			$html .= wp_get_inline_script_tag( '(()=>{const root=document.currentScript.closest("[data-school-menus]");if(!root)return;root.dataset.illustratedLoading="true";root.tccmsLoadingTimer=setTimeout(()=>{root.removeAttribute("data-illustrated-loading");root.querySelectorAll(".tccms-illustrated-stage").forEach(stage=>{stage.style.height="";});},30000);})();' );
+		}
 		foreach ( $weeks as $menu_id => $week ) {
 			$target = $prefix . '-' . $menu_id;
 			$period = self::period( $week, true );
@@ -186,7 +189,11 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 			$period = self::period( $week );
 			$title = sprintf( __( 'Semaine du %1$s au %2$s', 'thecore-collectivity-management' ), $period[0], $period[1] );
 			$rail = self::source_badges( $week['source_badges'] ?? array(), $prefix, $asset_url );
-			$html .= '<section class="tccms-week' . ( $rail ? ' tccms-week--with-rail' : '' ) . '" data-menu-week data-week-start="' . esc_attr( $week['start'] ) . '"' . ( $illustrated ? ' data-illustrated-url="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::view_url( $menu_id ) ) . '"' : '' ) . ' id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1"><div class="tccms-week-heading"><img class="tccms-season tccms-season--desktop" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><img class="tccms-season tccms-season--mobile" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><h2 id="' . esc_attr( $week_id . '-title' ) . '"><span class="tccms-week-leaf tccms-week-leaf--left" aria-hidden="true"></span>' . esc_html( $title ) . '<span class="tccms-week-leaf tccms-week-leaf--right" aria-hidden="true"></span></h2></div>';
+			$html .= '<section class="tccms-week' . ( $rail && ! $illustrated ? ' tccms-week--with-rail' : '' ) . '" data-menu-week data-week-start="' . esc_attr( $week['start'] ) . '"' . ( $illustrated ? ' data-illustrated-url="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::view_url( $menu_id ) ) . '"' : '' ) . ' id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1">';
+			if ( $illustrated ) {
+				$html .= '<div class="tccms-illustrated-stage"><p class="tccms-illustrated-loading" role="status">' . esc_html__( 'Chargement du menu…', 'thecore-collectivity-management' ) . '</p><div class="tccms-week tccms-illustrated-fallback' . ( $rail ? ' tccms-week--with-rail' : '' ) . '">';
+			}
+			$html .= '<div class="tccms-week-heading"><img class="tccms-season tccms-season--desktop" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><img class="tccms-season tccms-season--mobile" src="' . esc_url( $asset_url . 'autumn-hedgehog.png' ) . '" alt="" width="1536" height="1024"><h2 id="' . esc_attr( $week_id . '-title' ) . '"><span class="tccms-week-leaf tccms-week-leaf--left" aria-hidden="true"></span>' . esc_html( $title ) . '<span class="tccms-week-leaf tccms-week-leaf--right" aria-hidden="true"></span></h2></div>';
 			$html .= '<div class="tccms-table-view"><table class="tccms-table"><caption class="tccms-sr-only">' . esc_html( $title ) . '</caption><thead><tr><th scope="col" class="tccms-corner"><span class="tccms-sr-only">' . esc_html__( 'Repas', 'thecore-collectivity-management' ) . '</span></th>';
 			foreach ( $week['days'] as $index => $day ) {
 				$html .= '<th scope="col" id="' . esc_attr( $week_id . '-day-' . $index ) . '" class="tccms-day-head tccms-color-' . $index . '"><span class="tccms-day-name">' . esc_html( self::day_name( $day['date'] ) ) . '</span><time datetime="' . esc_attr( $day['date'] ) . '">' . esc_html( self::day_name( $day['date'], 'j F' ) ) . '</time>' . ( $day['vegetarian'] ? '<span class="tccms-vegetarian">' . self::icon( 'leaf' ) . '<span>' . esc_html__( 'Menu végétarien', 'thecore-collectivity-management' ) . '</span></span>' : '' ) . '</th>';
@@ -219,6 +226,9 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 			if ( $week['notice'] ) {
 				$html .= '<p class="tccms-notice">' . nl2br( esc_html( $week['notice'] ) ) . '</p>';
 			}
+			if ( $illustrated ) {
+				$html .= '</div></div>' . $rail . '</div></div>';
+			}
 			$html .= '<div class="tccms-week-footer">';
 			if ( TheCore_Collectivity_PDF_Client::enabled() ) {
 				$html .= '<a class="tccms-download tccms-download--print" href="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::pdf_url( $menu_id ) ) . '" download>' . self::icon( 'download' ) . '<span>' . esc_html__( 'Télécharger le menu', 'thecore-collectivity-management' ) . ' <small>(PDF)</small></span></a>';
@@ -229,7 +239,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 				$html .= '<a class="tccms-download tccms-download--calendar" href="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::url( $menu_id ) ) . '" download>' . self::icon( 'calendar' ) . '<span>' . esc_html__( 'Télécharger au format agenda', 'thecore-collectivity-management' ) . ' <small>(.ics)</small></span></a>';
 			}
 			$html .= '</div>';
-			$html .= '</div></div>' . $rail . '</section>';
+			$html .= ( $illustrated ? '' : '</div></div>' . $rail ) . '</section>';
 		}
 		return $html . '</div>';
 	}

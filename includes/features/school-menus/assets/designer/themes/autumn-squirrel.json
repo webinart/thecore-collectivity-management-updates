@@ -1,0 +1,191 @@
+{
+  "format": "thecore.school-menu-theme",
+  "version": 2,
+  "id": "autumn-squirrel",
+  "name": "Automne — Écureuil",
+  "theme": "Automne",
+  "style": {
+    "ribbonColor": "#267a15",
+    "ribbonText": "#ffffff",
+    "ribbonShape": "painted",
+    "ribbonRadius": 10,
+    "ribbonPadding": 16,
+    "font": "hand",
+    "headingFont": "brush",
+    "fontSize": 22,
+    "ink": "#152e65",
+    "lineHeight": 1.2,
+    "dishSpacing": 6,
+    "pageBackground": "#ffffff",
+    "pagePadding": 48,
+    "indexWidth": 24,
+    "texture": true,
+    "days": {
+      "shape": "painted",
+      "radius": 8,
+      "height": 107,
+      "padding": 16,
+      "fontSize": 26,
+      "dateSize": 17,
+      "dateGap": 2,
+      "monday": {
+        "background": "#ce0047",
+        "secondary": "#ff3b7b",
+        "gradient": true,
+        "text": "#ffffff",
+        "cellBackground": "#fff0f5",
+        "border": "#ff6295"
+      },
+      "tuesday": {
+        "background": "#ff8a0d",
+        "secondary": "#ffc82f",
+        "gradient": true,
+        "text": "#492500",
+        "cellBackground": "#fff5e5",
+        "border": "#ffac30"
+      },
+      "wednesday": {
+        "background": "#ffda12",
+        "secondary": "#fff559",
+        "gradient": true,
+        "text": "#493600",
+        "cellBackground": "#fffce5",
+        "border": "#dfbd16"
+      },
+      "thursday": {
+        "background": "#8bd71b",
+        "secondary": "#b8ec3c",
+        "gradient": true,
+        "text": "#193e03",
+        "cellBackground": "#f4fbe5",
+        "border": "#87ca30"
+      },
+      "friday": {
+        "background": "#1bd6e4",
+        "secondary": "#70edf1",
+        "gradient": true,
+        "text": "#073b50",
+        "cellBackground": "#eafcfc",
+        "border": "#2bc9d5"
+      }
+    },
+    "courses": {
+      "shape": "painted",
+      "radius": 8,
+      "fontSize": 30,
+      "iconSize": 42,
+      "padding": 13,
+      "starter": {
+        "background": "#267a15",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#408d1d",
+        "gradient": true
+      },
+      "main": {
+        "background": "#ae4800",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#de7210",
+        "gradient": true
+      },
+      "dessert": {
+        "background": "#9024b0",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#b337c6",
+        "gradient": true
+      },
+      "shadow": true
+    },
+    "cells": {
+      "shape": "rounded",
+      "radius": 8,
+      "borderWidth": 1,
+      "paddingX": 12,
+      "paddingY": 13,
+      "gap": 0,
+      "gradient": true
+    },
+    "badges": {
+      "placement": "legend",
+      "size": 76,
+      "gap": 10,
+      "frame": "none",
+      "background": "#ffffff",
+      "border": "#c9d8d3",
+      "padding": 0,
+      "logos": {
+        "produce_fr": "",
+        "eggs_fr": "",
+        "beef_fr": "",
+        "pork_fr": ""
+      }
+    },
+    "markers": {
+      "homemade": "#db1070",
+      "onsite": "#0074d9",
+      "iconSize": 18,
+      "organicSize": 20
+    },
+    "legend": {
+      "preparationBackground": "#f0f6e8",
+      "originBackground": "#fbf6e9",
+      "text": "#223e43",
+      "border": "#d5dfce",
+      "radius": 12,
+      "fontSize": 13,
+      "padding": 12,
+      "gap": 8
+    },
+    "print": {
+      "padding": 10,
+      "logoSize": 60,
+      "titleSize": 36,
+      "fontAdjustment": -3
+    },
+    "backgroundImage": "",
+    "backgroundOpacity": 100,
+    "backgroundFit": "cover",
+    "ribbonSecondary": "#408d1d",
+    "ribbonGradient": true
+  },
+  "elements": [
+    {
+      "id": "character",
+      "name": "Écureuil de l’affiche",
+      "source": "assets/autumn-squirrel.png",
+      "anchor": "index",
+      "scale": 100,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": false
+    },
+    {
+      "id": "sprigs",
+      "name": "Feuilles du bandeau",
+      "source": "assets/green-sprig.png",
+      "anchor": "ribbon",
+      "scale": 100,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": true
+    },
+    {
+      "id": "leaves",
+      "name": "Feuilles à droite",
+      "source": "assets/autumn-leaves.png",
+      "anchor": "below-badges",
+      "scale": 140,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": false
+    }
+  ]
+}

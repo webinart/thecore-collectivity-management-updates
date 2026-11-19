@@ -7,11 +7,13 @@ require_once __DIR__ . '/class-thecore-collectivity-school-menus-data.php';
 require_once __DIR__ . '/class-thecore-collectivity-school-menus-admin.php';
 require_once __DIR__ . '/class-thecore-collectivity-school-menus-downloads.php';
 require_once __DIR__ . '/class-thecore-collectivity-school-menus-renderer.php';
+require_once __DIR__ . '/class-thecore-collectivity-school-menu-themes.php';
 
 final class TheCore_Collectivity_School_Menus_Module extends TheCore_Collectivity_Abstract_Module {
 	public function get_id() { return 'school-menus'; }
 
 	public function register_hooks() {
+		TheCore_Collectivity_School_Menu_Themes::setup();
 		add_action( 'init', array( $this, 'register_content' ), 6 );
 		add_action( 'admin_init', array( $this, 'seed_markers' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ), 5 );

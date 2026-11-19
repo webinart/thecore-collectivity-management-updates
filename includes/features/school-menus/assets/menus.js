@@ -30,7 +30,7 @@
     const initialize = root => {
         if (root.dataset.initialized) return;
         root.dataset.initialized = 'true';
-        const sections = [...root.querySelectorAll('.tccms-week')];
+        const sections = [...root.querySelectorAll('[data-menu-week]')];
         const links = [...root.querySelectorAll('.tccms-periods a')];
         let activeMarker = null;
         let hideTimer;

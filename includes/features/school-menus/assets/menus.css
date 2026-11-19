@@ -6,6 +6,10 @@
 .tccms-calendar .tccms-archives > summary:focus-visible { outline: 2px solid #075b61; outline-offset: 4px; }
 .tccms-calendar .tccms-archives > .tccm-school-menus { margin-top: 16px; }
 .tccms-illustrated-stage { position: relative; width: 100%; overflow: hidden; }
+.tccms-illustrated-loading { display: none; }
+.tccm-school-menus[data-illustrated-loading="true"]:not([data-initialized]) > [data-menu-week] ~ [data-menu-week] { display: none; }
+.tccm-school-menus[data-illustrated-loading="true"] .tccms-illustrated-stage:not(.is-ready):not(.has-failed) > .tccms-illustrated-fallback { visibility: hidden; }
+.tccm-school-menus[data-illustrated-loading="true"] .tccms-illustrated-stage:not(.is-ready):not(.has-failed) > .tccms-illustrated-loading { display: flex; position: absolute; inset: 0; align-items: center; justify-content: center; color: var(--menu-teal); font-size: 16px; }
 .tccms-illustrated-frame { position: absolute; top: 0; left: 0; border: 0; max-width: none; transform-origin: top left; visibility: hidden; }
 .tccms-illustrated-stage.is-ready > .tccms-illustrated-frame { visibility: visible; }
 .tccm-school-menus [data-illustrated-url] > .tccms-week-footer { flex-direction: row; flex-wrap: wrap; gap: 12px; margin-top: 16px; }

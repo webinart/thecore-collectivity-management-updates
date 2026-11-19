@@ -5,6 +5,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class TheCore_Collectivity_School_Menus_Illustrated_Print {
 	public static function document( array $published, $screen = false ) {
+		if ( class_exists( 'TheCore_Collectivity_School_Menu_Themes' ) ) {
+			$selected = TheCore_Collectivity_School_Menu_Themes::selected( $published['id'] );
+			if ( $selected && 'standard' === $selected['composition'] ) {
+				return TheCore_Collectivity_School_Menu_Themes::document( $published, $selected['theme'], $screen );
+			}
+		}
+		return self::approved_document( $published, $screen );
+	}
+
+	public static function approved_document( array $published, $screen, $allow_print = true ) {
 		$base = 'includes/features/school-menus/assets/illustrated/proposition-menu-automne/';
 		$template = file_get_contents( __DIR__ . '/assets/illustrated/proposition-menu-automne/canvas.html' );
 		$theme = json_decode( file_get_contents( __DIR__ . '/assets/illustrated/proposition-menu-automne/theme.json' ), true );
@@ -13,7 +23,7 @@ final class TheCore_Collectivity_School_Menus_Illustrated_Print {
 		}
 		$context = array(
 			'theme' => $theme,
-			'autoPrint' => ! $screen && ! isset( $_GET['pdf_revision'] ),
+			'autoPrint' => $allow_print && ! $screen && ! isset( $_GET['pdf_revision'] ),
 			'week' => array(
 				'id' => $published['id'],
 				'start' => $published['week']['start'],

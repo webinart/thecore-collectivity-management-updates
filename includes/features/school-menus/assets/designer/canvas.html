@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow,noarchive">
+    <title>Aperçu du modèle de menu</title>
+    <link rel="stylesheet" href="assets/menus.css">
+    <link rel="stylesheet" href="assets/print.css">
+    <link rel="stylesheet" href="canvas.css">
+    <script src="theme-format.js" defer></script>
+    <script src="theme-renderer.js" defer></script>
+    <link rel="stylesheet" href="menu-motion.css">
+    <script src="menu-motion.js" defer></script>
+    <script src="canvas.js" defer></script>
+</head>
+<body class="mode-screen">
+    <main class="canvas-paper" id="paper">
+        <div id="background-layer" aria-hidden="true"></div>
+        <header class="tccms-print-heading canvas-heading"><img class="tccms-print-logo" src="assets/municipal-logo.webp" width="480" height="480" alt="Saint-Vincent-sur-Jard"><h1>Menu scolaire</h1></header>
+        <div id="drape-back-layer" class="decor-layer back-layer" aria-label="Guirlandes d’arrière-plan"></div>
+        <div id="drape-front-layer" class="decor-layer front-layer" aria-label="Guirlandes de premier plan"></div>
+        <div id="back-layer" class="decor-layer back-layer" aria-label="Illustrations d’arrière-plan"></div>
+        <div id="menu-root"><p class="loading-message" role="status">Chargement du menu…</p></div>
+        <div id="mobile-extra-art" class="mobile-extra-art" aria-label="Illustrations du modèle"></div>
+        <div id="front-layer" class="decor-layer front-layer" aria-label="Illustrations du modèle"></div>
+        <div id="selection" class="selection" hidden aria-hidden="true"><span class="selection-name"></span><i></i><i></i><i></i><i></i></div>
+    </main>
+</body>
+</html>

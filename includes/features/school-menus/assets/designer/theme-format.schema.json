@@ -1,0 +1,1206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The Core — thème de menu scolaire, version 2",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "thecore.school-menu-theme"
+    },
+    "version": {
+      "const": 2
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[a-z0-9][a-z0-9_-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[^<>\\u0000-\\u001f]+$"
+    },
+    "theme": {
+      "type": "string",
+      "enum": [
+        "Automne",
+        "Hiver",
+        "Printemps",
+        "Été",
+        "Événements"
+      ]
+    },
+    "elements": {
+      "type": "array",
+      "maxItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 60,
+            "pattern": "^[^<>\\u0000-\\u001f]+$"
+          },
+          "source": {
+            "type": "string",
+            "maxLength": 2800000,
+            "pattern": "^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$"
+          },
+          "anchor": {
+            "type": "string",
+            "enum": [
+              "index",
+              "below-badges",
+              "ribbon",
+              "top-right",
+              "bottom",
+              "drape-right",
+              "drape-corner"
+            ]
+          },
+          "scale": {
+            "type": "number",
+            "minimum": 40,
+            "maximum": 200
+          },
+          "x": {
+            "type": "number",
+            "minimum": -60,
+            "maximum": 60
+          },
+          "y": {
+            "type": "number",
+            "minimum": -60,
+            "maximum": 60
+          },
+          "layer": {
+            "type": "string",
+            "enum": [
+              "front",
+              "back"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "paired": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "source",
+          "anchor",
+          "scale",
+          "x",
+          "y",
+          "layer",
+          "visible",
+          "paired"
+        ]
+      }
+    },
+    "style": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "ribbonColor": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "title": "Fond du bandeau",
+          "default": "#267a15"
+        },
+        "ribbonText": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "title": "Texte du bandeau",
+          "default": "#ffffff"
+        },
+        "ribbonShape": {
+          "type": "string",
+          "enum": [
+            "painted",
+            "rounded",
+            "square"
+          ],
+          "title": "Forme du bandeau",
+          "default": "painted"
+        },
+        "ribbonRadius": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 28,
+          "title": "Arrondi du bandeau",
+          "default": 10
+        },
+        "ribbonPadding": {
+          "type": "integer",
+          "minimum": 8,
+          "maximum": 28,
+          "title": "Espacement vertical du bandeau",
+          "default": 16
+        },
+        "font": {
+          "type": "string",
+          "enum": [
+            "hand",
+            "sans"
+          ],
+          "title": "Écriture des plats",
+          "default": "hand"
+        },
+        "headingFont": {
+          "type": "string",
+          "enum": [
+            "brush",
+            "sans"
+          ],
+          "title": "Écriture des titres",
+          "default": "brush"
+        },
+        "fontSize": {
+          "type": "integer",
+          "minimum": 17,
+          "maximum": 24,
+          "title": "Taille du texte des plats",
+          "default": 22
+        },
+        "ink": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "title": "Couleur du texte des plats",
+          "default": "#152e65"
+        },
+        "lineHeight": {
+          "type": "number",
+          "minimum": 1,
+          "maximum": 1.6,
+          "title": "Interligne des plats",
+          "default": 1.2
+        },
+        "dishSpacing": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 14,
+          "title": "Séparation entre les plats",
+          "default": 6
+        },
+        "pageBackground": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "title": "Fond de la feuille",
+          "default": "#ffffff"
+        },
+        "pagePadding": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 48,
+          "title": "Marge intérieure à l’écran",
+          "default": 36
+        },
+        "indexWidth": {
+          "type": "integer",
+          "minimum": 20,
+          "maximum": 28,
+          "title": "Largeur de la colonne des catégories",
+          "default": 24
+        },
+        "texture": {
+          "type": "boolean",
+          "title": "Texture papier",
+          "default": true
+        },
+        "days": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": [
+                "painted",
+                "rounded",
+                "square"
+              ],
+              "title": "Forme des en-têtes",
+              "default": "painted"
+            },
+            "radius": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 28,
+              "title": "Arrondi des en-têtes",
+              "default": 8
+            },
+            "height": {
+              "type": "integer",
+              "minimum": 90,
+              "maximum": 135,
+              "title": "Hauteur des en-têtes sur ordinateur",
+              "default": 107
+            },
+            "padding": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 24,
+              "title": "Espacement vertical",
+              "default": 16
+            },
+            "fontSize": {
+              "type": "integer",
+              "minimum": 22,
+              "maximum": 32,
+              "title": "Taille du nom du jour",
+              "default": 26
+            },
+            "dateSize": {
+              "type": "integer",
+              "minimum": 14,
+              "maximum": 20,
+              "title": "Taille de la date",
+              "default": 17
+            },
+            "dateGap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 8,
+              "title": "Espace entre le jour et la date",
+              "default": 2
+            },
+            "monday": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de l’en-tête",
+                  "default": "#ce0047"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#ff3b7b"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de l’en-tête",
+                  "default": true
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte de l’en-tête",
+                  "default": "#ffffff"
+                },
+                "cellBackground": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond des cellules",
+                  "default": "#fff0f5"
+                },
+                "border": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Bordure des cellules",
+                  "default": "#ff6295"
+                }
+              },
+              "required": [
+                "background",
+                "secondary",
+                "gradient",
+                "text",
+                "cellBackground",
+                "border"
+              ]
+            },
+            "tuesday": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de l’en-tête",
+                  "default": "#ff8a0d"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#ffc82f"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de l’en-tête",
+                  "default": true
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte de l’en-tête",
+                  "default": "#492500"
+                },
+                "cellBackground": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond des cellules",
+                  "default": "#fff5e5"
+                },
+                "border": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Bordure des cellules",
+                  "default": "#ffac30"
+                }
+              },
+              "required": [
+                "background",
+                "secondary",
+                "gradient",
+                "text",
+                "cellBackground",
+                "border"
+              ]
+            },
+            "wednesday": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de l’en-tête",
+                  "default": "#ffda12"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#fff559"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de l’en-tête",
+                  "default": true
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte de l’en-tête",
+                  "default": "#493600"
+                },
+                "cellBackground": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond des cellules",
+                  "default": "#fffce5"
+                },
+                "border": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Bordure des cellules",
+                  "default": "#dfbd16"
+                }
+              },
+              "required": [
+                "background",
+                "secondary",
+                "gradient",
+                "text",
+                "cellBackground",
+                "border"
+              ]
+            },
+            "thursday": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de l’en-tête",
+                  "default": "#8bd71b"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#b8ec3c"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de l’en-tête",
+                  "default": true
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte de l’en-tête",
+                  "default": "#193e03"
+                },
+                "cellBackground": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond des cellules",
+                  "default": "#f4fbe5"
+                },
+                "border": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Bordure des cellules",
+                  "default": "#87ca30"
+                }
+              },
+              "required": [
+                "background",
+                "secondary",
+                "gradient",
+                "text",
+                "cellBackground",
+                "border"
+              ]
+            },
+            "friday": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de l’en-tête",
+                  "default": "#1bd6e4"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#70edf1"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de l’en-tête",
+                  "default": true
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte de l’en-tête",
+                  "default": "#073b50"
+                },
+                "cellBackground": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond des cellules",
+                  "default": "#eafcfc"
+                },
+                "border": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Bordure des cellules",
+                  "default": "#2bc9d5"
+                }
+              },
+              "required": [
+                "background",
+                "secondary",
+                "gradient",
+                "text",
+                "cellBackground",
+                "border"
+              ]
+            }
+          },
+          "required": [
+            "shape",
+            "radius",
+            "height",
+            "padding",
+            "fontSize",
+            "dateSize",
+            "dateGap",
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday"
+          ]
+        },
+        "courses": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": [
+                "painted",
+                "rounded",
+                "square"
+              ],
+              "title": "Forme des catégories",
+              "default": "painted"
+            },
+            "radius": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 28,
+              "title": "Arrondi des catégories",
+              "default": 8
+            },
+            "fontSize": {
+              "type": "integer",
+              "minimum": 24,
+              "maximum": 36,
+              "title": "Taille des libellés",
+              "default": 30
+            },
+            "iconSize": {
+              "type": "integer",
+              "minimum": 28,
+              "maximum": 48,
+              "title": "Taille des pictogrammes",
+              "default": 42
+            },
+            "padding": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 24,
+              "title": "Espacement vertical",
+              "default": 13
+            },
+            "starter": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de la catégorie",
+                  "default": "#267a15"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte et pictogramme",
+                  "default": "#ffffff"
+                },
+                "icon": {
+                  "type": "string",
+                  "enum": [
+                    "original",
+                    "salad",
+                    "utensils",
+                    "cake"
+                  ],
+                  "title": "Pictogramme",
+                  "default": "original"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#408d1d"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de la catégorie",
+                  "default": true
+                }
+              },
+              "required": [
+                "background",
+                "text",
+                "icon",
+                "secondary",
+                "gradient"
+              ]
+            },
+            "main": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de la catégorie",
+                  "default": "#ae4800"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte et pictogramme",
+                  "default": "#ffffff"
+                },
+                "icon": {
+                  "type": "string",
+                  "enum": [
+                    "original",
+                    "salad",
+                    "utensils",
+                    "cake"
+                  ],
+                  "title": "Pictogramme",
+                  "default": "original"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#de7210"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de la catégorie",
+                  "default": true
+                }
+              },
+              "required": [
+                "background",
+                "text",
+                "icon",
+                "secondary",
+                "gradient"
+              ]
+            },
+            "dessert": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "background": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Fond de la catégorie",
+                  "default": "#9024b0"
+                },
+                "text": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Texte et pictogramme",
+                  "default": "#ffffff"
+                },
+                "icon": {
+                  "type": "string",
+                  "enum": [
+                    "original",
+                    "salad",
+                    "utensils",
+                    "cake"
+                  ],
+                  "title": "Pictogramme",
+                  "default": "original"
+                },
+                "secondary": {
+                  "type": "string",
+                  "pattern": "^#[a-fA-F0-9]{6}$",
+                  "title": "Seconde couleur du dégradé",
+                  "default": "#b337c6"
+                },
+                "gradient": {
+                  "type": "boolean",
+                  "title": "Dégradé de la catégorie",
+                  "default": true
+                }
+              },
+              "required": [
+                "background",
+                "text",
+                "icon",
+                "secondary",
+                "gradient"
+              ]
+            },
+            "shadow": {
+              "type": "boolean",
+              "title": "Relief sous les catégories",
+              "default": true
+            }
+          },
+          "required": [
+            "shape",
+            "radius",
+            "fontSize",
+            "iconSize",
+            "padding",
+            "starter",
+            "main",
+            "dessert",
+            "shadow"
+          ]
+        },
+        "cells": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "shape": {
+              "type": "string",
+              "enum": [
+                "square",
+                "rounded",
+                "organic"
+              ],
+              "title": "Forme des cellules",
+              "default": "rounded"
+            },
+            "radius": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 24,
+              "title": "Arrondi",
+              "default": 8
+            },
+            "borderWidth": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 3,
+              "title": "Épaisseur de bordure",
+              "default": 1
+            },
+            "paddingX": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 22,
+              "title": "Espacement horizontal",
+              "default": 12
+            },
+            "paddingY": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 22,
+              "title": "Espacement vertical",
+              "default": 13
+            },
+            "gap": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 6,
+              "title": "Espace entre les cellules",
+              "default": 0
+            },
+            "gradient": {
+              "type": "boolean",
+              "title": "Dégradé doux dans les cellules",
+              "default": false
+            }
+          },
+          "required": [
+            "shape",
+            "radius",
+            "borderWidth",
+            "paddingX",
+            "paddingY",
+            "gap",
+            "gradient"
+          ]
+        },
+        "badges": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "placement": {
+              "type": "string",
+              "enum": [
+                "right",
+                "footer",
+                "legend"
+              ],
+              "title": "Emplacement des badges",
+              "default": "right"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 44,
+              "maximum": 90,
+              "title": "Taille des badges",
+              "default": 76
+            },
+            "gap": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 18,
+              "title": "Espace entre les badges",
+              "default": 10
+            },
+            "frame": {
+              "type": "string",
+              "enum": [
+                "none",
+                "circle",
+                "rounded"
+              ],
+              "title": "Encadrement",
+              "default": "none"
+            },
+            "background": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Fond des cadres",
+              "default": "#ffffff"
+            },
+            "border": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Couleur des cadres",
+              "default": "#c9d8d3"
+            },
+            "padding": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 10,
+              "title": "Marge à l’intérieur du cadre",
+              "default": 0
+            },
+            "logos": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "produce_fr": {
+                  "type": "string",
+                  "maxLength": 2800000,
+                  "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+                  "title": "Fruits et légumes de France",
+                  "default": ""
+                },
+                "eggs_fr": {
+                  "type": "string",
+                  "maxLength": 2800000,
+                  "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+                  "title": "Œufs de France",
+                  "default": ""
+                },
+                "beef_fr": {
+                  "type": "string",
+                  "maxLength": 2800000,
+                  "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+                  "title": "Viande bovine française",
+                  "default": ""
+                },
+                "pork_fr": {
+                  "type": "string",
+                  "maxLength": 2800000,
+                  "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+                  "title": "Le Porc Français",
+                  "default": ""
+                }
+              },
+              "required": [
+                "produce_fr",
+                "eggs_fr",
+                "beef_fr",
+                "pork_fr"
+              ]
+            }
+          },
+          "required": [
+            "placement",
+            "size",
+            "gap",
+            "frame",
+            "background",
+            "border",
+            "padding",
+            "logos"
+          ]
+        },
+        "markers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "homemade": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Pictogramme Fait maison",
+              "default": "#db1070"
+            },
+            "onsite": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Pictogramme Préparé sur place",
+              "default": "#0074d9"
+            },
+            "iconSize": {
+              "type": "integer",
+              "minimum": 14,
+              "maximum": 22,
+              "title": "Taille des pictogrammes",
+              "default": 18
+            },
+            "organicSize": {
+              "type": "integer",
+              "minimum": 16,
+              "maximum": 24,
+              "title": "Hauteur du logo AB",
+              "default": 20
+            }
+          },
+          "required": [
+            "homemade",
+            "onsite",
+            "iconSize",
+            "organicSize"
+          ]
+        },
+        "legend": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "preparationBackground": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Fond Qualité et préparation",
+              "default": "#f0f6e8"
+            },
+            "originBackground": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Fond Origine et fournisseur",
+              "default": "#fbf6e9"
+            },
+            "text": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Texte des légendes",
+              "default": "#223e43"
+            },
+            "border": {
+              "type": "string",
+              "pattern": "^#[a-fA-F0-9]{6}$",
+              "title": "Bordure des légendes",
+              "default": "#d5dfce"
+            },
+            "radius": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 20,
+              "title": "Arrondi des blocs",
+              "default": 12
+            },
+            "fontSize": {
+              "type": "integer",
+              "minimum": 11,
+              "maximum": 15,
+              "title": "Taille du texte des repères",
+              "default": 13
+            },
+            "padding": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 18,
+              "title": "Marge intérieure des blocs",
+              "default": 12
+            },
+            "gap": {
+              "type": "integer",
+              "minimum": 4,
+              "maximum": 16,
+              "title": "Espace entre les deux blocs",
+              "default": 8
+            }
+          },
+          "required": [
+            "preparationBackground",
+            "originBackground",
+            "text",
+            "border",
+            "radius",
+            "fontSize",
+            "padding",
+            "gap"
+          ]
+        },
+        "print": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "padding": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 14,
+              "title": "Marge intérieure du papier",
+              "default": 10
+            },
+            "logoSize": {
+              "type": "integer",
+              "minimum": 44,
+              "maximum": 72,
+              "title": "Taille du logo municipal",
+              "default": 60
+            },
+            "titleSize": {
+              "type": "integer",
+              "minimum": 28,
+              "maximum": 42,
+              "title": "Taille du titre Menu scolaire",
+              "default": 36
+            },
+            "fontAdjustment": {
+              "type": "integer",
+              "minimum": -5,
+              "maximum": 0,
+              "title": "Ajustement du texte des plats",
+              "default": -3
+            }
+          },
+          "required": [
+            "padding",
+            "logoSize",
+            "titleSize",
+            "fontAdjustment"
+          ]
+        },
+        "backgroundImage": {
+          "type": "string",
+          "maxLength": 2800000,
+          "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+          "title": "Image de fond de la feuille",
+          "default": ""
+        },
+        "backgroundOpacity": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "title": "Intensité du fond illustré",
+          "default": 100
+        },
+        "backgroundFit": {
+          "type": "string",
+          "enum": [
+            "cover",
+            "contain",
+            "stretch"
+          ],
+          "title": "Ajustement du fond",
+          "default": "cover"
+        },
+        "ribbonSecondary": {
+          "type": "string",
+          "pattern": "^#[a-fA-F0-9]{6}$",
+          "title": "Seconde couleur du bandeau",
+          "default": "#408d1d"
+        },
+        "ribbonGradient": {
+          "type": "boolean",
+          "title": "Dégradé du bandeau",
+          "default": true
+        },
+        "animation": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "none",
+                "snow",
+                "leaves",
+                "bubbles"
+              ],
+              "title": "Mouvement",
+              "default": "none"
+            },
+            "density": {
+              "type": "string",
+              "enum": [
+                "low",
+                "normal",
+                "high"
+              ],
+              "title": "Densité",
+              "default": "normal"
+            },
+            "speed": {
+              "type": "string",
+              "enum": [
+                "slow",
+                "normal",
+                "fast"
+              ],
+              "title": "Vitesse",
+              "default": "normal"
+            },
+            "zone": {
+              "type": "string",
+              "enum": [
+                "all",
+                "edges"
+              ],
+              "title": "Zone animée",
+              "default": "all"
+            },
+            "image": {
+              "type": "string",
+              "maxLength": 2800000,
+              "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+              "title": "Motif principal",
+              "default": ""
+            },
+            "variant": {
+              "type": "string",
+              "maxLength": 2800000,
+              "pattern": "^$|^(assets/[a-z0-9][a-z0-9._-]*\\.(png|jpg|jpeg|webp)|data:image/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2})$",
+              "title": "Second motif (facultatif)",
+              "default": ""
+            }
+          },
+          "required": [
+            "mode",
+            "density",
+            "speed",
+            "zone",
+            "image",
+            "variant"
+          ]
+        }
+      },
+      "required": [
+        "ribbonColor",
+        "ribbonText",
+        "ribbonShape",
+        "ribbonRadius",
+        "ribbonPadding",
+        "font",
+        "headingFont",
+        "fontSize",
+        "ink",
+        "lineHeight",
+        "dishSpacing",
+        "pageBackground",
+        "pagePadding",
+        "indexWidth",
+        "texture",
+        "days",
+        "courses",
+        "cells",
+        "badges",
+        "markers",
+        "legend",
+        "print",
+        "backgroundImage",
+        "backgroundOpacity",
+        "backgroundFit",
+        "ribbonSecondary",
+        "ribbonGradient"
+      ]
+    }
+  },
+  "required": [
+    "format",
+    "version",
+    "id",
+    "name",
+    "theme",
+    "elements",
+    "style"
+  ]
+}

@@ -1,0 +1,203 @@
+{
+  "format": "thecore.school-menu-theme",
+  "version": 2,
+  "id": "winter-garlands",
+  "name": "Hiver — Guirlandes",
+  "theme": "Hiver",
+  "elements": [
+    {
+      "id": "fox",
+      "name": "Renardeau emmitouflé",
+      "source": "assets/winter-fox.png",
+      "anchor": "index",
+      "scale": 105,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": false
+    },
+    {
+      "id": "garland",
+      "name": "Guirlande enneigée",
+      "source": "assets/winter-garland.png",
+      "anchor": "drape-corner",
+      "scale": 55,
+      "x": 0,
+      "y": 0,
+      "layer": "back",
+      "visible": true,
+      "paired": false
+    },
+    {
+      "id": "snowflakes",
+      "name": "Flocons du bandeau",
+      "source": "assets/winter-snowflakes.png",
+      "anchor": "ribbon",
+      "scale": 110,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": true
+    },
+    {
+      "id": "snow",
+      "name": "Neige à droite",
+      "source": "assets/winter-snowflakes.png",
+      "anchor": "below-badges",
+      "scale": 180,
+      "x": 0,
+      "y": 0,
+      "layer": "front",
+      "visible": true,
+      "paired": false
+    }
+  ],
+  "style": {
+    "ribbonColor": "#155d58",
+    "ribbonText": "#ffffff",
+    "ribbonShape": "painted",
+    "ribbonRadius": 12,
+    "ribbonPadding": 16,
+    "font": "hand",
+    "headingFont": "brush",
+    "fontSize": 22,
+    "ink": "#163b55",
+    "lineHeight": 1.15,
+    "dishSpacing": 6,
+    "pageBackground": "#fcfefd",
+    "pagePadding": 36,
+    "indexWidth": 24,
+    "texture": true,
+    "days": {
+      "shape": "painted",
+      "radius": 10,
+      "height": 107,
+      "padding": 16,
+      "fontSize": 27,
+      "dateSize": 17,
+      "dateGap": 2,
+      "monday": {
+        "background": "#bce7f4",
+        "secondary": "#e1f5fc",
+        "gradient": true,
+        "text": "#153e53",
+        "cellBackground": "#f0faff",
+        "border": "#91c8df"
+      },
+      "tuesday": {
+        "background": "#f8d7db",
+        "secondary": "#fdecee",
+        "gradient": true,
+        "text": "#153e53",
+        "cellBackground": "#fff5f5",
+        "border": "#eab7c2"
+      },
+      "wednesday": {
+        "background": "#f8dfa0",
+        "secondary": "#fff0c8",
+        "gradient": true,
+        "text": "#153e53",
+        "cellBackground": "#fffbee",
+        "border": "#e4c47b"
+      },
+      "thursday": {
+        "background": "#c9e7db",
+        "secondary": "#e1f3e9",
+        "gradient": true,
+        "text": "#153e53",
+        "cellBackground": "#f1faf4",
+        "border": "#a4d2b7"
+      },
+      "friday": {
+        "background": "#d8ddf6",
+        "secondary": "#eef0ff",
+        "gradient": true,
+        "text": "#153e53",
+        "cellBackground": "#f7f7ff",
+        "border": "#bdc5eb"
+      }
+    },
+    "courses": {
+      "shape": "painted",
+      "radius": 10,
+      "fontSize": 30,
+      "iconSize": 42,
+      "padding": 13,
+      "starter": {
+        "background": "#17685d",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#408d1d",
+        "gradient": false
+      },
+      "main": {
+        "background": "#a5264b",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#de7210",
+        "gradient": false
+      },
+      "dessert": {
+        "background": "#255578",
+        "text": "#ffffff",
+        "icon": "original",
+        "secondary": "#b337c6",
+        "gradient": false
+      },
+      "shadow": true
+    },
+    "cells": {
+      "shape": "rounded",
+      "radius": 10,
+      "borderWidth": 1,
+      "paddingX": 12,
+      "paddingY": 13,
+      "gap": 0,
+      "gradient": false
+    },
+    "badges": {
+      "placement": "legend",
+      "size": 72,
+      "gap": 10,
+      "frame": "none",
+      "background": "#ffffff",
+      "border": "#d7e2e7",
+      "padding": 0,
+      "logos": {
+        "produce_fr": "",
+        "eggs_fr": "",
+        "beef_fr": "",
+        "pork_fr": ""
+      }
+    },
+    "markers": {
+      "homemade": "#db1070",
+      "onsite": "#0074d9",
+      "iconSize": 18,
+      "organicSize": 20
+    },
+    "legend": {
+      "preparationBackground": "#edf7f2",
+      "originBackground": "#fdf6e7",
+      "text": "#25454b",
+      "border": "#c9ddd6",
+      "radius": 12,
+      "fontSize": 13,
+      "padding": 12,
+      "gap": 8
+    },
+    "print": {
+      "padding": 8,
+      "logoSize": 52,
+      "titleSize": 36,
+      "fontAdjustment": -4
+    },
+    "backgroundImage": "",
+    "backgroundOpacity": 100,
+    "backgroundFit": "cover",
+    "ribbonSecondary": "#408d1d",
+    "ribbonGradient": false
+  }
+}

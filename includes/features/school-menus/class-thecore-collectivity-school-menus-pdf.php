@@ -64,7 +64,8 @@ final class TheCore_Collectivity_School_Menus_PDF {
 		}
 		ksort( $assets );
 		$identity = array( home_url( '/' ), get_bloginfo( 'name' ), get_bloginfo( 'language' ), get_theme_mod( 'custom_logo' ), get_option( 'site_icon' ) );
-		return hash( 'sha256', wp_json_encode( array( $published['week'], $markers, $assets, $identity ) ) );
+		$theme = class_exists( 'TheCore_Collectivity_School_Menu_Themes' ) ? TheCore_Collectivity_School_Menu_Themes::selected( $published['id'] ) : null;
+		return hash( 'sha256', wp_json_encode( array( $published['week'], $markers, $assets, $identity, $theme ) ) );
 	}
 
 	public static function file( array $published, $generate = true ) {

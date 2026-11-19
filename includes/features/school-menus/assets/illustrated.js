@@ -4,55 +4,73 @@
     const prepare = section => {
         if (section.dataset.illustratedInitialized) return;
         section.dataset.illustratedInitialized = 'true';
-        const fallback = document.createElement('div');
-        fallback.className = `${section.className} tccms-illustrated-fallback`;
-        const stage = document.createElement('div');
-        stage.className = 'tccms-illustrated-stage';
+        const root = section.closest('[data-school-menus]');
+        clearTimeout(root.tccmsLoadingTimer);
+        root.dataset.illustratedLoading = 'true';
+        const fallback = section.querySelector('.tccms-illustrated-fallback');
+        const stage = section.querySelector('.tccms-illustrated-stage');
+        if (!fallback || !stage) return;
         const frame = document.createElement('iframe');
         frame.className = 'tccms-illustrated-frame';
         frame.title = section.querySelector('h2').textContent.trim();
         frame.setAttribute('aria-hidden', 'true');
         frame.tabIndex = -1;
         frame.referrerPolicy = 'same-origin';
-        const footer = section.querySelector('.tccms-week-footer');
-        section.classList.remove('tccms-week--with-rail');
-        fallback.append(...section.childNodes);
-        stage.append(fallback, frame);
-        section.append(stage);
-        if (footer) section.append(footer);
-        const state = { section, stage, frame, fallback, layout: '', width: 1280, height: 794, ready: false };
+        stage.append(frame);
+        const state = { section, stage, frame, fallback, layout: '', width: 1280, height: null, ready: false, timer: null, cacheKey: '' };
         const fit = () => {
             if (!visible(section) || stage.clientWidth < 1) return;
             const layout = stage.clientWidth < 960 ? 'mobile' : 'screen';
             state.width = layout === 'mobile' ? stage.clientWidth : 1280;
             const scale = Math.min(1, stage.clientWidth / state.width);
             frame.style.width = `${state.width}px`;
-            frame.style.height = `${state.height}px`;
+            frame.style.height = `${state.height || 794}px`;
             frame.style.transform = `scale(${scale})`;
             if (state.ready) stage.style.height = `${Math.ceil(state.height * scale)}px`;
             if (layout !== state.layout) {
                 state.layout = layout;
                 state.ready = false;
                 stage.classList.remove('is-ready');
+                stage.classList.remove('has-failed');
                 stage.style.height = '';
                 fallback.hidden = false;
+                section.dataset.illustratedState = 'loading';
+                stage.setAttribute('aria-busy', 'true');
                 frame.setAttribute('aria-hidden', 'true');
                 frame.tabIndex = -1;
                 const source = new URL(section.dataset.illustratedUrl, location.href);
-                if (source.origin !== location.origin) return;
+                if (source.origin !== location.origin) { fail(); return; }
                 source.searchParams.set('layout', layout);
+                state.cacheKey = `tccms-illustrated:${source.href}:${state.width}`;
+                state.height = null;
+                try {
+                    const height = Number(sessionStorage.getItem(state.cacheKey));
+                    if (height > 0 && height <= 50000) state.height = height;
+                } catch {}
+                clearTimeout(state.timer);
+                state.timer = setTimeout(fail, 30000);
                 frame.src = source.href;
             }
+            state.cacheKey = `tccms-illustrated:${frame.src}:${state.width}`;
+            if (!state.ready && state.height) stage.style.height = `${Math.ceil(state.height * scale)}px`;
         };
         const fail = () => {
+            clearTimeout(state.timer);
             state.ready = false;
             fallback.hidden = false;
             stage.style.height = '';
             stage.classList.remove('is-ready');
+            stage.classList.add('has-failed');
+            stage.removeAttribute('aria-busy');
+            section.dataset.illustratedState = 'fallback';
             frame.setAttribute('aria-hidden', 'true');
             frame.tabIndex = -1;
         };
         frame.addEventListener('error', fail);
+        frame.addEventListener('load', () => {
+            try { if (!frame.contentDocument?.getElementById('svj-school-menu-document')) fail(); }
+            catch { fail(); }
+        });
         state.fit = fit;
         state.fail = fail;
         frames.add(state);
@@ -70,11 +88,15 @@
         const state = [...frames].find(item => item.frame.contentWindow === event.source);
         if (!state) return;
         if (event.data?.type === 'SVJ_AUTUMN_ERROR') { state.fail(); return; }
-        if (event.data?.type !== 'SVJ_AUTUMN_DIMENSIONS' || event.data.week !== state.section.dataset.weekStart || !Number.isFinite(event.data.height) || event.data.height < 1 || event.data.height > 50000 || !Number.isFinite(event.data.width) || Math.abs(event.data.width - state.width) > 2) return;
+        if (event.data?.type !== 'SVJ_AUTUMN_DIMENSIONS' || state.stage.classList.contains('has-failed') || event.data.week !== state.section.dataset.weekStart || !Number.isFinite(event.data.height) || event.data.height < 1 || event.data.height > 50000 || !Number.isFinite(event.data.width) || Math.abs(event.data.width - state.width) > 2) return;
+        clearTimeout(state.timer);
         state.height = event.data.height;
         state.ready = true;
+        try { sessionStorage.setItem(state.cacheKey, String(state.height)); } catch {}
         state.fallback.hidden = true;
         state.stage.classList.add('is-ready');
+        state.stage.removeAttribute('aria-busy');
+        state.section.dataset.illustratedState = 'ready';
         state.frame.removeAttribute('aria-hidden');
         state.frame.tabIndex = 0;
         state.fit();

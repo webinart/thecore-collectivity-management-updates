@@ -1,6 +1,6 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
-const format = require('../includes/features/school-menus/assets/illustrated/modeles-menus/theme-format.js');
+const format = require('../includes/features/school-menus/assets/designer/theme-format.js');
 const clone = value => JSON.parse(JSON.stringify(value));
 let checks = 0;
 const test = (name, run) => { run(); checks += 1; };
@@ -10,7 +10,7 @@ test('complete_theme_roundtrip', () => assert.deepEqual(format.parse(JSON.string
 test('generated_schema_matches_registry', () => assert.deepEqual(JSON.parse(fs.readFileSync(`${__dirname}/../docs/school-menus/theme-format.schema.json`)), format.schema));
 test('generated_theme_is_actual_valid_example', () => assert.deepEqual(format.parse(fs.readFileSync(`${__dirname}/../docs/school-menus/themes/winter-mist.json`, 'utf8')), winter));
 test('winter_contrast_passes', () => assert.deepEqual(format.warnings(winter), []));
-test('default_style_has_every_field', () => assert.equal(format.fields.filter(setting => format.get({ style: format.defaults() }, setting.path) !== undefined).length, 112));
+test('default_style_has_every_field', () => assert.equal(format.fields.filter(setting => format.get({ style: format.defaults() }, setting.path) !== undefined).length, 118));
 for (const setting of format.fields) {
     test(`valid_${setting.path}`, () => {
         assert.notEqual(format.get(winter, setting.path), undefined);
@@ -22,6 +22,8 @@ for (const setting of format.fields) {
 for (const source of ['https://example.org/picture.png', 'assets/../../bad.png', 'assets/code.svg', 'data:image/svg+xml;base64,PHN2Zz4=', 'assets/subfolder/picture.png', 'javascript:alert(1)']) {
     test(`unsafe_source_${source}`, () => rejects(theme => { theme.elements = [{ id: 'sample', name: 'Décor', source, anchor: 'index', scale: 100, x: 0, y: 0, layer: 'front', visible: true, paired: false }]; }));
 }
+test('old_v2_without_motion_is_static', () => { const old = clone(winter); delete old.style.animation; assert.equal(format.parse(old).style.animation.mode, 'none'); });
+test('motion_roundtrips', () => { for (const mode of ['snow', 'leaves', 'bubbles']) { const theme = clone(winter); theme.style.animation = { mode, density: 'low', speed: 'slow', zone: 'edges', image: 'assets/petal.png', variant: '' }; assert.deepEqual(format.fromEditor(format.toEditor(theme)), theme); } });
 test('unknown_root_refused', () => rejects(theme => { theme.content = 'New meal'; }));
 test('unknown_nested_refused', () => rejects(theme => { theme.style.days.monday.css = 'background:red'; }));
 test('unknown_version_refused', () => rejects(theme => { theme.version = 3; }));

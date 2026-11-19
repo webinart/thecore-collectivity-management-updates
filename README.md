@@ -4,8 +4,14 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.41`
+Current version: `1.0.1-beta.42`
 Release channel: beta
+
+### Changes in 1.0.1-beta.42
+
+- Add a school-menu theme editor with draft, preview, ZIP import and publication for authorized users.
+- Let catering staff select a published design for a weekly menu. The menu keeps a snapshot of the selected design.
+- Support optional AI-assisted design through the shared The Core theme service.
 
 ### Changes in 1.0.1-beta.41
 

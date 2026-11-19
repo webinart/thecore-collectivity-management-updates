@@ -15,6 +15,7 @@ function wp_enqueue_script( $handle ) {}
 function admin_url( $path ) { return home_url( '/wp-admin/' . $path ); }
 function add_query_arg( $arguments, $url ) { return $url . '?' . http_build_query( $arguments ); }
 function wp_json_encode( $value, $flags = 0 ) { return json_encode( $value, $flags ); }
+function wp_get_inline_script_tag( $value ) { return '<script>' . $value . '</script>'; }
 
 class WP_Query {
 	public $posts;
@@ -63,6 +64,9 @@ school_check( 1 === $xpath->query( '//*[@data-menu-group="archive"]//*[@data-men
 school_check( 1 === $xpath->query( '//details[@data-menu-archives and not(@open)]' )->length, 'Previous weeks use a closed native disclosure.' );
 school_check( '2026-11-16' === $xpath->query( '//*[@data-menu-group="current"]//*[@data-menu-week][1]' )->item( 0 )->getAttribute( 'data-week-start' ), 'The first main week is the current one.' );
 school_check( 3 === $xpath->query( '//*[@data-illustrated-url]' )->length, 'Illustrated views are offered only for public menus.' );
+school_check( 3 === $xpath->query( '//*[@data-illustrated-url]/*[contains(@class,"tccms-illustrated-stage")]/*[contains(@class,"tccms-illustrated-fallback")]' )->length, 'Illustrated loading shells and readable fallbacks are rendered on the server.' );
+school_check( 3 === $xpath->query( '//*[@data-illustrated-url]/*[contains(@class,"tccms-week-footer")]' )->length, 'Downloads stay outside the illustrated loading shell.' );
+school_check( 3 === $xpath->query( '//*[@data-illustrated-url]/*[contains(@class,"tccms-illustrated-stage")]/*[@role="status"]' )->length, 'Each illustrated view has an accessible loading state.' );
 school_check( 'Europe/Paris' === $xpath->query( '//*[@data-menu-calendar]' )->item( 0 )->getAttribute( 'data-timezone' ), 'The browser receives the WordPress timezone.' );
 school_check( 'publish' === $GLOBALS['school_display_query']['post_status'] && false === $GLOBALS['school_display_query']['has_password'], 'The query excludes unpublished and password-protected posts.' );
 $GLOBALS['school_test_today'] = '2026-11-22';
