@@ -188,6 +188,9 @@ input::placeholder { color: #66756b; opacity: 1; }
 .library-empty h2 { font-size: 18px; }
 .library-empty p { margin: 10px 0 20px; font-size: 13px; }
 dialog { width: min(580px, calc(100% - 32px)); padding: 24px; border: 1px solid #cfd9d1; border-radius: 12px; color: #294232; background: #fff; box-shadow: 0 12px 48px #18352626; }
+#usage-report-dialog { width: min(920px, calc(100% - 24px)); padding: 12px; }
+#usage-report-dialog form { display: flex; justify-content: flex-end; }
+#usage-report-dialog iframe { display: block; width: 100%; height: min(68vh, 660px); border: 0; }
 dialog::backdrop { background: #15291f50; }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
 .dialog-heading h2 { font-size: 20px; letter-spacing: -.02em; }

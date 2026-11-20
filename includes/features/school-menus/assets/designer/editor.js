@@ -678,6 +678,17 @@
             finally { submit.disabled = false; }
         });
     }
+    if (server?.usageUrl) {
+        const dialog = element('#usage-report-dialog');
+        for (const trigger of document.querySelectorAll('[data-usage-report]')) {
+            trigger.hidden = false;
+            trigger.addEventListener('click', () => {
+                dialog.querySelector('iframe').src = server.usageUrl;
+                dialog.showModal();
+            });
+        }
+        dialog.addEventListener('close', () => dialog.querySelector('iframe').removeAttribute('src'));
+    }
     setTab(currentTab);
     refresh();
     if (server?.library) showLibrary();

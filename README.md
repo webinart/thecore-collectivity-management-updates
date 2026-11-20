@@ -4,8 +4,13 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.42`
+Current version: `1.0.1-beta.43`
 Release channel: beta
+
+### Changes in 1.0.1-beta.43
+
+- Record whether an AI-generated school-menu theme was saved as a draft, rejected during validation, or failed to save.
+- Open the current user's monthly AI usage from the theme library or editor when the active The Core theme supports usage reports.
 
 ### Changes in 1.0.1-beta.42
 
