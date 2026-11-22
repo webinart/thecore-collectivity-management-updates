@@ -34,6 +34,13 @@ final class TheCore_Collectivity_School_Menu_Themes {
         return current_user_can('manage_options') || (current_user_can('publish_tccm_school_menus') && current_user_can('edit_others_posts'));
     }
 
+    public static function can_choose() {
+        if (self::can_design()) return true;
+        $type = get_post_type_object(TheCore_Collectivity_School_Menus_Data::POST_TYPE);
+        return $type && current_user_can($type->cap->edit_posts)
+            && TheCore_Collectivity_School_Menus_Settings::catering_theme_choice_enabled();
+    }
+
     public static function records() {
         $records = [];
         foreach (get_posts(['post_type' => self::POST_TYPE, 'post_status' => ['draft', 'publish'], 'numberposts' => 100, 'orderby' => 'ID', 'order' => 'ASC']) as $post) {
@@ -79,6 +86,7 @@ final class TheCore_Collectivity_School_Menu_Themes {
     }
 
     public static function assign($menu_id, $theme_id, $snapshot) {
+        if (!self::can_choose()) return;
         update_post_meta($menu_id, self::CHOICE, $theme_id);
         if ($snapshot) update_post_meta($menu_id, self::SNAPSHOT, wp_slash($snapshot));
         else delete_post_meta($menu_id, self::SNAPSHOT);

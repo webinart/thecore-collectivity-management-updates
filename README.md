@@ -4,8 +4,13 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.43`
+Current version: `1.0.1-beta.44`
 Release channel: beta
+
+### Changes in 1.0.1-beta.44
+
+- Add a site setting for catering staff to choose a weekly menu design. It defaults to enabled. When disabled, design managers keep control and catering edits preserve the assigned design and its saved snapshot.
+- Menu editors can use `TheCore_Collectivity_School_Menu_Themes::can_choose()` to show the selector. The assignment API enforces the same policy.
 
 ### Changes in 1.0.1-beta.43
 

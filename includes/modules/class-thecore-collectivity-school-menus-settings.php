@@ -4,6 +4,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 final class TheCore_Collectivity_School_Menus_Settings {
+	const CATERING_THEME_CHOICE = 'tccm_school_menus_catering_theme_choice';
+
+	public static function catering_theme_choice_enabled() {
+		return '1' === (string) get_option( self::CATERING_THEME_CHOICE, '1' );
+	}
+
 	public static function register_hooks() {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_post_tccm_school_menus_toggle', array( __CLASS__, 'save' ) );
@@ -27,6 +33,8 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		wp_nonce_field( 'tccm_school_menus_toggle' );
 		echo '<p><label><input type="checkbox" name="enabled" value="1" ' . checked( $active, true, false ) . '> ' . esc_html__( 'Activer la gestion des menus scolaires', 'thecore-collectivity-management' ) . '</label></p>';
 		echo '<p class="description">' . esc_html__( 'Une publication par semaine, des repères associés à chaque aliment et un widget d’affichage. La désactivation conserve les menus et les repères.', 'thecore-collectivity-management' ) . '</p>';
+		echo '<input type="hidden" name="catering_theme_choice" value="0">';
+		echo '<p><label><input type="checkbox" name="catering_theme_choice" value="1" ' . checked( self::catering_theme_choice_enabled(), true, false ) . '> ' . esc_html__( 'Autoriser l’équipe de restauration à choisir le modèle graphique de chaque semaine', 'thecore-collectivity-management' ) . '</label></p>';
 		submit_button();
 		echo '</form>';
 		if ( $active ) {
@@ -44,6 +52,9 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		$states = is_array( $states ) ? $states : array();
 		$states['school-menus'] = isset( $_POST['enabled'] ) && is_string( $_POST['enabled'] ) && '1' === $_POST['enabled'];
 		update_option( TheCore_Collectivity_Module_Registry::OPTION_MODULE_STATES, $states, false );
+		if ( isset( $_POST['catering_theme_choice'] ) && in_array( $_POST['catering_theme_choice'], array( '0', '1' ), true ) ) {
+			update_option( self::CATERING_THEME_CHOICE, $_POST['catering_theme_choice'], false );
+		}
 		wp_safe_redirect( admin_url( 'options-general.php?page=tccm-school-menus&saved=1' ) );
 		exit;
 	}
