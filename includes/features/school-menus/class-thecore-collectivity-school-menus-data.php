@@ -3,6 +3,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
+require_once dirname( __DIR__, 2 ) . '/modules/class-thecore-collectivity-school-menus-settings.php';
+
 final class TheCore_Collectivity_School_Menus_Data {
 	const POST_TYPE = 'tccm_school_menu';
 	const TAXONOMY = 'tccm_food_marker';
@@ -28,6 +30,11 @@ final class TheCore_Collectivity_School_Menus_Data {
 			$date = ( new DateTimeImmutable( 'now', wp_timezone() ) )->modify( 'monday this week' );
 		}
 		$value = array( 'version' => 1, 'start' => $date->format( 'Y-m-d' ), 'source_url' => '', 'notice' => '', 'days' => array() );
+		$defaults = TheCore_Collectivity_School_Menus_Settings::default_badge_ids();
+		if ( $defaults ) {
+			$value['source_badges'] = $defaults;
+			$value['source_badges_in_legend'] = true;
+		}
 		for ( $offset = 0; $offset < 5; $offset++ ) {
 			$value['days'][] = array( 'date' => $date->modify( '+' . $offset . ' days' )->format( 'Y-m-d' ), 'status' => 'not_specified', 'vegetarian' => false, 'courses' => array_fill_keys( array_keys( self::courses() ), array() ) );
 		}
@@ -62,6 +69,9 @@ final class TheCore_Collectivity_School_Menus_Data {
 			return self::error( __( 'Le lien de l’affiche doit être une adresse HTTP ou HTTPS complète.', 'thecore-collectivity-management' ) );
 		}
 		$result = array( 'version' => 1, 'start' => $value['start'], 'source_url' => $source, 'notice' => sanitize_textarea_field( $value['notice'] ), 'days' => array() );
+		if ( true === ( $value['source_badges_in_legend'] ?? false ) ) {
+			$result['source_badges_in_legend'] = true;
+		}
 		foreach ( array( 'source_markers', 'source_badges' ) as $field ) {
 			if ( ! array_key_exists( $field, $value ) ) {
 				continue;
@@ -131,7 +141,7 @@ final class TheCore_Collectivity_School_Menus_Data {
 		$family = get_term_meta( $term->term_id, '_tccm_marker_family', true );
 		$logo = (int) get_term_meta( $term->term_id, '_tccm_marker_logo', true );
 		$crop = $logo ? self::logo_crop( $logo, get_term_meta( $term->term_id, '_tccm_marker_logo_crop', true ) ) : null;
-		return array( 'id' => (int) $term->term_id, 'name' => $term->name, 'family' => 'origin' === $family ? 'origin' : 'preparation', 'logo' => $logo && wp_attachment_is_image( $logo ) ? wp_get_attachment_image_url( $logo, $crop ? 'full' : 'thumbnail' ) : '', 'crop' => $crop, 'icon' => get_term_meta( $term->term_id, '_tccm_marker_icon', true ) );
+		return array( 'id' => (int) $term->term_id, 'name' => $term->name, 'slug' => $term->slug ?? '', 'family' => 'origin' === $family ? 'origin' : 'preparation', 'logo' => $logo && wp_attachment_is_image( $logo ) ? wp_get_attachment_image_url( $logo, $crop ? 'full' : 'thumbnail' ) : '', 'crop' => $crop, 'icon' => get_term_meta( $term->term_id, '_tccm_marker_icon', true ) );
 	}
 
 	public static function logo_crop( $attachment_id, $rectangle ) {
@@ -163,6 +173,17 @@ final class TheCore_Collectivity_School_Menus_Data {
 	public static function update( $post_id, $value ) {
 		if ( self::POST_TYPE !== get_post_type( $post_id ) || ! current_user_can( 'edit_post', $post_id ) ) {
 			return new WP_Error( 'tccm_school_menu_forbidden', __( 'Vous ne pouvez pas modifier ce menu.', 'thecore-collectivity-management' ) );
+		}
+		// Older clients can omit the poster field. Preserve a saved week, including an empty selection.
+		if ( is_array( $value ) && ! array_key_exists( 'source_badges', $value ) ) {
+			$previous = get_post_meta( $post_id, self::META, true );
+			$badges = is_array( $previous ) ? ( $previous['source_badges'] ?? array() ) : TheCore_Collectivity_School_Menus_Settings::default_badge_ids();
+			if ( $badges ) {
+				$value['source_badges'] = $badges;
+				if ( ! is_array( $previous ) || ! empty( $previous['source_badges_in_legend'] ) ) {
+					$value['source_badges_in_legend'] = true;
+				}
+			}
 		}
 		$value = self::normalize( $value );
 		if ( is_wp_error( $value ) ) {

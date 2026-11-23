@@ -93,7 +93,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 		return array( self::day_name( $week['start'], $format ), self::day_name( $end, $short ? 'j M Y' : 'j F Y' ) );
 	}
 
-	private static function legend( array $used_markers, $prefix ) {
+	private static function legend( array $used_markers, $prefix, $badges = '' ) {
 		$html = '<section class="tccms-legend" aria-label="' . esc_attr__( 'Les repères du menu', 'thecore-collectivity-management' ) . '"><div class="tccms-legend-heading"><span class="tccms-legend-badge" aria-hidden="true">' . self::icon( 'help' ) . '</span><h3>' . esc_html__( 'Les repères du menu', 'thecore-collectivity-management' ) . '</h3></div>';
 		foreach ( array( 'preparation' => __( 'Qualité et préparation', 'thecore-collectivity-management' ), 'origin' => __( 'Origine et fournisseur', 'thecore-collectivity-management' ) ) as $family => $label ) {
 			$entries = array();
@@ -107,7 +107,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 				$html .= '<div class="tccms-legend-family tccms-legend-family--' . esc_attr( $family ) . '"><h4>' . esc_html( $label ) . '</h4><ul>' . implode( '', $entries ) . '</ul></div>';
 			}
 		}
-		return $html . '</section>';
+		return $html . $badges . '</section>';
 	}
 
 	private static function source_badges( array $marker_ids, $prefix, $asset_url ) {
@@ -115,7 +115,8 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 		foreach ( array_unique( $marker_ids ) as $marker_id ) {
 			$marker = TheCore_Collectivity_School_Menus_Data::marker( $marker_id );
 			if ( $marker && 'origin' === $marker['family'] ) {
-				$entries[] = '<li>' . self::marker( $marker, $prefix, false ) . '</li>';
+				$key = TheCore_Collectivity_School_Menus_Settings::FRANCE_KEYS[ $marker['slug'] ] ?? '';
+				$entries[] = '<li data-france-badge="' . esc_attr( $key ) . '">' . self::marker( $marker, $prefix, false ) . '</li>';
 			}
 		}
 		return $entries ? '<aside class="tccms-origin-rail" aria-label="' . esc_attr__( 'Repères d’origine présents sur l’affiche', 'thecore-collectivity-management' ) . '"><ul>' . implode( '', $entries ) . '</ul><img class="tccms-edge-leaves" src="' . esc_url( $asset_url . 'autumn-leaves.png' ) . '" alt="" width="1024" height="1536" loading="lazy" aria-hidden="true"></aside>' : '';
@@ -189,7 +190,11 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 			$period = self::period( $week );
 			$title = sprintf( __( 'Semaine du %1$s au %2$s', 'thecore-collectivity-management' ), $period[0], $period[1] );
 			$rail = self::source_badges( $week['source_badges'] ?? array(), $prefix, $asset_url );
-			$html .= '<section class="tccms-week' . ( $rail && ! $illustrated ? ' tccms-week--with-rail' : '' ) . '" data-menu-week data-week-start="' . esc_attr( $week['start'] ) . '"' . ( $illustrated ? ' data-illustrated-url="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::view_url( $menu_id ) ) . '"' : '' ) . ' id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1">';
+			$legend_badges = ! empty( $week['source_badges_in_legend'] ) ? $rail : '';
+			if ( $legend_badges ) {
+				$rail = '';
+			}
+			$html .= '<section class="tccms-week' . ( $rail && ! $illustrated ? ' tccms-week--with-rail' : '' ) . '"' . ( $legend_badges ? ' data-legend-badges' : '' ) . ' data-menu-week data-week-start="' . esc_attr( $week['start'] ) . '"' . ( $illustrated ? ' data-illustrated-url="' . esc_url( TheCore_Collectivity_School_Menus_Downloads::view_url( $menu_id ) ) . '"' : '' ) . ' id="' . esc_attr( $week_id ) . '" aria-labelledby="' . esc_attr( $week_id . '-title' ) . '" tabindex="-1">';
 			if ( $illustrated ) {
 				$html .= '<div class="tccms-illustrated-stage"><p class="tccms-illustrated-loading" role="status">' . esc_html__( 'Chargement du menu…', 'thecore-collectivity-management' ) . '</p><div class="tccms-week tccms-illustrated-fallback' . ( $rail ? ' tccms-week--with-rail' : '' ) . '">';
 			}
@@ -222,7 +227,7 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 				}
 				$html .= '</article>';
 			}
-			$html .= '</div><div class="tccms-week-details">' . self::legend( $used_markers, $prefix ) . '<div class="tccms-week-notes">';
+			$html .= '</div><div class="tccms-week-details">' . self::legend( $used_markers, $prefix, $legend_badges ) . '<div class="tccms-week-notes">';
 			if ( $week['notice'] ) {
 				$html .= '<p class="tccms-notice">' . nl2br( esc_html( $week['notice'] ) ) . '</p>';
 			}

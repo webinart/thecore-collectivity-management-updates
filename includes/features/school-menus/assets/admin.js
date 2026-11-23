@@ -57,7 +57,7 @@
             for (const [family, label] of Object.entries({ preparation: 'Qualité et préparation', origin: 'Origine et fournisseur' })) {
                 const group = node('fieldset');
                 group.append(node('legend', label));
-                const markers = configuration.markers.filter(marker => marker.family === family);
+                const markers = configuration.markers.filter(marker => marker.family === family && !configuration.hiddenIngredientSlugs?.includes(marker.slug));
                 if (!markers.length) group.append(node('p', 'Aucun repère disponible.'));
                 for (const marker of markers) {
                     const option = node('label');
@@ -164,7 +164,7 @@
             target.append(field('Informations complémentaires (facultatif)', value.notice, notice => { value.notice = notice; }, 'textarea'));
             for (const [key, title, description] of [
                 ['source_markers', 'Origines mentionnées sur l’affiche', 'Ces repères apparaissent dans la légende, sans être attribués à tous les aliments.'],
-                ['source_badges', 'Badges à droite du tableau', 'Ces repères de l’affiche restent séparés des fournisseurs de la légende et des origines attribuées aux aliments.']
+                ['source_badges', 'Logos de la semaine', 'Les logos sélectionnés accompagnent le menu de cette semaine et son PDF.']
             ]) {
                 const sourceMarkers = node('fieldset', '', 'tccm-menu-markers');
                 sourceMarkers.append(node('legend', title), node('p', description, 'description'));

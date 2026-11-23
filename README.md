@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.44`
+Current version: `1.0.1-beta.45`
 Release channel: beta
+
+### Changes in 1.0.1-beta.45
+
+- Configure the French origin logos copied to the legend of each new school menu and its PDF. Ingredient-level French origin choices can be enabled independently.
 
 ### Changes in 1.0.1-beta.44
 

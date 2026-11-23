@@ -34,7 +34,8 @@
             '--legend-font-size': `${style.legend.fontSize - (printing ? 2 : 0)}px`
         };
         for (const [name, value] of Object.entries(variables)) html.style.setProperty(name, value);
-        Object.assign(document.body.dataset, { texture: String(style.texture), ribbonShape: style.ribbonShape, dayShape: style.days.shape, courseShape: style.courses.shape, courseShadow: String(style.courses.shadow), cellShape: style.cells.shape, cellGradient: String(style.cells.gradient), badgePlacement: style.badges.placement, badgeFrame: style.badges.frame });
+        const badgePlacement = root.querySelector('[data-legend-badges]') ? 'legend' : style.badges.placement;
+        Object.assign(document.body.dataset, { texture: String(style.texture), ribbonShape: style.ribbonShape, dayShape: style.days.shape, courseShape: style.courses.shape, courseShadow: String(style.courses.shadow), cellShape: style.cells.shape, cellGradient: String(style.cells.gradient), badgePlacement, badgeFrame: style.badges.frame });
         paper.style.padding = `${printing ? style.print.padding * 96 / 25.4 : mobile ? Math.min(style.pagePadding, 24) : style.pagePadding}px`;
         paper.style.backgroundColor = style.pageBackground;
         const background = document.querySelector('#background-layer');
@@ -73,14 +74,15 @@
         const badgeKeys = Object.keys(format.badgeNames);
         const badgeRail = root.querySelector('.tccms-origin-rail');
         if (badgeRail && !badgeHomes.has(badgeRail)) badgeHomes.set(badgeRail, { parent: badgeRail.parentElement, next: badgeRail.nextSibling });
-        if (badgeRail && style.badges.placement === 'legend') {
+        if (badgeRail && badgePlacement === 'legend') {
             root.querySelector('.tccms-legend').append(badgeRail);
         } else if (badgeRail) {
             const home = badgeHomes.get(badgeRail);
             home.parent.insertBefore(badgeRail, home.next?.parentNode === home.parent ? home.next : null);
         }
         root.querySelectorAll('.tccms-origin-rail li .tccms-marker').forEach((marker, index) => {
-            const source = style.badges.logos[badgeKeys[index]];
+            const key = marker.closest('li').dataset.franceBadge ?? badgeKeys[index];
+            const source = style.badges.logos[key];
             let replacement = marker.querySelector('.theme-badge-image');
             if (!replacement) { replacement = document.createElement('img'); replacement.className = 'theme-badge-image'; replacement.alt = ''; marker.append(replacement); }
             marker.querySelectorAll(':scope > svg, :scope > img:not(.theme-badge-image)').forEach(original => { original.style.display = source ? 'none' : ''; });

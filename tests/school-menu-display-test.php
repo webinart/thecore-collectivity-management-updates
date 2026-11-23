@@ -93,4 +93,9 @@ foreach ( array( 0, 'invalid', 23, 24, 25, 26, 27, 28, 999 ) as $unavailable ) {
 	school_check( is_wp_error( TheCore_Collectivity_School_Menus_Downloads::view_document( $unavailable ) ), 'Unavailable menus cannot be opened through the screen endpoint: ' . $unavailable );
 }
 school_check( $before === serialize( array( $GLOBALS['school_test_posts'], $GLOBALS['school_test_meta'] ) ), 'Classification and public rendering never mutate stored menus or publication statuses.' );
+$GLOBALS['school_test_meta'][20]['_tccm_school_menu']['source_badges'] = array(3);
+$GLOBALS['school_test_meta'][20]['_tccm_school_menu']['source_badges_in_legend'] = true;
+$single = school_display_xpath( TheCore_Collectivity_School_Menus_Renderer::render(20, 1) );
+school_check( 1 === $single->query('//section[@class="tccms-legend"]//li[@data-france-badge="eggs_fr"]')->length, 'An individual French logo is rendered in the legend with its own design key.' );
+school_check( 0 === $single->query('//td//*[@data-menu-marker]')->length, 'A legend logo does not imply an ingredient attribution.' );
 echo "School menu display checks passed. Total assertions: " . $checks . ".\n";

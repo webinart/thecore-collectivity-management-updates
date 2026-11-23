@@ -116,6 +116,9 @@
 .tccm-school-menus .tccms-legend h3 { font-size: 16px; line-height: 1.3; }
 .tccm-school-menus .tccms-legend-badge { display: flex; flex: none; align-items: center; justify-content: center; width: 26px; height: 26px; color: #0074d9; }
 .tccm-school-menus .tccms-legend-badge svg { width: 26px; height: 26px; }
+.tccm-school-menus [data-legend-badges] .tccms-legend > .tccms-origin-rail { grid-column: 1 / -1; grid-row: auto; margin: 0; }
+.tccm-school-menus [data-legend-badges] .tccms-legend > .tccms-origin-rail ul { flex-direction: row; flex-wrap: wrap; }
+.tccm-school-menus [data-legend-badges] .tccms-origin-rail .tccms-edge-leaves { display: none; }
 .tccm-school-menus .tccms-legend-family { min-width: 0; padding: 12px; border: 1px solid #d0dfc9; border-radius: 12px; background: #f0f6e9; }
 .tccm-school-menus .tccms-legend-family--origin { border-color: #e6d9be; background: #fcf6e9; }
 .tccm-school-menus .tccms-legend h4 { margin-bottom: 8px; font-size: 14px; line-height: 1.3; }

@@ -6,6 +6,43 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class TheCore_Collectivity_School_Menus_Settings {
 	const CATERING_THEME_CHOICE = 'tccm_school_menus_catering_theme_choice';
 
+	const FRANCE_POSTER = 'tccm_school_menus_france_poster';
+	const FRANCE_INGREDIENTS = 'tccm_school_menus_france_ingredients';
+	const FRANCE_KEYS = array(
+		'fruits-legumes-france' => 'produce_fr',
+		'oeufs-france' => 'eggs_fr',
+		'viande-bovine-francaise' => 'beef_fr',
+		'porc-francais' => 'pork_fr',
+	);
+
+	public static function ingredient_origins_enabled() {
+		return '1' === (string) get_option( self::FRANCE_INGREDIENTS, '1' );
+	}
+
+	public static function france_terms() {
+		$terms = get_terms( array(
+			'taxonomy' => TheCore_Collectivity_School_Menus_Data::TAXONOMY,
+			'hide_empty' => false, 'slug' => array_keys( self::FRANCE_KEYS ),
+			'meta_key' => '_tccm_marker_family', 'meta_value' => 'origin',
+		) );
+		return is_wp_error( $terms ) ? array() : array_column( $terms, null, 'slug' );
+	}
+
+	public static function default_badge_ids() {
+		$selected = get_option( self::FRANCE_POSTER, array() );
+		if ( ! is_array( $selected ) || ! $selected ) {
+			return array();
+		}
+		$terms = self::france_terms();
+		$ids = array();
+		foreach ( self::FRANCE_KEYS as $slug => $key ) {
+			if ( isset( $terms[ $slug ] ) && in_array( $slug, $selected, true ) ) {
+				$ids[] = (int) $terms[ $slug ]->term_id;
+			}
+		}
+		return $ids;
+	}
+
 	public static function catering_theme_choice_enabled() {
 		return '1' === (string) get_option( self::CATERING_THEME_CHOICE, '1' );
 	}
@@ -35,6 +72,25 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		echo '<p class="description">' . esc_html__( 'Une publication par semaine, des repères associés à chaque aliment et un widget d’affichage. La désactivation conserve les menus et les repères.', 'thecore-collectivity-management' ) . '</p>';
 		echo '<input type="hidden" name="catering_theme_choice" value="0">';
 		echo '<p><label><input type="checkbox" name="catering_theme_choice" value="1" ' . checked( self::catering_theme_choice_enabled(), true, false ) . '> ' . esc_html__( 'Autoriser l’équipe de restauration à choisir le modèle graphique de chaque semaine', 'thecore-collectivity-management' ) . '</label></p>';
+		if ( $active ) {
+			$terms = self::france_terms();
+			$selected = get_option( self::FRANCE_POSTER, array() );
+			echo '<h2>' . esc_html__( 'Origines France', 'thecore-collectivity-management' ) . '</h2>';
+			if ( $terms ) {
+				echo '<fieldset><legend>' . esc_html__( 'Logos en légende des nouvelles semaines', 'thecore-collectivity-management' ) . '</legend>';
+				echo '<input type="hidden" name="france_poster_present" value="1">';
+				foreach ( self::FRANCE_KEYS as $slug => $key ) {
+					if ( isset( $terms[ $slug ] ) ) {
+						echo '<p><label><input type="checkbox" name="france_poster[]" value="' . esc_attr( $slug ) . '" ' . checked( in_array( $slug, (array) $selected, true ), true, false ) . '> ' . esc_html( $terms[ $slug ]->name ) . '</label></p>';
+					}
+				}
+				echo '</fieldset><p class="description">' . esc_html__( 'Chaque nouvelle semaine reprend ces logos sur le menu et son PDF.', 'thecore-collectivity-management' ) . '</p>';
+			} else {
+				echo '<p>' . esc_html__( 'Ajoutez les repères Origines France dans la famille Origine et fournisseur pour choisir les logos de la légende.', 'thecore-collectivity-management' ) . '</p>';
+			}
+			echo '<input type="hidden" name="france_ingredients" value="0">';
+			echo '<p><label><input type="checkbox" name="france_ingredients" value="1" ' . checked( self::ingredient_origins_enabled(), true, false ) . '> ' . esc_html__( 'Proposer les origines France lors de la saisie de chaque aliment', 'thecore-collectivity-management' ) . '</label></p>';
+		}
 		submit_button();
 		echo '</form>';
 		if ( $active ) {
@@ -54,6 +110,18 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		update_option( TheCore_Collectivity_Module_Registry::OPTION_MODULE_STATES, $states, false );
 		if ( isset( $_POST['catering_theme_choice'] ) && in_array( $_POST['catering_theme_choice'], array( '0', '1' ), true ) ) {
 			update_option( self::CATERING_THEME_CHOICE, $_POST['catering_theme_choice'], false );
+		}
+		if ( ( $_POST['france_poster_present'] ?? '' ) === '1' ) {
+			$selected = $_POST['france_poster'] ?? array();
+			if ( is_array( $selected ) ) {
+				$slugs = array_filter( array_keys( self::FRANCE_KEYS ), static function ( $slug ) use ( $selected ) {
+					return in_array( $slug, $selected, true );
+				} );
+				update_option( self::FRANCE_POSTER, array_values( $slugs ), false );
+			}
+		}
+		if ( isset( $_POST['france_ingredients'] ) && in_array( $_POST['france_ingredients'], array( '0', '1' ), true ) ) {
+			update_option( self::FRANCE_INGREDIENTS, $_POST['france_ingredients'], false );
 		}
 		wp_safe_redirect( admin_url( 'options-general.php?page=tccm-school-menus&saved=1' ) );
 		exit;

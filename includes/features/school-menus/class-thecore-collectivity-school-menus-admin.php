@@ -51,7 +51,7 @@ final class TheCore_Collectivity_School_Menus_Admin {
 		wp_enqueue_media();
 		wp_enqueue_style( 'tccm-school-menus-admin', THECORE_COLLECTIVITY_MANAGEMENT_URL . $base . 'admin.css', array(), TheCore_Collectivity_Elementor::get_asset_version( $base . 'admin.css' ) );
 		wp_enqueue_script( 'tccm-school-menus-admin', THECORE_COLLECTIVITY_MANAGEMENT_URL . $base . 'admin.js', array(), TheCore_Collectivity_Elementor::get_asset_version( $base . 'admin.js' ), true );
-		wp_localize_script( 'tccm-school-menus-admin', 'TCCMSchoolMenus', array( 'markers' => TheCore_Collectivity_School_Menus_Data::markers(), 'courses' => TheCore_Collectivity_School_Menus_Data::courses(), 'locale' => str_replace( '_', '-', get_locale() ) ) );
+		wp_localize_script( 'tccm-school-menus-admin', 'TCCMSchoolMenus', array( 'markers' => TheCore_Collectivity_School_Menus_Data::markers(), 'hiddenIngredientSlugs' => TheCore_Collectivity_School_Menus_Settings::ingredient_origins_enabled() ? array() : array_keys( TheCore_Collectivity_School_Menus_Settings::FRANCE_KEYS ), 'courses' => TheCore_Collectivity_School_Menus_Data::courses(), 'locale' => str_replace( '_', '-', get_locale() ) ) );
 	}
 
 	public static function save( $post_id, $post ) {

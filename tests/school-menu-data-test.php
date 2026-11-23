@@ -28,14 +28,16 @@ class TheCore_Collectivity_School_Menus_Admin {
 $GLOBALS['wpdb'] = new School_Menu_Test_DB();
 function __( $value, $domain = '' ) { return $value; }
 function is_wp_error( $value ) { return $value instanceof WP_Error; }
+function get_option( $key, $default = false ) { return $GLOBALS['school_test_options'][ $key ] ?? $default; }
+function get_terms( $args ) { return $GLOBALS['school_france_terms'] ?? array(); }
 function wp_timezone() { return new DateTimeZone( 'Europe/Paris' ); }
 function current_time( $format ) { return $GLOBALS['school_test_today'] ?? '2026-11-17'; }
 function wp_parse_url( $value, $component = -1 ) { return parse_url( $value, $component ); }
 function sanitize_text_field( $value ) { return trim( strip_tags( preg_replace( '/\s+/u', ' ', $value ) ) ); }
 function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
 function current_user_can( ...$arguments ) { return $GLOBALS['school_test_allowed']; }
-function get_term( $marker_id, $taxonomy ) { return in_array( $marker_id, array( 1, 2 ), true ) ? (object) array( 'term_id' => $marker_id, 'name' => 1 === $marker_id ? 'Bio' : 'Ferme locale' ) : null; }
-function get_term_meta( $marker_id, $key, $single ) { return '_tccm_marker_family' === $key ? ( 2 === $marker_id ? 'origin' : 'preparation' ) : ''; }
+function get_term( $marker_id, $taxonomy ) { if ( 3 === $marker_id ) return (object) array( 'term_id' => 3, 'slug' => 'oeufs-france', 'name' => 'Œufs de France' ); return in_array( $marker_id, array( 1, 2 ), true ) ? (object) array( 'term_id' => $marker_id, 'name' => 1 === $marker_id ? 'Bio' : 'Ferme locale' ) : null; }
+function get_term_meta( $marker_id, $key, $single ) { return '_tccm_marker_family' === $key ? ( in_array( $marker_id, array( 2, 3 ), true ) ? 'origin' : 'preparation' ) : ''; }
 function get_post( $post_id ) { return $GLOBALS['school_test_posts'][ $post_id ] ?? null; }
 function get_post_type( $post_id ) { return get_post( $post_id )->post_type ?? null; }
 function get_post_status( $post_id ) { return get_post( $post_id )->post_status ?? null; }
@@ -132,4 +134,21 @@ foreach ( explode( "\r\n", $calendar['content'] ) as $line ) {
 school_check( is_wp_error( TheCore_Collectivity_School_Menus_Downloads::file( 18 ) ), 'Draft menu exports are refused.' );
 $GLOBALS['school_test_posts'][17]->post_password = 'protected';
 school_check( is_wp_error( TheCore_Collectivity_School_Menus_Downloads::file( 17 ) ), 'Password-protected exports are refused.' );
+// A weekly selection is captured at creation and never inferred from dish ingredients.
+use TheCore_Collectivity_School_Menus_Settings as OriginSettings;
+use TheCore_Collectivity_School_Menus_Data as MenuData;
+$GLOBALS['school_france_terms'] = array( (object) array( 'term_id' => 2, 'slug' => 'oeufs-france' ) );
+$GLOBALS['school_test_options'][OriginSettings::FRANCE_POSTER] = array( 'oeufs-france', 'unknown' );
+$GLOBALS['school_test_options'][OriginSettings::FRANCE_INGREDIENTS] = '0';
+$new_week = MenuData::empty_week( '2026-11-23' );
+school_check( array( 2 ) === $new_week['source_badges'] && $new_week['source_badges_in_legend'] && ! OriginSettings::ingredient_origins_enabled(), 'Legend defaults and ingredient entry are independent.' );
+school_check( ! isset( MenuData::get(17)['source_badges'] ), 'Loading an old menu does not backfill the legend.' );
+school_check( array(2) === MenuData::update(18, $week)['source_badges'], 'A first write from an older client receives the defaults.' );
+$GLOBALS['school_test_options'][OriginSettings::FRANCE_POSTER] = array();
+school_check( array(2) === MenuData::update(18, $week)['source_badges'], 'Changes in policy and omitted fields preserve the saved legend.' );
+$no_badges = $week;
+$no_badges['source_badges'] = array();
+school_check( array() === MenuData::update(18, $no_badges)['source_badges'], 'An explicit empty selection is respected.' );
+school_check( ! isset( MenuData::empty_week()['source_badges'] ), 'A municipality may disable every default logo.' );
+unset( $GLOBALS['school_test_options'] );
 echo $checks . " school menu data/calendar checks passed.\n";

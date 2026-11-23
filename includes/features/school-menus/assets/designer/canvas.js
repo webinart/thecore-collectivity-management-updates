@@ -118,12 +118,12 @@
         document.body.dataset.editingDecorations = String(latest.editingDecorations === true);
         if (Math.abs(innerWidth - modeWidth()) > 1) { dimensions(); return; }
         window.SVJMenuRenderer.apply(model, mode, paper, menuRoot);
-        const sideBadges = model.style.badges.placement === 'right';
+        const sideBadges = document.body.dataset.badgePlacement === 'right';
         const pieces = model.elements.filter(piece => piece.visible && sourceAllowed(piece.source) && (sideBadges || piece.anchor !== 'below-badges'));
         const drapes = pieces.filter(piece => piece.anchor.startsWith('drape-'));
         const hasCorner = drapes.some(piece => piece.anchor === 'drape-corner');
         document.body.dataset.tableGarland = String(drapes.some(piece => piece.anchor === 'drape-right'));
-        menuRoot.style.paddingRight = drapes.length ? mode === 'mobile' ? '32px' : model.style.badges.placement === 'legend' ? mode === 'print' ? '56px' : '64px' : '' : '';
+        menuRoot.style.paddingRight = drapes.length ? mode === 'mobile' ? '32px' : !sideBadges ? mode === 'print' ? '56px' : '64px' : '' : '';
         menuRoot.querySelectorAll('.tccms-table-view,.tccms-day-view').forEach(node => { node.style.marginBottom = hasCorner ? mode === 'mobile' ? '40px' : mode === 'print' ? '45px' : '50px' : ''; });
         const mascot = menuRoot.querySelector('.tccms-season--mobile');
         const character = pieces.find(piece => piece.anchor === 'index');
