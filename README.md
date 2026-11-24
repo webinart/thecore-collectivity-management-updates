@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.45`
+Current version: `1.0.1-beta.46`
 Release channel: beta
+
+### Changes in 1.0.1-beta.46
+
+- Keep the illustrated school menu at its intended layout width when Elementor’s frontend stylesheet is active.
 
 ### Changes in 1.0.1-beta.45
 
