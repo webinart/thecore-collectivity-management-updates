@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.47`
+Current version: `1.0.1-beta.48`
 Release channel: beta
+
+### Changes in 1.0.1-beta.48
+
+- Give mobile school menus more room for dishes and display the day and date on a taller ribbon above each daily menu.
 
 ### Changes in 1.0.1-beta.47
 

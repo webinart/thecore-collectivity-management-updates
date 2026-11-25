@@ -36,7 +36,9 @@
         for (const [name, value] of Object.entries(variables)) html.style.setProperty(name, value);
         const badgePlacement = root.querySelector('[data-legend-badges]') ? 'legend' : style.badges.placement;
         Object.assign(document.body.dataset, { texture: String(style.texture), ribbonShape: style.ribbonShape, dayShape: style.days.shape, courseShape: style.courses.shape, courseShadow: String(style.courses.shadow), cellShape: style.cells.shape, cellGradient: String(style.cells.gradient), badgePlacement, badgeFrame: style.badges.frame });
-        paper.style.padding = `${printing ? style.print.padding * 96 / 25.4 : mobile ? Math.min(style.pagePadding, 24) : style.pagePadding}px`;
+        paper.style.padding = mobile
+            ? `${Math.min(style.pagePadding, 24)}px ${Math.min(style.pagePadding, 4)}px`
+            : `${printing ? style.print.padding * 96 / 25.4 : style.pagePadding}px`;
         paper.style.backgroundColor = style.pageBackground;
         const background = document.querySelector('#background-layer');
         background.style.backgroundImage = style.backgroundImage ? `url("${style.backgroundImage}")` : 'none';

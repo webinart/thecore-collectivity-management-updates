@@ -4,7 +4,7 @@ html, body { background: #fffefd; }
 #menu-root { padding-right: 72px; }
 #paper .tccms-week-heading { padding-inline: 62px; }
 #paper .tccms-week-heading h2 { margin-inline: 0; padding-inline: 32px; text-shadow: 0 2px 2px #165b1730; }
-#paper :is(.tccms-cell,.tccms-mobile-day) { background-image: linear-gradient(135deg, #ffffff85, #ffffff00 85%), url("../modeles-menus/assets/paper-texture.webp"); background-size: 100% 100%, 300px 300px; background-repeat: no-repeat, repeat; background-blend-mode: normal, multiply; }
+#paper :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { background-image: linear-gradient(135deg, #ffffff85, #ffffff00 85%), url("../modeles-menus/assets/paper-texture.webp"); background-size: 100% 100%, 300px 300px; background-repeat: no-repeat, repeat; background-blend-mode: normal, multiply; }
 #paper :is(.tccms-day-head,.tccms-mobile-heading,.tccms-week-heading h2)::before { background-image: url("../modeles-menus/assets/paper-texture.webp"), var(--menu-gradient); background-size: 260px 260px, 100% 100%; background-blend-mode: multiply, normal; }
 #paper .tccms-week-heading h2::before { background-image: linear-gradient(180deg, #b9ec484d, #ffffff00 38%, #104f1026 76%, #96d5273d), url("../modeles-menus/assets/paper-texture.webp"), var(--menu-gradient); background-size: 100% 100%, 260px 260px, 100% 100%; background-blend-mode: normal, multiply, normal; }
 #paper :is(.tccms-course,.tccms-mobile-course dt)::before { background-image: url("../modeles-menus/assets/paper-texture.webp"), var(--course-background); background-size: 260px 260px, 100% 100%; background-blend-mode: multiply, normal; }
@@ -33,8 +33,8 @@ html, body { background: #fffefd; }
 #paper .tccms-legend .tccms-origin-rail ul { display: grid; grid-template-columns: repeat(2,var(--autumn-badge-size)); justify-content: center; align-items: center; gap: 8px 12px; margin: 0; }
 #paper .tccms-legend .tccms-origin-rail .tccms-marker-group { padding: 0; background: transparent; border-radius: 0; }
 #paper .tccms-legend .tccms-origin-rail .tccms-marker { width: var(--autumn-badge-size); height: var(--autumn-badge-size); filter: none; }
-body.mode-mobile #paper .tccms-week-heading { grid-template-columns: 88px minmax(0,1fr); gap: 10px; padding: 0; }
-body.mode-mobile #menu-root { padding-right: 24px; }
+body.mode-mobile #paper .tccms-week-heading { grid-template-columns: clamp(48px, 18vw, 88px) minmax(0,1fr); gap: 10px; padding: 0 16px 0 0; }
+body.mode-mobile #menu-root { padding-right: 0; }
 body.mode-mobile #paper .tccms-week-heading h2 { min-width: 0; margin-inline: 14px; padding-inline: 12px; }
 body.mode-mobile #paper .tccms-season--mobile { visibility: visible !important; }
 body.mode-mobile #paper .tccms-week-leaf { visibility: hidden !important; }

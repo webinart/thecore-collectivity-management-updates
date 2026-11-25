@@ -127,8 +127,8 @@
     .tccm-school-menus .tccms-week-leaf { width: 32px; height: 48px; }
     .tccm-school-menus .tccms-week-leaf--left { left: -40px; }
     .tccm-school-menus .tccms-week-leaf--right { right: -40px; }
-    .tccm-school-menus .tccms-mobile-day { border: 1px solid var(--menu-edge); border-radius: 10px; background-color: var(--menu-day); background-image: url("paper-texture.webp"), url("paper-texture.webp"); background-position: center; background-size: 400px 400px; background-repeat: repeat; background-blend-mode: multiply; }
-    .tccm-school-menus .tccms-mobile-heading { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 8px; padding: 16px 16px 19px; color: var(--menu-head-ink); }
+    .tccm-school-menus .tccms-mobile-day > :where(dl, .tccms-status) { border: 1px solid var(--menu-edge); border-radius: 10px; background-color: var(--menu-day); background-image: url("paper-texture.webp"), url("paper-texture.webp"); background-position: center; background-size: 400px 400px; background-repeat: repeat; background-blend-mode: multiply; }
+    .tccm-school-menus .tccms-mobile-heading { position: relative; isolation: isolate; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 72px; margin-bottom: 4px; padding: 16px; color: var(--menu-head-ink); }
     .tccm-school-menus .tccms-mobile-heading h3 { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; font: 400 25px/1.1 "TCCM Menu Brush", cursive; }
     .tccm-school-menus .tccms-mobile-heading time { font: 400 17px/1.1 "TCCM Menu Hand", cursive; }
     .tccm-school-menus .tccms-mobile-day dl { padding: 0 16px; }
@@ -152,5 +152,5 @@
     .tccm-school-menus .tccms-periods, .tccm-school-menus .tccms-season { display: none; }
     .tccm-school-menus .tccms-dish-name { font-size: 12pt; }
     .tccm-school-menus .tccms-marker-group--interactive > .tccms-marker-name { display: none !important; }
-    .tccm-school-menus .tccms-cell, .tccm-school-menus .tccms-mobile-day { background-image: none; }
+    .tccm-school-menus .tccms-cell, .tccm-school-menus .tccms-mobile-day > :where(dl, .tccms-status) { background-image: none; }
 }

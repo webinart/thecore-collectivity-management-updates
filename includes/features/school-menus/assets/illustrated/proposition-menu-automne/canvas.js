@@ -26,7 +26,7 @@
             const width = Math.min(corner.width - 12, (corner.bottom - heading.top - 4) * 1.5);
             place(art.querySelector('.autumn-mascot'), corner.left + (corner.width - width) / 2, corner.bottom - width / 1.5 - 3, width, width / 1.5);
         }
-        const sprigSize = mobile ? 30 : mode === 'print' ? 48 : 60;
+        const sprigSize = mobile ? 22 : mode === 'print' ? 48 : 60;
         const sprigGap = mobile ? 6 : 8;
         place(art.querySelector('.autumn-sprig.is-left'), title.left - sprigSize - sprigGap, title.top + (title.height - sprigSize) / 2, sprigSize, sprigSize);
         place(art.querySelector('.autumn-sprig.is-right'), title.right + sprigGap, title.top + (title.height - sprigSize) / 2, sprigSize, sprigSize);

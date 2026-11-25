@@ -123,7 +123,7 @@
         const drapes = pieces.filter(piece => piece.anchor.startsWith('drape-'));
         const hasCorner = drapes.some(piece => piece.anchor === 'drape-corner');
         document.body.dataset.tableGarland = String(drapes.some(piece => piece.anchor === 'drape-right'));
-        menuRoot.style.paddingRight = drapes.length ? mode === 'mobile' ? '32px' : !sideBadges ? mode === 'print' ? '56px' : '64px' : '' : '';
+        menuRoot.style.paddingRight = drapes.length ? mode === 'mobile' ? '8px' : !sideBadges ? mode === 'print' ? '56px' : '64px' : '' : '';
         menuRoot.querySelectorAll('.tccms-table-view,.tccms-day-view').forEach(node => { node.style.marginBottom = hasCorner ? mode === 'mobile' ? '40px' : mode === 'print' ? '45px' : '50px' : ''; });
         const mascot = menuRoot.querySelector('.tccms-season--mobile');
         const character = pieces.find(piece => piece.anchor === 'index');

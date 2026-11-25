@@ -70,12 +70,12 @@ body[data-course-shape="square"] .canvas-paper .tccm-school-menus .tccms-course:
 .canvas-paper .tccm-school-menus :is(.tccms-course-icon,.theme-course-icon) { width: var(--course-icon-size); height: var(--course-icon-size); flex: none; margin: 0; }
 .theme-course-icon { display: inline-block; background-color: currentColor; mask: var(--course-icon-image) center / contain no-repeat; }
 .canvas-paper .tccm-school-menus .tccms-table { border-spacing: var(--theme-cells-gap); }
-.canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day) { border: var(--theme-cells-border-width) solid var(--menu-edge) !important; border-radius: var(--theme-cells-radius); }
-body[data-cell-shape="square"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day) { border-radius: 0; }
-body[data-cell-shape="organic"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day) { border-radius: var(--theme-cells-radius) calc(var(--theme-cells-radius) * .4) calc(var(--theme-cells-radius) * .6) var(--theme-cells-radius); }
+.canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { border: var(--theme-cells-border-width) solid var(--menu-edge) !important; border-radius: var(--theme-cells-radius); }
+body[data-cell-shape="square"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { border-radius: 0; }
+body[data-cell-shape="organic"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { border-radius: var(--theme-cells-radius) calc(var(--theme-cells-radius) * .4) calc(var(--theme-cells-radius) * .6) var(--theme-cells-radius); }
 .canvas-paper .tccm-school-menus .tccms-cell { padding: var(--cell-padding-y) var(--cell-padding-x); }
-body[data-cell-gradient="true"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day) { background-image: linear-gradient(145deg, #ffffffd9, #ffffff00 75%); background-size: 100% 100%; }
-body[data-cell-gradient="true"][data-texture="true"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day) { background-image: linear-gradient(145deg, #ffffffd9, #ffffff00 75%), url("assets/paper-texture.webp"); background-size: 100% 100%, 400px 400px; background-blend-mode: normal, soft-light; }
+body[data-cell-gradient="true"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { background-image: linear-gradient(145deg, #ffffffd9, #ffffff00 75%); background-size: 100% 100%; }
+body[data-cell-gradient="true"][data-texture="true"] .canvas-paper .tccm-school-menus :is(.tccms-cell,.tccms-mobile-day > :where(dl, .tccms-status)) { background-image: linear-gradient(145deg, #ffffffd9, #ffffff00 75%), url("assets/paper-texture.webp"); background-size: 100% 100%, 400px 400px; background-blend-mode: normal, soft-light; }
 .canvas-paper .tccm-school-menus :is(.tccms-dish-name,.tccms-dishes > li) { line-height: var(--theme-line-height); }
 .canvas-paper .tccm-school-menus .tccms-dishes > li + li { margin-top: var(--theme-dish-spacing); padding-top: var(--theme-dish-spacing); }
 .canvas-paper .tccm-school-menus .tccms-week--with-rail { grid-template-columns: minmax(0, 1fr) var(--badge-size); }
@@ -115,12 +115,12 @@ body[data-badge-placement="legend"].mode-mobile .canvas-paper .tccms-origin-rail
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-week-heading:has(.tccms-season--mobile[style*="display: none"]) { grid-template-columns: minmax(0,1fr); padding: 0; }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-week-heading:has(.tccms-season--mobile[style*="display: none"]) h2 { margin: 0; }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-heading { padding-block: var(--day-padding); }
-.mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-heading h3 { gap: var(--theme-days-date-gap) 6px; }
+.mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-heading h3 { column-gap: 10px; row-gap: var(--theme-days-date-gap); }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-day dl { padding-inline: var(--cell-padding-x); }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-course { padding-block: var(--cell-padding-y); }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-mobile-course dt { color: var(--course-text); background: var(--course-background); font: 400 var(--course-font-size)/1.2 var(--heading-font); border-radius: var(--theme-courses-radius); padding: var(--course-padding) 10px; }
 body.mode-mobile[data-course-shape="square"] .canvas-paper .tccms-mobile-course dt { border-radius: 0; }
-body.mode-mobile[data-texture="false"] .canvas-paper .tccms-mobile-day { background-image: none; }
+body.mode-mobile[data-texture="false"] .canvas-paper .tccms-mobile-day > :where(dl, .tccms-status) { background-image: none; }
 .mode-mobile .canvas-paper .tccm-school-menus .tccms-day-view { gap: calc(16px + var(--theme-cells-gap)); }
 body.mode-print .canvas-paper .tccm-school-menus .tccms-day-head.tccms-color-2::before { background: var(--menu-gradient); }
 body[data-background-image="true"] .canvas-paper .tccms-legend-heading { width: fit-content; padding: 4px 8px; border-radius: 8px; background: #fffdf4ed; }
