@@ -172,9 +172,8 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 			$html .= '<a href="#' . esc_attr( $target ) . '" aria-controls="' . esc_attr( $target ) . '">' . esc_html( $period[0] . '–' . $period[1] ) . '</a>';
 		}
 		$html .= '</nav>';
-		$used_markers = array();
-		foreach ( $weeks as $week ) {
-			$used_markers = array_merge( $used_markers, $week['source_markers'] ?? array() );
+		foreach ( $weeks as $menu_id => $week ) {
+			$used_markers = $week['source_markers'] ?? array();
 			foreach ( $week['days'] as $day ) {
 				foreach ( $day['courses'] as $items ) {
 					foreach ( $items as $item ) {
@@ -184,8 +183,6 @@ final class TheCore_Collectivity_School_Menus_Renderer {
 					}
 				}
 			}
-		}
-		foreach ( $weeks as $menu_id => $week ) {
 			$week_id = $prefix . '-' . $menu_id;
 			$period = self::period( $week );
 			$title = sprintf( __( 'Semaine du %1$s au %2$s', 'thecore-collectivity-management' ), $period[0], $period[1] );

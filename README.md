@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.48`
+Current version: `1.0.1-beta.49`
 Release channel: beta
+
+### Changes in 1.0.1-beta.49
+
+- Prepare hidden illustrations for PDF export in custom menu themes. Configure the default suppliers for new weeks and render each week’s own legend.
 
 ### Changes in 1.0.1-beta.48
 

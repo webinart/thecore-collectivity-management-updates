@@ -254,7 +254,15 @@
             latest = { model: window.SVJMenuTheme.toEditor(window.SVJMenuTheme.parse(embedded.theme)), mode: embedded.screen ? embedded.mobile ? 'mobile' : 'screen' : 'print', editingDecorations: false };
             document.documentElement.style.width = `${modeWidth()}px`;
             render();
-            await Promise.all([...paper.querySelectorAll('img')].map(image => image.complete ? Promise.resolve() : new Promise(resolve => { image.addEventListener('load', resolve, { once: true }); image.addEventListener('error', resolve, { once: true }); })));
+            // Hidden mobile artwork will never enter the viewport of the A4 renderer.
+            const images = [...paper.querySelectorAll('img[src]')];
+            if (!embedded.screen) {
+                for (const image of images) image.loading = 'eager';
+            }
+            await Promise.all(images.filter(image => image.loading !== 'lazy' && !image.complete).map(image => new Promise(resolve => {
+                image.addEventListener('load', resolve, { once: true });
+                image.addEventListener('error', resolve, { once: true });
+            })));
             await document.fonts.ready;
             render();
             await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));

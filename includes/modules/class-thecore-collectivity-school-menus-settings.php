@@ -6,6 +6,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class TheCore_Collectivity_School_Menus_Settings {
 	const CATERING_THEME_CHOICE = 'tccm_school_menus_catering_theme_choice';
 
+	const SUPPLIER_DEFAULTS = 'tccm_school_menus_default_suppliers';
 	const FRANCE_POSTER = 'tccm_school_menus_france_poster';
 	const FRANCE_INGREDIENTS = 'tccm_school_menus_france_ingredients';
 	const FRANCE_KEYS = array(
@@ -43,6 +44,24 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		return $ids;
 	}
 
+	public static function suppliers() {
+		$terms = get_terms( array(
+			'taxonomy' => TheCore_Collectivity_School_Menus_Data::TAXONOMY, 'hide_empty' => false,
+			'meta_key' => '_tccm_marker_family', 'meta_value' => 'origin',
+		) );
+		return is_wp_error( $terms ) ? array() : array_filter( $terms, static function ( $term ) {
+			return ! isset( self::FRANCE_KEYS[ $term->slug ] );
+		} );
+	}
+
+	public static function default_supplier_ids() {
+		$selected = get_option( self::SUPPLIER_DEFAULTS, array() );
+		if ( ! is_array( $selected ) || ! $selected ) {
+			return array();
+		}
+		return array_values( array_intersect( array_map( 'intval', array_column( self::suppliers(), 'term_id' ) ), $selected ) );
+	}
+
 	public static function catering_theme_choice_enabled() {
 		return '1' === (string) get_option( self::CATERING_THEME_CHOICE, '1' );
 	}
@@ -73,6 +92,15 @@ final class TheCore_Collectivity_School_Menus_Settings {
 		echo '<input type="hidden" name="catering_theme_choice" value="0">';
 		echo '<p><label><input type="checkbox" name="catering_theme_choice" value="1" ' . checked( self::catering_theme_choice_enabled(), true, false ) . '> ' . esc_html__( 'Autoriser l’équipe de restauration à choisir le modèle graphique de chaque semaine', 'thecore-collectivity-management' ) . '</label></p>';
 		if ( $active ) {
+			$suppliers = self::suppliers();
+			if ( $suppliers ) {
+				$defaults = self::default_supplier_ids();
+				echo '<fieldset><legend><strong>' . esc_html__( 'Fournisseurs précochés pour les nouvelles semaines', 'thecore-collectivity-management' ) . '</strong></legend><input type="hidden" name="suppliers_present" value="1">';
+				foreach ( $suppliers as $term ) {
+					echo '<p><label><input type="checkbox" name="default_suppliers[]" value="' . esc_attr( $term->term_id ) . '" ' . checked( in_array( (int) $term->term_id, $defaults, true ), true, false ) . '> ' . esc_html( $term->name ) . '</label></p>';
+				}
+				echo '</fieldset>';
+			}
 			$terms = self::france_terms();
 			$selected = get_option( self::FRANCE_POSTER, array() );
 			echo '<h2>' . esc_html__( 'Origines France', 'thecore-collectivity-management' ) . '</h2>';
@@ -104,6 +132,17 @@ final class TheCore_Collectivity_School_Menus_Settings {
 			wp_die( esc_html__( 'Accès refusé.', 'thecore-collectivity-management' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( 'tccm_school_menus_toggle' );
+		if ( ( $_POST['suppliers_present'] ?? '' ) === '1' ) {
+			$submitted = $_POST['default_suppliers'] ?? array();
+			$allowed = array_map( 'strval', array_column( self::suppliers(), 'term_id' ) );
+			$ids = array_values( array_filter( $allowed, static function ( $id ) use ( $submitted ) {
+				return is_array( $submitted ) && in_array( $id, $submitted, true );
+			} ) );
+			if ( count( $ids ) > 12 ) {
+				wp_die( esc_html__( 'Choisissez au maximum douze fournisseurs pour la légende.', 'thecore-collectivity-management' ), '', array( 'response' => 400, 'back_link' => true ) );
+			}
+			update_option( self::SUPPLIER_DEFAULTS, array_map( 'intval', $ids ), false );
+		}
 		$states = get_option( TheCore_Collectivity_Module_Registry::OPTION_MODULE_STATES, array() );
 		$states = is_array( $states ) ? $states : array();
 		$states['school-menus'] = isset( $_POST['enabled'] ) && is_string( $_POST['enabled'] ) && '1' === $_POST['enabled'];

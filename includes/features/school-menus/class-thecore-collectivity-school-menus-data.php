@@ -30,6 +30,10 @@ final class TheCore_Collectivity_School_Menus_Data {
 			$date = ( new DateTimeImmutable( 'now', wp_timezone() ) )->modify( 'monday this week' );
 		}
 		$value = array( 'version' => 1, 'start' => $date->format( 'Y-m-d' ), 'source_url' => '', 'notice' => '', 'days' => array() );
+		$suppliers = TheCore_Collectivity_School_Menus_Settings::default_supplier_ids();
+		if ( $suppliers ) {
+			$value['source_markers'] = $suppliers;
+		}
 		$defaults = TheCore_Collectivity_School_Menus_Settings::default_badge_ids();
 		if ( $defaults ) {
 			$value['source_badges'] = $defaults;
