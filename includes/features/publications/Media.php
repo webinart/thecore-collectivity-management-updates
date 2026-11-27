@@ -64,6 +64,7 @@ final class Media {
     public static function render(array $attributes): string {
         $design = (array) ($attributes['design'] ?? []);
         $values = (array) ($attributes['values'] ?? []);
+        if (isset($design['component'])) return Components::render((int) $design['component'], $values);
         $parts = $design['parts'] ?? [];
         if (!is_array($parts)) return '';
         $content = [];

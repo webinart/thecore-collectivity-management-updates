@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.50`
+Current version: `1.0.1-beta.51`
 Release channel: beta
+
+### Changes in 1.0.1-beta.51
+
+- Create and edit native Elementor components from the editorial library. Communication staff manage library components through a dedicated capability. Published sections are available when composing articles.
 
 ### Changes in 1.0.1-beta.50
 

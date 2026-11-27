@@ -7,6 +7,7 @@ use TheCore\Collectivity\Publications\Screen;
 defined('ABSPATH') || exit;
 
 require_once __DIR__ . '/Library.php';
+require_once __DIR__ . '/Components.php';
 require_once __DIR__ . '/Media.php';
 require_once __DIR__ . '/Editor.php';
 require_once __DIR__ . '/Screen.php';
@@ -15,6 +16,9 @@ final class TheCore_Collectivity_Publications_Module extends TheCore_Collectivit
     public function get_id() { return 'publications'; }
 
     public function register_hooks() {
+        \TheCore\Collectivity\Publications\Components::hooks();
+        add_action('admin_post_tccm_component_create', [Screen::class, 'create_component']);
+        add_action('admin_post_tccm_component_thumbnail', [Screen::class, 'thumbnail']);
         add_action('init', [Library::class, 'register']);
         add_action('init', [Editor::class, 'register']);
         add_action('enqueue_block_editor_assets', [Editor::class, 'assets']);
@@ -107,6 +111,9 @@ final class TheCore_Collectivity_Publications_Module extends TheCore_Collectivit
         $id = (int) get_queried_object_id();
         if (is_singular('post') && Editor::managed($id)) {
             wp_enqueue_style('tccm-publication');
+            foreach (\TheCore\Collectivity\Publications\Components::article_components($id) as $component_id) {
+                \TheCore\Collectivity\Publications\Components::styles($component_id);
+            }
             if (wp_style_is('thecore-gallery', 'registered') && str_contains((string) get_post_field('post_content', $id), '"gallery"')) {
                 wp_enqueue_style('thecore-gallery');
             }

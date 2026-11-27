@@ -34,8 +34,10 @@ final class Editor {
         if (!$post || !self::managed($post->ID)) return;
         wp_enqueue_media();
         wp_enqueue_script('tccm-publication-editor');
+        $fields = [];
+        foreach (Components::catalog() as $entry) $fields[$entry['component']] = Components::fields($entry['component']);
         wp_add_inline_script('tccm-publication-editor', 'window.tccmPublications=' . wp_json_encode([
-            'designs' => Library::designs(), 'labels' => Library::parts(), 'assemble' => current_user_can(Library::ASSEMBLE),
+            'fields' => $fields, 'designs' => Library::designs(), 'labels' => Library::parts(), 'assemble' => current_user_can(Library::ASSEMBLE),
         ], JSON_HEX_TAG | JSON_HEX_AMP) . ';', 'before');
     }
 

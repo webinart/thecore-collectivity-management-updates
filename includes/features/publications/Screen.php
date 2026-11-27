@@ -100,49 +100,124 @@ final class Screen {
         echo '</div>';
     }
 
+    public static function create_component(): void {
+        self::authorize('tccm_component_create', Library::MANAGE);
+        $id = Components::create(sanitize_text_field(wp_unslash($_POST['title'] ?? '')));
+        if (is_wp_error($id)) wp_die(esc_html($id->get_error_message()), '', ['response' => 400, 'back_link' => true]);
+        wp_safe_redirect(\Elementor\Plugin::$instance->documents->get($id)->get_edit_url(), 303);
+        exit;
+    }
+
+    private static function thumb(string $ref, bool $layout = false): string {
+        $url = add_query_arg(['action' => 'tccm_component_thumbnail', 'ref' => $ref, 'layout' => (int) $layout], admin_url('admin-post.php'));
+        return '<span class="tccm-catalog-thumb" aria-hidden="true" inert><iframe tabindex="-1" loading="lazy" sandbox="allow-same-origin" src="' . esc_url($url) . '" title="Aperçu"></iframe></span>';
+    }
+
+    public static function thumbnail(): void {
+        if (!current_user_can(Library::WRITE)) wp_die('Accès refusé.', '', ['response' => 403]);
+        $designs = Library::designs();
+        if (current_user_can(Library::MANAGE)) $designs += Components::catalog(true);
+        $ref = sanitize_key($_GET['ref'] ?? '');
+        $sections = empty($_GET['layout']) ? [$ref] : (Library::layouts()[$ref]['sections'] ?? []);
+        $html = '';
+        foreach ($sections as $key) {
+            if (!isset($designs[$key])) continue;
+            $entry = $designs[$key];
+            if (isset($entry['component'])) {
+                $html .= Components::render($entry['component'], [], true);
+                continue;
+            }
+            $html .= '<div class="sample ' . esc_attr($entry['layout']) . '">';
+            foreach ($entry['parts'] as $part) {
+                if ($part === 'text') {
+                    $html .= '<div><h2>Au fil de la commune</h2><p>Retrouvez les nouvelles de la vie locale et les rendez-vous de la semaine.</p></div>';
+                } elseif ($part === 'file') {
+                    $html .= '<div class="file">↓ &nbsp; Télécharger le document</div>';
+                } elseif ($part === 'video') {
+                    $html .= '<div class="video">▶</div>';
+                } else {
+                    $count = $part === 'gallery' ? 3 : 1;
+                    $html .= '<div class="photos">';
+                    $images = get_posts(['post_type' => 'post', 'post_status' => 'publish', 'has_password' => false, 'meta_key' => '_thumbnail_id', 'posts_per_page' => $count]);
+                    foreach ($images as $photo) $html .= get_the_post_thumbnail($photo->ID, 'medium', ['alt' => '']);
+                    $html .= '</div>';
+                }
+            }
+            $html .= '</div>';
+        }
+        nocache_headers();
+        header('X-Robots-Tag: noindex');
+        header("Content-Security-Policy: script-src 'none'; frame-src 'none'; frame-ancestors 'self'; form-action 'none'");
+        header('Content-Type: text/html; charset=' . get_option('blog_charset'));
+        echo '<!doctype html><html lang="fr"><head><meta charset="utf-8">';
+        if (Components::available()) \Elementor\Plugin::$instance->frontend->enqueue_styles();
+        wp_print_styles();
+        echo '<style>html,body{margin:0!important;background:white;color:#25484a;font:17px/1.45 system-ui}main{padding:20px}.sample{display:grid;gap:14px;margin-bottom:12px}.columns{grid-template-columns:1fr 1fr}.sample h2{font:600 29px/1.1 Georgia;margin:0 0 7px}.sample p{margin:0}.photos{display:flex;gap:8px;overflow:hidden}.photos img{width:0;flex:1;min-width:0;height:116px;object-fit:cover}.video,.file{border-radius:5px;padding:20px;background:#edf4f3}.video{display:grid;place-items:center;background:#24484b;color:white;font-size:30px;height:85px}</style></head><body><main>';
+        echo $html . '</main></body></html>';
+        exit;
+    }
+
     private static function library_screen(): void {
-        $type = ($_GET['type'] ?? '') === 'layout' ? Library::LAYOUT : Library::COMPONENT;
+        $section = ['section' => 'bibliotheque'];
+        $is_layout = ($_GET['type'] ?? '') === 'layout';
+        $type = $is_layout ? Library::LAYOUT : Library::COMPONENT;
         $id = absint($_GET['item'] ?? 0);
         $post = $id ? get_post($id) : null;
         if ($id && (!$post || $post->post_type !== $type)) wp_die('Modèle introuvable.', '', ['response' => 404]);
-        $section = ['section' => 'bibliotheque'];
-        echo '<nav>';
-        self::link('Sections', $section);
-        echo ' · ';
-        self::link('Compositions', $section + ['type' => 'layout']);
+        echo '<nav class="tccm-catalog-tabs" aria-label="Bibliothèque">';
+        foreach (['component' => 'Sections', 'layout' => 'Compositions'] as $tab => $label) {
+            echo '<a ' . (($tab === 'layout') === $is_layout ? 'aria-current="page" ' : '') . 'href="' . esc_url(self::url($section + ['type' => $tab])) . '">' . $label . '</a>';
+        }
         echo '</nav>';
-        $is_layout = $type === Library::LAYOUT;
-        $key = $is_layout ? 'layout' : 'component';
-        $choices = $is_layout ? array_map(static fn($d) => $d['name'], Library::designs()) : Library::parts();
-        $catalog = $is_layout ? Library::layouts() : Library::designs();
-        echo '<section class="tccm-pub-panel"><h2>' . ($is_layout ? 'Compositions disponibles' : 'Sections disponibles') . '</h2><ul>';
+        $designs = Library::designs();
+        $catalog = $is_layout ? Library::layouts() : Components::catalog(true) + $designs;
+        echo '<section class="tccm-pub-panel"><h2>' . ($is_layout ? 'Compositions' : 'Sections') . '</h2>';
+        if (!$is_layout && Components::available() && \Elementor\Modules\Components\Components_Access_Controller::can_create()) {
+            self::form('tccm_component_create');
+            echo '<label>Nom de la nouvelle section <input name="title" required minlength="2" maxlength="200" placeholder="Texte et portrait"></label> <button type="submit" class="button button-primary svjd-action">Créer avec Elementor</button></form>';
+        }
+        if ($is_layout) self::link('Nouvelle composition', $section + ['type' => 'layout', 'new' => 1]);
+        echo '<div class="tccm-catalog-grid">';
         foreach ($catalog as $ref => $entry) {
-            echo '<li>';
-            self::link($entry['name'], $section + ['type' => $key, 'source' => $ref] + (preg_match('/^(section|layout)-(\d+)$/', $ref, $m) ? ['item' => $m[2]] : []));
-            echo '</li>';
+            $button = '';
+            $note = '';
+            if (isset($entry['component'])) {
+                $doc = \Elementor\Plugin::$instance->documents->get($entry['component']);
+                $button = '<a href="' . esc_url($doc->get_edit_url()) . '">Modifier avec Elementor</a>';
+                $note = get_post_status($entry['component']) === 'draft' ? 'Brouillon' : 'Publié';
+            } elseif ($is_layout || preg_match('/^section-\d+$/', $ref)) {
+                $params = $section + ['type' => $is_layout ? 'layout' : 'component', 'source' => $ref];
+                $custom = preg_match('/^(section|layout)-(\d+)$/', $ref, $match);
+                if ($custom) $params['item'] = $match[2];
+                $button = '<a href="' . esc_url(self::url($params)) . '">' . ($custom ? 'Modifier' : 'Créer une variante') . '</a>';
+            }
+            echo '<article class="tccm-catalog-card">' . self::thumb($ref, $is_layout) . '<div><strong>' . esc_html($entry['name']) . '</strong>';
+            if ($note) echo '<small>' . esc_html($note) . '</small>';
+            echo $button . '</div></article>';
         }
-        echo '</ul>';
-        self::link($is_layout ? 'Nouvelle composition' : 'Nouvelle section', $section + ['type' => $key]);
-        echo '</section>';
+        echo '</div></section>';
+        if (!$post && (!$is_layout || !isset($_GET['new']) && !isset($_GET['source']))) return;
         $source = $catalog[sanitize_key($_GET['source'] ?? '')] ?? [];
-        $data = $post ? json_decode($post->post_content, true) : ($is_layout ? ($source['sections'] ?? []) : $source);
-        $rows = ($is_layout ? $data : ($data['parts'] ?? [])) ?: [array_key_first($choices)];
-        echo '<section class="tccm-pub-panel"><h2>' . ($id ? 'Modifier' : 'Créer') . ($is_layout ? ' une composition' : ' une section') . '</h2>';
+        $data = $post ? json_decode($post->post_content, true) : ($source['sections'] ?? []);
+        $rows = $is_layout ? $data : ($data['parts'] ?? []);
+        $choices = $is_layout ? array_map(static fn($d) => $d['name'], $designs) : Library::parts();
+        echo '<section class="tccm-pub-panel" id="tccm-composer"><h2>' . ($is_layout ? 'Composer un article' : 'Modifier la section Gutenberg') . '</h2>';
         self::form('tccm_publication_library');
-        echo '<input type="hidden" name="item" value="' . $id . '"><input type="hidden" name="type" value="' . esc_attr($key) . '">';
-        echo '<input type="hidden" name="revision" value="' . ($post ? esc_attr(self::revision($post)) : '') . '">';
-        echo '<label>Nom<input name="title" required maxlength="120" value="' . esc_attr($post->post_title ?? ($source['name'] ?? '')) . '"></label>';
+        echo '<input type="hidden" name="type" value="' . ($is_layout ? 'layout' : 'component') . '"><input type="hidden" name="item" value="' . $id . '"><input type="hidden" name="revision" value="' . esc_attr($post ? self::revision($post) : '') . '">';
+        echo '<label>Nom <input required name="title" value="' . esc_attr($post ? $post->post_title : ($source['name'] ?? '')) . '"></label>';
         if (!$is_layout) {
-            echo '<label>Présentation<select name="layout"><option value="stack">De haut en bas</option><option value="columns" ' . selected($data['layout'] ?? '', 'columns', false) . '>En colonnes sur grand écran</option></select></label>';
+            echo '<label>Disposition <select name="layout"><option value="stack">Une colonne</option><option value="columns" ' . selected($data['layout'] ?? '', 'columns', false) . '>Deux colonnes</option></select></label>';
         }
-        echo '<fieldset><legend>' . ($is_layout ? 'Sections dans l’ordre de lecture' : 'Champs à remplir, dans l’ordre de lecture') . '</legend><div data-pub-rows>';
-        foreach ($rows as $value) {
-            echo '<div data-pub-row><select name="parts[]" aria-label="Élément">';
-            foreach ($choices as $choice => $label) echo '<option value="' . esc_attr($choice) . '" ' . selected($value, $choice, false) . '>' . esc_html($label) . '</option>';
-            echo '</select> <button type="button" data-op="up">Monter</button> <button type="button" data-op="down">Descendre</button> <button type="button" data-op="remove">Retirer</button></div>';
+        echo '<div class="tccm-composer"><div><h3>' . ($is_layout ? 'Ajouter une section' : 'Ajouter un champ') . '</h3><div class="tccm-palette">';
+        foreach ($choices as $key => $label) {
+            echo '<button type="button" data-add="' . esc_attr($key) . '">' . ($is_layout ? self::thumb($key) : '') . '<span>' . esc_html($label) . '</span></button>';
         }
-        echo '</div><button type="button" data-op="add">Ajouter ' . ($is_layout ? 'une section' : 'un champ') . '</button></fieldset>';
-        echo '<button type="submit" class="button button-primary svjd-action">Enregistrer dans la bibliothèque</button></form></section>';
+        echo '</div></div><div><h3>Ordre de lecture</h3><ol data-composition>';
+        foreach ($rows as $key) {
+            if (!isset($choices[$key])) continue;
+            echo '<li data-key="' . esc_attr($key) . '"><input type="hidden" name="parts[]" value="' . esc_attr($key) . '">' . ($is_layout ? self::thumb($key) : '') . '<strong>' . esc_html($choices[$key]) . '</strong></li>';
+        }
+        echo '</ol><p role="status" class="screen-reader-text"></p></div></div><button type="submit" class="button button-primary svjd-action">Enregistrer dans la bibliothèque</button></form></section>';
         wp_enqueue_script('tccm-publication-library');
     }
 

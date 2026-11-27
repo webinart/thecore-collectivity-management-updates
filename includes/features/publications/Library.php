@@ -47,7 +47,7 @@ final class Library {
                 $result['section-' . $post->ID] = ['name' => $post->post_title, 'layout' => $data['layout'], 'parts' => $data['parts']];
             }
         }
-        return $result;
+        return $result + Components::catalog();
     }
 
     public static function layouts(): array {

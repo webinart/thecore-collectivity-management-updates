@@ -73,6 +73,17 @@
                     ...designs.map(([value, d]) => ({ value, label: d.name }))],
                 onChange: key => key && setAttributes({ design: config.designs[key] })
             }) : h(Notice, { status: 'warning', isDismissible: false }, 'Section indisponible.'));
+            if (design.component) {
+                const fields = Object.entries(config.fields?.[design.component] || {});
+                const change = (key, value) => setAttributes({ values: { ...attributes.values, [key]: value } });
+                return h('section', props, h('h3', null, design.name), fields.map(([key, field]) => {
+                    if (field.type === 'image') return h('div', { key }, picker(field.label, {
+                        allowedTypes: ['image'], value: attributes.values?.[key], onSelect: image => change(key, image.id)
+                    }));
+                    return h(TextareaControl, { key, label: field.label, value: attributes.values?.[key] ?? field.default,
+                        onChange: value => change(key, value) });
+                }), !fields.length && h('p', null, 'Cette section reprend le contenu du composant.'));
+            }
             return h('section', props, h('h3', null, design.name),
                 design.parts.map((type, index) => h(Field, { key: index, type, value: attributes.values?.[index] || {},
                     change: value => setAttributes({ values: { ...attributes.values, [index]: value } }) })));
