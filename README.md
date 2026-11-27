@@ -4,8 +4,13 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.49`
+Current version: `1.0.1-beta.50`
 Release channel: beta
+
+### Changes in 1.0.1-beta.50
+
+- Optional Publications module for municipal news. Communication staff can maintain reusable sections and compositions. Editors assemble approved sections and contributors fill a prepared composition in Gutenberg. Publishing follows WordPress permissions.
+- Enable the `publications` module in the existing module registry. The workspace screen is `publications`. A site adapter can use `tccm_publication_manager_roles` to give a communication role library access without global administration rights.
 
 ### Changes in 1.0.1-beta.49
 

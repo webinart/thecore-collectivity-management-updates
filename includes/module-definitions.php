@@ -8,6 +8,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 return array(
+    'publications' => array(
+        'class' => 'TheCore_Collectivity_Publications_Module',
+        'file' => THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/publications/Module.php',
+        'default_active' => false,
+        'dependencies' => array(),
+        'optional_dependencies' => array(),
+    ),
 	'school-menus'      => array(
 		'class'                 => 'TheCore_Collectivity_School_Menus_Module',
 		'file'                  => THECORE_COLLECTIVITY_MANAGEMENT_DIR . 'includes/features/school-menus/class-thecore-collectivity-school-menus-module.php',
