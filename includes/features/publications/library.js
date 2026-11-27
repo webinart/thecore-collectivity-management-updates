@@ -1,4 +1,26 @@
 function initPublicationComposer() {
+    const fitPreview = frame => {
+        const main = frame.contentDocument?.querySelector('main');
+        if (!main || frame.previewDocument === main.ownerDocument) return;
+        frame.previewDocument = main.ownerDocument;
+        const fit = () => {
+            const width = frame.offsetWidth;
+            if (!width) return;
+            const height = Math.ceil(main.getBoundingClientRect().height);
+            const scale = frame.getBoundingClientRect().width / width;
+            const preview = frame.parentElement;
+            preview.style.setProperty('--tccm-frame-height', height + 'px');
+            preview.style.setProperty('--tccm-preview-height', Math.ceil(height * scale) + 'px');
+        };
+        fit();
+        new frame.contentWindow.ResizeObserver(fit).observe(main);
+    };
+    const frames = '.tccm-catalog-thumb iframe';
+    document.addEventListener('load', event => {
+        if (event.target.matches?.(frames)) fitPreview(event.target);
+    }, true);
+    document.querySelectorAll(frames).forEach(fitPreview);
+
     const list = document.querySelector('[data-composition]');
     if (!list) return;
     const form = list.closest('form');

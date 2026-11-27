@@ -54,7 +54,7 @@ final class TheCore_Collectivity_Publications_Module extends TheCore_Collectivit
         add_filter('thecore_administration_workspace_asset_handles', static function ($handles) {
             if (!in_array($_GET['screen'] ?? '', ['publications', apply_filters('tccm_publication_screen', 'publications')], true)) return $handles;
             $handles['styles'][] = 'tccm-publication';
-            if (current_user_can(Library::MANAGE) && ($_GET['section'] ?? '') === 'bibliotheque') {
+            if (in_array($_GET['section'] ?? '', ['bibliotheque', 'rediger'], true) && current_user_can(Library::WRITE)) {
                 $handles['scripts'][] = 'tccm-publication-library';
             }
             return $handles;

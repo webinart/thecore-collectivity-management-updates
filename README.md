@@ -4,8 +4,12 @@ Shared collectivity/business layer for The Core WordPress sites.
 
 This plugin centralizes the reusable functional modules that should not live in a commune-specific child theme.
 
-Current version: `1.0.1-beta.51`
+Current version: `1.0.1-beta.52`
 Release channel: beta
+
+### Changes in 1.0.1-beta.52
+
+- Improve the news dashboard and the editorial library. Browse recent articles with thumbnails, choose a starting composition visually and open dedicated creation screens.
 
 ### Changes in 1.0.1-beta.51
 
